@@ -41,31 +41,31 @@ services:
         networks:
             - backend
 
-    db-migrate:
-        restart: "no"
-        image: postgres-databarn-warehouse-migrate:0.1.0
-        build:
-            context: ../
-            dockerfile: Dockerfile.jsapp
-            args:
-                APP_NAME: db-migrate
-        env_file: ../.env
-        volumes:
-            - ../apps/db-migrate/src/sql:/sql
-        environment:
-            TZ: "UTC"
-            LOG_LEVEL: "trace"
-            DB_HOST: postgres
-            DB_PORT: 5432
-            DB_NAME: beefy
-            DB_USER: beefy
-            DB_PASS: beefy
-            DB_MIGRATION_FILE_PATTERN: "/sql/*.sql"
-        networks:
-            - backend
-        depends_on:
-            postgres:
-                condition: service_healthy
+    # db-migrate:
+    #     restart: "no"
+    #     image: postgres-databarn-warehouse-migrate:0.1.0
+    #     build:
+    #         context: ../
+    #         dockerfile: Dockerfile.jsapp
+    #         args:
+    #             APP_NAME: db-migrate
+    #     env_file: ../.env
+    #     volumes:
+    #         - ../apps/db-migrate/src/sql:/sql
+    #     environment:
+    #         TZ: "UTC"
+    #         LOG_LEVEL: "trace"
+    #         DB_HOST: postgres
+    #         DB_PORT: 5432
+    #         DB_NAME: beefy
+    #         DB_USER: beefy
+    #         DB_PASS: beefy
+    #         DB_MIGRATION_FILE_PATTERN: "/sql/*.sql"
+    #     networks:
+    #         - backend
+    #     depends_on:
+    #         postgres:
+    #             condition: service_healthy
 
     grafana:
         image: grafana/grafana:10.2.2
@@ -91,10 +91,10 @@ services:
         volumes:
             - grafana_data_wtf:/var/lib/grafana
             - grafana_plugins:/var/lib/grafana/plugins
-            - ../apps/grafana/custom.ini:/etc/grafana/grafana.ini
-            - ../apps/grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
-            - ../apps/grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
-            - ../apps/grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
+            - ./grafana/custom.ini:/etc/grafana/grafana.ini
+            - ./grafana/provisioning/dashboards:/etc/grafana/provisioning/dashboards
+            - ./grafana/provisioning/alerting:/etc/grafana/provisioning/alerting
+            - ./grafana/provisioning/datasources:/etc/grafana/provisioning/datasources
         depends_on:
             - postgres
         networks:

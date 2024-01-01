@@ -12,13 +12,20 @@ plugins:
     pip_url: tap-rest-api-msdk
     config:
       api_url: https://api.beefy.finance
-      flattening_enabled: true
-      flattening_max_depth: 10
       streams:
-      - name: vaults
-        num_inference_records: 5000
+      - name: beefy_vaults
         path: /vaults
         primary_keys: [id]
+        num_inference_records: 5000
+      - name: beefy_boosts
+        path: /boosts
+        primary_keys: [id]
+      - name: beefy_tokens
+        path: /tokens
+        flattening_enabled: false
+        records_path: "$.*.*"
+        primary_keys: [id]
+
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -26,3 +33,9 @@ plugins:
   - name: target-postgres
     variant: meltanolabs
     pip_url: meltanolabs-target-postgres
+    config:
+      user: beefy
+      database: beefy
+      add_record_metadata: true
+      host: localhost
+      port: 5432
