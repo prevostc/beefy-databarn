@@ -1,0 +1,9 @@
+config-version: 2
+version: 2
+sources:
+  - name: tap_rest_api_msdk     # the name we want to reference this source by
+    schema: tap_rest_api_msdk   # the schema the raw data was loaded into
+    tables:
+      - name: beefy_boosts
+      - name: beefy_vaults
+      - name: beefy_tokens
