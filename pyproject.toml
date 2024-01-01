@@ -16,6 +16,9 @@ test = [
 ]
 dev = ["pre-commit==3.3.3"]
 
+[tool.setuptools.packages]
+find = {}
+
 [tool.pytest.ini_options]
 minversion = "7.4"
 addopts = "-ra -q"

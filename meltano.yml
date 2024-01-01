@@ -10,3 +10,16 @@ plugins:
   - name: tap-rest-api-msdk
     variant: widen
     pip_url: tap-rest-api-msdk
+    config:
+      api_url: https://api.beefy.finance
+      flattening_enabled: true
+      flattening_max_depth: 10
+      streams:
+      - name: vaults
+        num_inference_records: 5000
+        path: /vaults
+        primary_keys: [id]
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
