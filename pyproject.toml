@@ -1,0 +1,112 @@
+[project]
+name = "beefy-databarn"
+version = "1.0.0"
+description = "Archive, index and serve beefy finance data"
+readme = "README.md"
+requires-python = ">=3.11"
+dependencies = [
+    "meltano==3.2.0",
+    "python-dotenv==1.0.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest==7.4.0",
+    "ruff==0.0.282",
+    "mypy==1.4.1",
+]
+dev = ["pre-commit==3.3.3"]
+
+[tool.pytest.ini_options]
+minversion = "7.4"
+addopts = "-ra -q"
+testpaths = ["test"]
+
+[tool.mypy]
+warn_return_any = false
+warn_unused_configs = true
+ignore_missing_imports = true
+allow_redefinition = true
+exclude = [".git", ".ruff_cache", ".venv", "build"]
+
+[tool.ruff]
+line-length = 200 # some like verticality, some don't
+
+exclude = [".git", ".ruff_cache", ".venv", "build"]
+
+# https://beta.ruff.rs/docs/rules/
+select = [
+    "F", # Pyflakes
+    "E", # Pycodestyle errors
+    "W", # Pycodestyle warnings
+    "I", # isort
+    "N", # pep8-naming
+    #"D",     # pydocstyle
+    "UP",    # pyupgrade
+    "YTT",   # flake8-2020
+    "ANN",   # flake8-annotations
+    "ASYNC", # flake8-async
+    "S",     # flake8-bandit
+    "BLE",   # flake8-blind-except
+    "FBT",   # flake8-boolean-trap
+    "B",     # flake8-bugbear
+    "A",     # flake8-builtins
+    "COM",   # flake8-commas
+    #"CPY",   # flake8-copyright
+    "C4",  # flake8-comprehensions
+    "DTZ", # flake8-datetimez
+    "T10", # flake8-debugger
+    #"DJ",   # flake8-django
+    "EM",   # flake8-errmsg
+    "EXE",  # flake8-executable
+    "FA",   # flake8-future-annotations
+    "ISC",  # flake8-implicit-str-concat
+    "ICN",  # flake8-import-conventions
+    "G",    # flake8-logging-format
+    "INP",  # flake8-no-pep420
+    "PIE",  # flake8-pie
+    "T20",  # flake8-print
+    "PYI",  # flake8-pyi
+    "PT",   # flake8-pytest-style
+    "Q",    # flake8-quotes
+    "RSE",  # flake8-raise
+    "RET",  # flake8-return
+    "SLF",  # flake8-self
+    "SLOT", # flake8-slots
+    "SIM",  # flake8-simplify
+    "TID",  # flake8-tidy-imports
+    "TCH",  # flake8-type-checking
+    "INT",  # flake8-gettext
+    "ARG",  # flake8-unused-arguments
+    "PTH",  # flake8-use-pathlib
+    #"TD",   # flake8-todos
+    #"FIX",  # flake8-fixme
+    "ERA", # eradicate
+    #"PD",   # pandas-vet
+    "PGH",  # pygrep-hooks
+    "PL",   # Pylint
+    "TRY",  # tryceratops
+    "FLY",  # flynt
+    "NPY",  # NumPy-specific rules
+    "AIR",  # Airflow
+    "PERF", # Perflint
+    "RUF",  # Ruff-specific rules
+]
+
+fixable = ["ALL"]
+
+ignore = [
+    "INP001",  # implicit-namespace-package: Checks for packages that are missing an `__init__.py` file.
+    "ANN101",  # missing-type-self: Checks that instance method `self` arguments have type annotations
+    "S101",    # assert: Checks for uses of the `assert` keyword.
+    "PT011",   # pytest-raises-too-broad: Checks for pytest.raises() calls that are too broad.
+    "TRY002",  # raise-vanilla-class: Checks for code that raises `Exception` directly.
+    "PLR2004", # magic-value-comparison: Checks for the use of unnamed numerical constants ("magic") values in comparisons.
+    "FBT001",  # boolean-positional-arg-in-function-definition: Checks for boolean positional arguments in function definitions.
+    "PLR0913", # too-many-arguments: Checks for function definitions that include too many arguments.
+    "FBT002",  # boolean-default-value-in-function-definition: Checks for the use of booleans as default values in function definitions.
+    "ANN401",  # any-type: Checks that an expression is annotated with a more specific type than `Any`.
+    "PLR0912", # too-many-branches: Checks for functions or methods with too many branches.
+    "PLR0911", # too-many-return-statements: Checks for functions or methods with too many return statements.
+    "PLR0915", # too-many-statements: Checks for functions or methods with too many statements.
+]

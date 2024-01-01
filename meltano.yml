@@ -1,0 +1,12 @@
+version: 1
+default_environment: dev
+project_id: d91cfa2a-62a5-4b90-8c5a-17255bac7c69
+environments:
+- name: dev
+- name: staging
+- name: prod
+plugins:
+  extractors:
+  - name: tap-rest-api-msdk
+    variant: widen
+    pip_url: tap-rest-api-msdk
