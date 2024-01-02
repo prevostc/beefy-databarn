@@ -1,0 +1,15 @@
+version: 2
+
+models:
+  - name: contract_watchlist
+    columns:
+      - name: contract_address
+        tests:
+          - not_null
+      - name: chain
+        tests:
+          - not_null
+    tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          column_list: ["chain", "contract_address"]
+          ignore_row_if: "any_value_is_missing"
