@@ -11,9 +11,9 @@ with base as (
 
 select
     id as boost_id,
-    chain as chain,
+    "chain",
     "poolId" as vault_id,
-    name as name,
+    "name",
     {{ hex_text_to_bytea('earnContractAddress') }} as contract_address,
     "earnedTokenDecimals" as reward_token_decimals,
     "earnedToken" as reward_token_symbol,

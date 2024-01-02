@@ -4,3 +4,4 @@ transform/dbt_packages/
 transform/target/
 transform/dbt_modules/
 transform/macros/
+infra/
