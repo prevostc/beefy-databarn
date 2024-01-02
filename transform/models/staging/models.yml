@@ -1,0 +1,41 @@
+version: 2
+
+models:
+  - name: stg_vaults
+    columns:
+      - name: vault_id
+        tests:
+          - not_null
+          - unique
+      - name: chain
+        tests:
+          - not_null
+      - name: contract_address
+        tests:
+          - not_null
+    tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          column_list: ["chain", "contract_address"]
+          ignore_row_if: "any_value_is_missing"
+
+  - name: stg_boosts
+    columns:
+      - name: boost_id
+        tests:
+          - not_null
+      - name : vault_id
+        tests:
+          - not_null
+          - relationships:
+              to: ref('customers')
+              field: vault_id
+      - name: chain
+        tests:
+          - not_null
+      - name: contract_address
+        tests:
+          - not_null
+    tests:
+      - dbt_expectations.expect_compound_columns_to_be_unique:
+          column_list: ["chain", "contract_address"]
+          ignore_row_if: "any_value_is_missing"

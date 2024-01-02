@@ -53,21 +53,21 @@ plugins:
     variant: sqlfluff
     pip_url: sqlfluff sqlfluff-templater-dbt dbt-core dbt-postgres
     settings:
-      - name: host
-        env: DBT_POSTGRES_HOST
-        value: localhost
-      - name: port
-        env: DBT_POSTGRES_PORT
-        value: 5432
-      - name: user
-        env: DBT_POSTGRES_USER
-        value: beefy
-      - name: password
-        env: DBT_POSTGRES_PASSWORD
-        kind: password
-      - name: dbname
-        env: DBT_POSTGRES_DBNAME
-        value: beefy
-      - name: schema
-        env: DBT_POSTGRES_SCHEMA
-        value: analytics
+    - name: host
+      env: DBT_POSTGRES_HOST
+      value: localhost
+    - name: port
+      env: DBT_POSTGRES_PORT
+      value: 5432
+    - name: user
+      env: DBT_POSTGRES_USER
+      value: beefy
+    - name: password
+      env: DBT_POSTGRES_PASSWORD
+      kind: password
+    - name: dbname
+      env: DBT_POSTGRES_DBNAME
+      value: beefy
+    - name: schema
+      env: DBT_POSTGRES_SCHEMA
+      value: analytics
