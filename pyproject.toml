@@ -5,7 +5,7 @@ description = "Archive, index and serve beefy finance data"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "meltano==3.2.0",
+    "meltano==3.2.0"
 ]
 
 [project.optional-dependencies]
