@@ -5,7 +5,7 @@ description = "Archive, index and serve beefy finance data"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "meltano==3.2.0","psycopg==3.1.16"
+    "meltano==3.2.0","psycopg==3.1.16","requests==2.31.0"
 ]
 
 [project.optional-dependencies]
@@ -13,8 +13,9 @@ test = [
     "pytest==7.4.0",
     "ruff==0.0.282",
     "mypy==1.4.1",
+    "types-requests==2.30.0.0"
 ]
-dev = ["pre-commit==3.3.3"]
+dev = ["pre-commit==3.3.3",]
 
 [tool.setuptools.packages]
 find = {}

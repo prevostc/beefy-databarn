@@ -1,7 +1,7 @@
 import typing as t
 from dataclasses import dataclass
 
-from extract.common.chains import ChainType
+from tap_beefy_databarn.common.chains import ChainType
 
 
 @dataclass

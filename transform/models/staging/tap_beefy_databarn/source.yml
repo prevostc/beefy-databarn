@@ -1,0 +1,7 @@
+config-version: 2
+version: 2
+sources:
+  - name: tap_beefy_databarn
+    schema: tap_beefy_databarn
+    tables:
+      - name: contract_creation_date

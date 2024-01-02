@@ -1,0 +1,26 @@
+{
+    "type": "object",
+    "additionalProperties": false,
+    "properties": {
+        "chain": {
+            "type": "string"
+        },
+        "contract_address": {
+            "type": "string"
+        },
+        "block_number": {
+            "type": "integer"
+        },
+        "block_datetime": {
+            "type": "string",
+            "format": "date-time"
+        }
+    },
+    "required": [
+        "block_datetime",
+        "block_number",
+        "chain",
+        "contract_address"
+    ],
+    "title": "ContractCreationDateElement"
+}
