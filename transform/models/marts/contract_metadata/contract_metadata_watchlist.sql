@@ -19,13 +19,13 @@ boosts as (
 )
 
 select
-    contract_address,
-    chain
+    chain,
+    {{ bytea_to_hex_text("contract_address") }} as contract_address
 from vaults
 
 union all
 
 select
-    contract_address,
-    chain
+    chain,
+    {{ bytea_to_hex_text("contract_address") }}
 from boosts
