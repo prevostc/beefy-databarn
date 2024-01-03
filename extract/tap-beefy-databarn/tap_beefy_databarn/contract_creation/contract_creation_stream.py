@@ -60,8 +60,11 @@ class ContractCreationDateStream(Stream):
             explorer_config = EXPLORER_CONFIG[chain]
             if explorer_config.explorer_type == "etherscan":
                 for contract in rate_limit_iterator(contracts, max_rps=explorer_config.max_rps):
-                    contract_creation_info = self._get_from_etherscan(explorer_config.url, contract)
-                    yield contract_creation_info
+                    try:
+                        contract_creation_info = self._get_from_etherscan(explorer_config.url, contract)
+                        yield contract_creation_info
+                    except Exception as exc:
+                        self.logger.error("Error while fetching contract creation info from Etherscan-like api: %s", exc)
 
     def _get_contract_list(self) -> t.Iterable[ContractWatch]:
         """Get the list of contracts to watch for metadata."""

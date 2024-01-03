@@ -8,7 +8,7 @@ from tap_beefy_databarn.common.chains import ChainType
 class ExplorerConfig:
     explorer_type: t.Literal["etherscan", "blockscout", "routescan", "blockscout-json", "harmony", "zksync"]
     url: str
-    max_rps: float = 0.1 # 10s between requests
+    max_rps: float = 0.2 # 5s between requests
 
 EXPLORER_CONFIG: dict[ChainType, ExplorerConfig] = {
   "arbitrum": ExplorerConfig(explorer_type="etherscan", url="https://api.arbiscan.io/api"),
