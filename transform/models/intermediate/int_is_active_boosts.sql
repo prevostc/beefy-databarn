@@ -11,12 +11,13 @@ with boosts as (
 
 active_vaults as (
     select *
-    from {{ ref('int_active_vaults') }}
+    from {{ ref('stg_vaults') }}
+    where is_active
 )
 
-select *
-from boosts
-where
+select
+    *,
     not eol
     and eol_date >= now()
-    and vault_id in (select vault_id from active_vaults)
+    and vault_id in (select vault_id from active_vaults) as is_active
+from boosts

@@ -14,6 +14,7 @@ select
     name,
     chain,
     status = 'eol' as eol,
+    status != 'eol' as is_active,
     (assets::jsonb) as assets,
     {{ hex_text_to_bytea('earnContractAddress') }} as contract_address,
     {{ hex_text_to_bytea('strategy') }} as strategy_address,

@@ -10,9 +10,9 @@ with base as (
 )
 
 select
-  chain,
-   {{ hex_text_to_bytea("contract_address") }} as contract_address,
-  block_number,
-  block_datetime
+    chain,
+    {{ hex_text_to_bytea("contract_address") }} as contract_address,
+    block_number,
+    block_datetime
 
 from base

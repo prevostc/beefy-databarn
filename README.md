@@ -81,6 +81,19 @@ pre-commit run --all-files
 
 ## Other
 
+### Format SQL files
+
+```bash
+# just tell you about the issues
+meltano invoke sqlfluff:lint
+
+# fix the issues with your confirmation
+meltano invoke sqlfluff:fix
+
+# do not ask for confirmation
+meltano invoke sqlfluff:fix-force
+```
+
 ### Reset venv
 
 ```bash

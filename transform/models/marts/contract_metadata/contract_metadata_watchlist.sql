@@ -8,15 +8,18 @@ with
 
 vaults as (
 
-    select * from {{ ref('int_active_vaults' ) }}
+    select *
+    from {{ ref('stg_vaults' ) }}
 
 ),
 
 boosts as (
 
-    select * from {{ ref('int_active_boosts' ) }}
+    select *
+    from {{ ref('int_is_active_boosts' ) }}
 
 ),
+
 
 already_imported_contracts as (
 
@@ -31,35 +34,39 @@ all_contracts as (
 
     select
         chain,
-        contract_address
+        contract_address,
+        is_active
     from vaults
 
     union all
 
     select
         chain,
-        contract_address
+        contract_address,
+        is_active
     from boosts
 
 ),
 
 contracts_to_import as (
 
-    select
-        chain,
-        contract_address
+    select *
     from all_contracts
-
-    except
-
-    select
-        chain,
-        contract_address
-    from already_imported_contracts
+    where
+        (chain, contract_address)
+        not in (
+            select
+                chain,
+                contract_address
+            from already_imported_contracts
+        )
 
 )
 
 select
-  chain,
-  {{ bytea_to_hex_text("contract_address") }} as contract_address
+    chain,
+    {{ bytea_to_hex_text("contract_address") }} as contract_address,
+    is_active
 from contracts_to_import
+-- ingesting active contracts first
+order by is_active::integer desc

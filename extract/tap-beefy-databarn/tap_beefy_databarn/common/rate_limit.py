@@ -16,3 +16,8 @@ def rate_limit_iterator(iterator: t.Iterable[T], max_rps: float) -> t.Iterable[T
                 time.sleep(time_to_wait)
         last_call_at = datetime.now(UTC)
         yield item
+
+
+def sleep_rps(max_rps: float) -> None:
+    """Sleep to respect the given rate limit."""
+    time.sleep(1 / max_rps)
