@@ -2,7 +2,8 @@ db.json
 .ruff_cache
 /venv
 /.meltano
-.env
+.env*
+!.env*.example
 
 ###################################################################################
 # https://github.com/github/gitignore/blob/main/Global/VisualStudioCode.gitignore #

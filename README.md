@@ -18,7 +18,18 @@ source .venv/bin/activate
 pip install . .[test] .[dev]
 ```
 
+```bash
+cp .env.example .env
+cp .env-grafana.example .env-grafana
+```
+
 ## Run
+
+### Infra
+
+```bash
+./scripts/infra.sh start
+```
 
 ### start
 
