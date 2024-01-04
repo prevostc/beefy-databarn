@@ -12,12 +12,12 @@ class ExplorerConfig:
 
 EXPLORER_CONFIG: dict[ChainType, ExplorerConfig] = {
   "arbitrum": ExplorerConfig(explorer_type="etherscan", url="https://api.arbiscan.io/api"),
-  "aurora": ExplorerConfig(explorer_type="etherscan", url="https://api.aurorascan.dev/api"),
+  "aurora": ExplorerConfig(explorer_type="blockscout-v5", url="https://old.explorer.aurora.dev/api"),
   "avax": ExplorerConfig(explorer_type="routescan", url="https://api.routescan.io"),
   "base": ExplorerConfig(explorer_type="etherscan", url="https://api.basescan.org/api"),
   "bsc": ExplorerConfig(explorer_type="etherscan", url="https://api.bscscan.com/api"),
   "canto": ExplorerConfig(explorer_type="blockscout-v5", url="https://explorer.plexnode.wtf/api"),
-  "celo": ExplorerConfig(explorer_type="blockscout", url="https://explorer.celo.org/"),
+  "celo": ExplorerConfig(explorer_type="blockscout", url="https://explorer.celo.org"),
   "cronos": ExplorerConfig(explorer_type="etherscan", url="https://api.cronoscan.com/api"),
   "emerald": ExplorerConfig(explorer_type="blockscout", url="https://explorer.emerald.oasis.dev/"),
   "ethereum": ExplorerConfig(explorer_type="etherscan", url="https://api.etherscan.io/api"),

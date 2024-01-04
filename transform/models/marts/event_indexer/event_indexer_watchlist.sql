@@ -8,7 +8,7 @@ with
 
 vaults as (
 
-    select * from {{ ref('stg_vaults' ) }}
+    select * from {{ ref('int_is_active_vaults' ) }}
 
 ),
 

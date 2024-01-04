@@ -230,12 +230,26 @@ class ContractCreationDateStream(Stream):
         if "transaction_hash_link" not in data:
             return self._get_from_blockscout_transaction_list_api(explorer_config, watch)
 
-        tx_hash = data.split('data-test="transaction_hash_link"')[1].split('href="/tx/')[1].split('"')[0]
+        tx_hash = data.split('data-test="transaction_hash_link"')[1]
+        
+        if 'href="/tx/' in tx_hash:
+            tx_hash = tx_hash.split('href="/tx/')[1].split('"')[0]
+        elif 'href="/mainnet/tx' in tx_hash:
+            # celo specific
+            tx_hash = tx_hash.split('href="/mainnet/tx/')[1].split('"')[0]
+        else:
+            raise Exception(f"Unknown tx hash format: {tx_hash}")
 
         # https://andromeda-explorer.metis.io/tx/0x9bbc84d8b646db3416a40bfdbb5a0028f93eb7a867f7ea6bb81f80c383d0bf28
         sleep_rps(explorer_config.max_rps)
         data = self._fetch_html_or_throw(f"{explorer_config.url}/tx/{tx_hash}")
-        block_number = data.split('class="transaction__link" href="/block/')[1].split('"')[0]
+
+        block_number = data.split('class="transaction__link"')[1]
+        if 'href="/block/' in block_number:
+            block_number = block_number.split('href="/block/')[1].split('"')[0]
+        elif 'href="/mainnet/block/' in block_number:
+            # celo specific
+            block_number = block_number.split('href="/mainnet/block/')[1].split('"')[0]
         block_number = int(block_number, 10)
 
         block_datetime = data.split('data-from-now="')[1].split('"')[0]
