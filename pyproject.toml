@@ -10,12 +10,12 @@ dependencies = [
 
 [project.optional-dependencies]
 test = [
-    "pytest==7.4.0",
-    "ruff==0.0.282",
-    "mypy==1.4.1",
+    "pytest==7.4.4",
+    "ruff==0.1.11",
+    "mypy==1.8.0",
     "types-requests==2.30.0.0"
 ]
-dev = ["pre-commit==3.3.3"]
+dev = ["pre-commit==3.6.0", "poetry==1.7.1"]
 
 [tool.setuptools.packages]
 find = {}
@@ -112,4 +112,6 @@ ignore = [
     "PLR0912", # too-many-branches: Checks for functions or methods with too many branches.
     "PLR0911", # too-many-return-statements: Checks for functions or methods with too many return statements.
     "PLR0915", # too-many-statements: Checks for functions or methods with too many statements.
+    "B006",    # mutable-argument-default: Checks for uses of mutable objects as function argument defaults.
+    "UP017",   # datetime-timezone-utc: Checks for uses of datetime.timezone.utc.
 ]

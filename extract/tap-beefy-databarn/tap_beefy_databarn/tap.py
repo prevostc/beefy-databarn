@@ -13,10 +13,10 @@ if TYPE_CHECKING:
     from singer_sdk.streams import Stream
 
 
-class TapBeefyDatabarn(Tap):
-    """BeefyDatabarn tap class."""
+class TapBlockExplorerContractCreationInfos(Tap):
+    """TapBlockExplorerContractCreationInfos tap class."""
 
-    name = "tap-beefy-databarn"
+    name = "tap-block-explorer-contract-creation-infos"
 
     config_jsonschema = th.PropertiesList(
         th.Property(
@@ -39,4 +39,4 @@ class TapBeefyDatabarn(Tap):
 
 
 if __name__ == "__main__":
-    TapBeefyDatabarn.cli()
+    TapBlockExplorerContractCreationInfos.cli()

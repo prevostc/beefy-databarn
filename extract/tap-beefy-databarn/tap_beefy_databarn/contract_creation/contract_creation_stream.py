@@ -6,20 +6,19 @@ import json
 import typing as t
 from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from dateutil import parser
 from pathlib import Path
 
 import psycopg
 import requests
+from dateutil import parser
 from psycopg.rows import class_row
 from singer_sdk.streams import Stream
-from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG
+
+from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
 
 if t.TYPE_CHECKING:
-
     from tap_beefy_databarn.common.chains import ChainType
-
 
 
 @dataclass
@@ -27,12 +26,14 @@ class ContractWatch:
     chain: ChainType
     contract_address: str
 
+
 @dataclass
 class ContractCreationInfo:
     chain: ChainType
     contract_address: str
     block_number: int
     block_datetime: datetime
+
 
 class ContractCreationDateStream(Stream):
     """Fetches the contract creation date for a given contract address."""
@@ -46,13 +47,13 @@ class ContractCreationDateStream(Stream):
     def schema(self) -> dict:
         return json.loads(Path(self.schema_filepath).read_text())
 
-    def get_records(self, context: dict[t.Any, t.Any]|None) -> t.Iterable[dict]:  # noqa: ARG002
+    def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:  # noqa: ARG002
         self.logger.info("Fetching contract creation date: %s", self.schema)
         for infos in self._get_contract_creation_info():
             yield asdict(infos)
 
     def _get_contract_creation_info(self) -> t.Iterable[ContractCreationInfo]:
-        """ Get the contract creation infos from any explorer"""
+        """Get the contract creation infos from any explorer"""
         by_type: dict[ChainType, list[ContractWatch]] = {}
         for contract in self._get_contract_list():
             by_type.setdefault(contract.chain, []).append(contract)
@@ -68,7 +69,7 @@ class ContractCreationDateStream(Stream):
 
         for chain, contracts in by_type.items():
             explorer_config = EXPLORER_CONFIG[chain]
-            
+
             if explorer_config.explorer_type not in fn_map:
                 self.logger.warning("No explorer function for %s", explorer_config.explorer_type)
                 continue
@@ -78,21 +79,21 @@ class ContractCreationDateStream(Stream):
                 try:
                     yield fn(explorer_config, contract)
                 except Exception as exc:
-                    self.logger.error("Error while fetching contract creation info for %s:%s: %s", contract.chain, contract.contract_address, exc, exc_info=True)
-
+                    self.logger.exception("Error while fetching contract creation info for %s:%s: %s", contract.chain, contract.contract_address, exc_info=exc)
 
     def _get_contract_list(self) -> t.Iterable[ContractWatch]:
         """Get the list of contracts to watch for metadata."""
         connection_string = self.config.get("postgres_connection_string", "")
         with psycopg.Connection.connect(connection_string) as conn, conn.cursor(row_factory=class_row(ContractWatch)) as cur:
-            cur.execute("""
+            cur.execute(
+                """
                 SELECT
                     chain,
                     contract_address
                 FROM analytics.contract_metadata_watchlist
-            """)
+            """,
+            )
             return cur.fetchall()
-
 
     def _get_from_etherscan(self, explorer_config: ExplorerConfig, watch: ContractWatch) -> ContractCreationInfo:
         """Get the contract creation info from Etherscan-like api."""
@@ -115,17 +116,24 @@ class ContractCreationDateStream(Stream):
             msg = f"Error from Etherscan-like api: {data.get('message')}"
             raise Exception(msg)
 
-        data = data.get("result")[0]
+        data = data["result"][0]
 
-        block_number = data.get("blockNumber")
-        if isinstance(block_number, str):
-            block_number = int(block_number, 10)
+        block_number_str = data.get("blockNumber")
+        if isinstance(block_number_str, str):
+            block_number = int(block_number_str, 10)
+        elif isinstance(block_number_str, int):
+            block_number = block_number_str
+        else:
+            raise CouldNotParseExplorerResponseError({"blockNumber": block_number_str})
 
-        block_datetime = data["timeStamp"]
-        if isinstance(block_datetime, str):
-            block_datetime = int(block_datetime, 10)
-
-        block_datetime = datetime.fromtimestamp(block_datetime, tz=UTC)
+        block_datetime_str = data["timeStamp"]
+        if isinstance(block_datetime_str, str):
+            block_datetime_int = int(block_datetime_str, 10)
+        elif isinstance(block_datetime_str, int):
+            block_datetime_int = block_datetime_str
+        else:
+            raise CouldNotParseExplorerResponseError({"timeStamp": block_datetime_str})
+        block_datetime = datetime.fromtimestamp(block_datetime_int, tz=UTC)
 
         return ContractCreationInfo(
             chain=watch.chain,
@@ -148,9 +156,9 @@ class ContractCreationDateStream(Stream):
 
         self.logger.debug("Got data from Routescan api for (%s:%s): %s", watch.chain, watch.contract_address, data)
         if "items" not in data or len(data["items"]) == 0:
-            msg = f"Error from Routescan api: no items"
+            msg = "Error from Routescan api: no items"
             raise Exception(msg)
-        
+
         block_number = data["items"][0]["blockNumber"]
         if isinstance(block_number, str):
             block_number = int(block_number, 10)
@@ -165,12 +173,9 @@ class ContractCreationDateStream(Stream):
             block_number=block_number,
             block_datetime=block_datetime,
         )
-        
+
     def _get_from_blockscout_transaction_list_api(self, explorer_config: ExplorerConfig, watch: ContractWatch) -> ContractCreationInfo:
-        data = {
-            "items": [],
-            "next_page_path": f"/address/{watch.contract_address}/transactions"
-        }
+        data = {"items": [], "next_page_path": f"/address/{watch.contract_address}/transactions"}
 
         while data["next_page_path"]:
             api_path = f"{explorer_config.url}{data['next_page_path']}"
@@ -180,18 +185,18 @@ class ContractCreationDateStream(Stream):
 
             data = self._fetch_json_or_throw(api_path)
             sleep_rps(explorer_config.max_rps)
-                
+
         if len(data["items"]) == 0:
-            msg = f"Error from Blockscout JSON api: no items"
+            msg = "Error from Blockscout JSON api: no items"
             raise Exception(msg)
 
         tx = data["items"][-1]
         self.logger.debug("Got tx from Blockscout JSON api for (%s:%s): %s", watch.chain, watch.contract_address, tx)
-        block_number = tx.split('href="/block/')[1].split('"')[0]
-        block_number = int(block_number, 10)
+        block_number_str = tx.split('href="/block/')[1].split('"')[0]
+        block_number = int(block_number_str, 10)
 
-        block_datetime = tx.split('data-from-now="')[1].split('"')[0]
-        block_datetime = parser.parse(block_datetime)
+        block_datetime_str = tx.split('data-from-now="')[1].split('"')[0]
+        block_datetime = parser.parse(block_datetime_str)
 
         return ContractCreationInfo(
             chain=watch.chain,
@@ -199,7 +204,7 @@ class ContractCreationDateStream(Stream):
             block_number=block_number,
             block_datetime=block_datetime,
         )
-        
+
     def _get_from_blockscout_v5(self, explorer_config: ExplorerConfig, watch: ContractWatch) -> ContractCreationInfo:
         # https://explorer.plexnode.wtf/api/v2/addresses/0x5B19bd330A84c049b62D5B0FC2bA120217a18C1C
         api_path = f"{explorer_config.url}/v2/addresses/{watch.contract_address}"
@@ -212,8 +217,8 @@ class ContractCreationDateStream(Stream):
         data = self._fetch_json_or_throw(api_path)
 
         block_number = data["block"]
-        block_datetime = data["timestamp"]
-        block_datetime = parser.parse(block_datetime)
+        block_datetime_str = data["timestamp"]
+        block_datetime = parser.parse(block_datetime_str)
 
         return ContractCreationInfo(
             chain=watch.chain,
@@ -231,29 +236,31 @@ class ContractCreationDateStream(Stream):
             return self._get_from_blockscout_transaction_list_api(explorer_config, watch)
 
         tx_hash = data.split('data-test="transaction_hash_link"')[1]
-        
+
         if 'href="/tx/' in tx_hash:
             tx_hash = tx_hash.split('href="/tx/')[1].split('"')[0]
         elif 'href="/mainnet/tx' in tx_hash:
             # celo specific
             tx_hash = tx_hash.split('href="/mainnet/tx/')[1].split('"')[0]
         else:
-            raise Exception(f"Unknown tx hash format: {tx_hash}")
+            raise CouldNotParseExplorerResponseError({"tx_hash": tx_hash})
 
         # https://andromeda-explorer.metis.io/tx/0x9bbc84d8b646db3416a40bfdbb5a0028f93eb7a867f7ea6bb81f80c383d0bf28
         sleep_rps(explorer_config.max_rps)
         data = self._fetch_html_or_throw(f"{explorer_config.url}/tx/{tx_hash}")
 
-        block_number = data.split('class="transaction__link"')[1]
-        if 'href="/block/' in block_number:
-            block_number = block_number.split('href="/block/')[1].split('"')[0]
-        elif 'href="/mainnet/block/' in block_number:
+        block_number_str = data.split('class="transaction__link"')[1]
+        if 'href="/block/' in block_number_str:
+            block_number_str = block_number_str.split('href="/block/')[1].split('"')[0]
+        elif 'href="/mainnet/block/' in block_number_str:
             # celo specific
-            block_number = block_number.split('href="/mainnet/block/')[1].split('"')[0]
-        block_number = int(block_number, 10)
+            block_number_str = block_number_str.split('href="/mainnet/block/')[1].split('"')[0]
+        else:
+            raise CouldNotParseExplorerResponseError({"html": data})
+        block_number = int(block_number_str, 10)
 
-        block_datetime = data.split('data-from-now="')[1].split('"')[0]
-        block_datetime = parser.parse(block_datetime)
+        block_datetime_str = data.split('data-from-now="')[1].split('"')[0]
+        block_datetime = parser.parse(block_datetime_str)
 
         return ContractCreationInfo(
             chain=watch.chain,
@@ -296,7 +303,6 @@ class ContractCreationDateStream(Stream):
         data = res.json()
         self.logger.debug("Got data from api: %s", url)
         return data
-    
 
     def _fetch_html_or_throw(self, url: str, params: dict = {}) -> str:
         self.logger.info("Fetching %s with params %s", url, params)
@@ -310,3 +316,9 @@ class ContractCreationDateStream(Stream):
         self.logger.debug("Got data from api: %s", url)
 
         return res.text
+
+
+class CouldNotParseExplorerResponseError(Exception):
+    def __init__(self, response: dict) -> None:
+        super().__init__(f"Could not parse explorer response: {response}")
+        self.response = response

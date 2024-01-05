@@ -26,10 +26,10 @@ plugins:
         records_path: $.*.*
         primary_keys: [id]
 
-  - name: tap-beefy-databarn
+  - name: tap-block-explorer-contract-creation-infos
     namespace: tap_beefy_databarn
     pip_url: -e extract/tap-beefy-databarn
-    executable: tap-beefy-databarn
+    executable: tap-block-explorer-contract-creation-infos
     capabilities:
     - state
     config:

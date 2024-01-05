@@ -1,0 +1,53 @@
+{
+  "folders": [
+    {
+      "path": "."
+    },
+    {
+      "path": "extract/tap-beefy-databarn",
+      "name": "tap-beefy-databarn"
+    },
+    {
+      "path": "transform",
+      "name": "dbt-transform"
+    }
+  ],
+  "settings": {
+    "[python]": {
+      "editor.formatOnSave": true,
+      "editor.defaultFormatter": "charliermarsh.ruff"
+    },
+    "files.exclude": {
+      "**/*.egg-info": true,
+      "**/__pycache__": true
+    },
+    "python.testing.unittestEnabled": true,
+    "python.testing.pytestEnabled": true,
+    "sqlfluff.dialect": "postgres",
+    "sqlfluff.env.useDotEnvFile": false,
+    "sqlfluff.ignoreLocalConfig": false,
+    "sqlfluff.ignoreParsing": false,
+    "sqlfluff.suppressNotifications": false,
+    "sqlfluff.linter.arguments": [],
+    "sqlfluff.linter.run": "onType",
+    "sqlfluff.format.arguments": ["--FIX-EVEN-UNPARSABLE"],
+    "sqlfluff.format.enabled": true,
+    "dbt.dbtPythonPathOverride": "${workspaceFolder}/.meltano/utilities/dbt-postgres/venv/bin/python"
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-python.python",
+      "ms-python.vscode-pylance",
+      "ms-python.mypy-type-checker",
+      "charliermarsh.ruff",
+      "innoverio.vscode-dbt-power-user",
+      "bastienboutonnet.vscode-dbt",
+      "mtxr.sqltools",
+      "mtxr.sqltools-driver-pg",
+      "Evidence.evidence-vscode",
+      "ms-toolsai.jupyter",
+      "z3z1ma.meltano-power-user",
+      "dorzey.vscode-sqlfluff"
+    ]
+  }
+}
