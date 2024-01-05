@@ -16,10 +16,10 @@ case $1 in
         docker compose -p databarn-dev -f infra/docker-compose.dev.yml up -d
         ;;
     stop)
-        docker compose -p databarn-dev -f infra/docker-compose.dev.yml logs -f
+        docker compose -p databarn-dev -f infra/docker-compose.dev.yml down
         ;;
     logs)
-        docker compose -p databarn-dev -f infra/docker-compose.dev.yml down
+        docker compose -p databarn-dev -f infra/docker-compose.dev.yml logs -f
         ;;
     *)
         usage

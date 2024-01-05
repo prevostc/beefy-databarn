@@ -16,7 +16,6 @@ services:
             dockerfile: Dockerfile
         volumes:
             - db_data:/pgdata
-            - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
         # configure the database
         #command: postgres -c max_locks_per_transaction=600
         command: postgres -c logging_collector=off -c log_min_duration_statement=1s -c log_statement=none -c max_locks_per_transaction=500 -c shared_preload_libraries='pg_stat_statements'
@@ -41,31 +40,28 @@ services:
         networks:
             - backend
 
-    # db-migrate:
-    #     restart: "no"
-    #     image: postgres-databarn-warehouse-migrate:0.1.0
-    #     build:
-    #         context: ../
-    #         dockerfile: Dockerfile.jsapp
-    #         args:
-    #             APP_NAME: db-migrate
-    #     env_file: ../.env
-    #     volumes:
-    #         - ../apps/db-migrate/src/sql:/sql
-    #     environment:
-    #         TZ: "UTC"
-    #         LOG_LEVEL: "trace"
-    #         DB_HOST: postgres
-    #         DB_PORT: 5432
-    #         DB_NAME: beefy
-    #         DB_USER: beefy
-    #         DB_PASS: beefy
-    #         DB_MIGRATION_FILE_PATTERN: "/sql/*.sql"
-    #     networks:
-    #         - backend
-    #     depends_on:
-    #         postgres:
-    #             condition: service_healthy
+    db-migrate:
+        restart: "no"
+        image: postgres-databarn-warehouse:0.1.0
+        build:
+            context: ./db
+            dockerfile: Dockerfile
+        command: psql -f /init.sql
+        env_file: ../.env
+        volumes:
+            - ./db/init.sql:/init.sql
+        environment:
+            TZ: "UTC"
+            PGHOST: postgres
+            PGPORT: 5432
+            PGUSER: beefy
+            PGPASSWORD: beefy
+            PGDB: beefy
+        networks:
+            - backend
+        depends_on:
+            postgres:
+                condition: service_healthy
 
     grafana:
         image: grafana/grafana:10.2.2
