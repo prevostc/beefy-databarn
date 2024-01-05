@@ -25,6 +25,6 @@ select
     *,
     not eol
     and eol_date >= now()
-    and vault_id in (select vault_id from active_vaults) 
+    and vault_id in (select vault_id from active_vaults)
     and chain in (select chain from active_chains) as is_active
 from boosts

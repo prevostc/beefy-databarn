@@ -7,7 +7,9 @@ environments:
 - name: prod
 plugins:
   extractors:
-  - name: tap-rest-api-msdk
+  - name: tap-beefy-api
+    namespace: tap_beefy_api
+    executable: tap-rest-api-msdk
     variant: widen
     pip_url: tap-rest-api-msdk
     config:
@@ -25,6 +27,18 @@ plugins:
         flattening_enabled: false
         records_path: $.*.*
         primary_keys: [id]
+  
+  - name: tap-github-files
+    namespace: tap_github_files
+    executable: tap-rest-api-msdk
+    variant: widen
+    pip_url: tap-rest-api-msdk
+    config:
+      api_url: https://raw.githubusercontent.com/
+      streams:
+      - name: beefy_zap_v3
+        path: /beefyfinance/beefy-v2/main/src/config/zap/zaps.json
+        primary_keys: ["chainId", "router"]
 
   - name: tap-block-explorer-contract-creation-infos
     namespace: tap_beefy_databarn

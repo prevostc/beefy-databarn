@@ -39,18 +39,19 @@ meltano install
 
 ```bash
 # get vault and boost data updated
-meltano run tap-rest-api-msdk target-postgres
+meltano run tap-beefy-api target-postgres
+meltano run tap-github-files target-postgres
 
 # run taps once to initialize the schemas
 # this should fail on first run because their input tables do not exist yet
-meltano run tap-beefy-databarn target-postgres
+meltano run tap-block-explorer-contract-creation-infos target-postgres
 
 # run dbt to create input tables
 meltano invoke dbt-postgres:run
 meltano invoke dbt-postgres:test
 
 # actually fetch the creation dates
-meltano run tap-beefy-databarn target-postgres
+meltano run tap-block-explorer-contract-creation-infos target-postgres
 ```
 
 ## Test

@@ -6,7 +6,7 @@
 
 with base as (
     select *
-    from {{ source('tap_rest_api_msdk', 'beefy_boosts') }}
+    from {{ source('tap_beefy_api', 'beefy_boosts') }}
 )
 
 select

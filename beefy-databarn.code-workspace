@@ -32,7 +32,8 @@
     "sqlfluff.linter.run": "onType",
     "sqlfluff.format.arguments": ["--FIX-EVEN-UNPARSABLE"],
     "sqlfluff.format.enabled": true,
-    "dbt.dbtPythonPathOverride": "${workspaceFolder}/.meltano/utilities/dbt-postgres/venv/bin/python"
+    "sqlfluff.executablePath": "${workspaceFolder}/../../.meltano/utilities/sqlfluff/venv/bin/sqlfluff",
+    "dbt.dbtPythonPathOverride": "${workspaceFolder}/../../.meltano/utilities/dbt-postgres/venv/bin/python"
   },
   "extensions": {
     "recommendations": [

@@ -1,4 +1,4 @@
-name: beefy-databarn
+name: beefy_databarn
 version: '1.0'
 profile: meltano
 config-version: 2

@@ -20,6 +20,13 @@ boosts as (
 
 ),
 
+zaps as (
+
+    select *
+    from {{ ref('stg_zaps' ) }}
+
+),
+
 active_chains as (
     select chain
     from {{ ref('stg_chains') }}
@@ -51,6 +58,14 @@ all_contracts as (
         contract_address,
         is_active
     from boosts
+
+    union all
+
+    select
+        chain,
+        router_contract_address,
+        true as is_active
+    from zaps
 
 ),
 
