@@ -5,7 +5,10 @@ description = "Archive, index and serve beefy finance data"
 readme = "README.md"
 requires-python = ">=3.11"
 dependencies = [
-    "meltano==3.2.0","psycopg==3.1.16","requests==2.31.0"
+    "meltano==3.2.0",
+    "psycopg==3.1.16",
+    "requests==2.31.0",
+    "psycopg2-binary==2.9.9", # used as the state backend of meltano
 ]
 
 [project.optional-dependencies]
