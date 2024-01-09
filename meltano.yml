@@ -50,6 +50,15 @@ plugins:
     config:
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
 
+  - name: tap-squid-contract-events
+    namespace: tap_beefy_databarn
+    pip_url: -e extract/tap-beefy-databarn
+    executable: tap-squid-contract-events
+    capabilities:
+    - state
+    config:
+      postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
+
   loaders:
   - name: target-jsonl
     variant: andyh1203

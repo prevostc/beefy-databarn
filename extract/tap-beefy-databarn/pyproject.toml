@@ -17,6 +17,7 @@ fs-s3fs = { version = "~=1.1.1", optional = true }
 psycopg = "^3.1.16"
 requests = "^2.31.0"
 types-python-dateutil = "2.8.19.14"
+pydantic = "^2.5.3"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0"
@@ -35,5 +36,5 @@ build-backend = "poetry.core.masonry.api"
 
 [tool.poetry.scripts]
 # CLI declaration
-tap-beefy-databarn = 'tap_beefy_databarn.tap:TapBeefyDatabarn.cli'
 tap-block-explorer-contract-creation-infos = 'tap_beefy_databarn.tap:TapBlockExplorerContractCreationInfos.cli'
+tap-squid-contract-events = 'tap_beefy_databarn.tap:TapSquidContractEvents.cli'
