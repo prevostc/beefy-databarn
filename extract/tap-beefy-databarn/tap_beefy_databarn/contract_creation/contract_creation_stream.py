@@ -2,23 +2,19 @@
 
 from __future__ import annotations
 
-import json
 import typing as t
-from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
-from pathlib import Path
 
 import psycopg
 import requests
 from dateutil import parser
 from psycopg.rows import class_row
-from singer_sdk.streams import Stream
+from pydantic.dataclasses import dataclass
 
+from tap_beefy_databarn.common.chains import ChainType
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
+from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
-
-if t.TYPE_CHECKING:
-    from tap_beefy_databarn.common.chains import ChainType
 
 
 @dataclass
@@ -35,22 +31,18 @@ class ContractCreationInfo:
     block_datetime: datetime
 
 
-class ContractCreationDateStream(Stream):
+class ContractCreationDateStream(PydanticDataclassStream):
     """Fetches the contract creation date for a given contract address."""
 
+    record_dataclass = ContractCreationInfo
     name = "contract_creation_date"
     primary_keys: t.ClassVar[list[str]] = ["chain", "contract_address"]
     replication_key = None
-    schema_filepath = Path(__file__).parent / "./contract_creation_date.json"
-
-    @property
-    def schema(self) -> dict:
-        return json.loads(Path(self.schema_filepath).read_text())
 
     def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:  # noqa: ARG002
         self.logger.info("Fetching contract creation date: %s", self.schema)
         for infos in self._get_contract_creation_info():
-            yield asdict(infos)
+            yield self._pydantic_dataclass_to_dict(infos)
 
     def _get_contract_creation_info(self) -> t.Iterable[ContractCreationInfo]:
         """Get the contract creation infos from any explorer"""

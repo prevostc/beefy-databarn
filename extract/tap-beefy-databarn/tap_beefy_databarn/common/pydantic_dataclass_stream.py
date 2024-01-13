@@ -7,6 +7,7 @@ import singer_sdk._singerlib as singer
 from pydantic import TypeAdapter
 from singer_sdk import Tap
 from singer_sdk.streams import Stream
+from pydantic import RootModel
 
 
 class PydanticDataclassStream(Stream):
@@ -19,6 +20,13 @@ class PydanticDataclassStream(Stream):
             msg = "schema must be None"
             raise Exception(msg)
 
+        if self.record_dataclass is None:
+            msg = "record_dataclass must be set"
+            raise Exception(msg)
+
         schema = TypeAdapter(self.record_dataclass).json_schema()
 
         super().__init__(tap, schema, name)
+
+    def _pydantic_dataclass_to_dict(self, obj: t.Any) -> dict[str, t.Any]:
+        return RootModel[self.record_dataclass](obj).model_dump()

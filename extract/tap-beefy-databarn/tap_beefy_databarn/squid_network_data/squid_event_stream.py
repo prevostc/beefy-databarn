@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-import typing as t
 import datetime
+import typing as t
+
 import psycopg
 from psycopg.rows import class_row
 from pydantic.dataclasses import dataclass
-from pydantic import RootModel
 
 from tap_beefy_databarn.common.chains import ChainType, all_chains
 from tap_beefy_databarn.common.events import AnyEvent
@@ -67,7 +67,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
 
         for chain, contracts in by_chain.items():
             for event in self._get_records_for_chain(chain, contracts):
-                yield RootModel[SquidEventStreamRecord](event).model_dump()
+                yield self._pydantic_dataclass_to_dict(event)
 
     def _get_watch_list(self) -> t.Iterable[ContractEventWatch]:
         """Get the list of contracts to watch for events."""
