@@ -2,20 +2,16 @@
 
 from __future__ import annotations
 
-import json
 import typing as t
-from dataclasses import dataclass
-from pathlib import Path
-
+import datetime
 import psycopg
 from psycopg.rows import class_row
-from singer_sdk.streams import Stream
-import singer_sdk._singerlib as singer
+from pydantic.dataclasses import dataclass
+from pydantic import RootModel
 
-from tap_beefy_databarn.common.chains import all_chains
-
-if t.TYPE_CHECKING:
-    from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.common.chains import ChainType, all_chains
+from tap_beefy_databarn.common.events import AnyEvent
+from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
 
 EventType = t.Literal[
     "IERC20:Transfer",
@@ -28,62 +24,50 @@ class ContractEventWatch:
     chain: ChainType
     contract_address: str
     events: list[EventType]
+    creation_block_number: int
+    creation_block_datetime: datetime.datetime
 
 
 @dataclass
 class SquidImportState:
     chain: ChainType
-    query_height: int
-    contract_addresses: set[str]
+    last_seen_height: int
+    watched_contract: list[ContractEventWatch]
 
 
-class SquidContractEventsStream(Stream):
+@dataclass
+class SquidEventStreamRecord:
+    unique_key: str
+    chain: ChainType
+    last_seen_height: int
+    # watched_contract: list[ContractEventWatch]
+    event: AnyEvent | None  # None when we just want to update the last_seen_height
+
+
+class SquidContractEventsStream(PydanticDataclassStream):
     """Fetches the contract creation date for a given contract address."""
 
-    name = "contract_event_data"
-    primary_keys: t.ClassVar[list[str]] = ["chain", "contract_address", "transaction_hash", "block_number", "log_index"]
-    schema_filepath = Path(__file__).parent / "./contract_event_data.json"
-    replication_key = "query_height"
+    name = "squid_event_stream"
+    record_dataclass = SquidEventStreamRecord
+    replication_key = "last_seen_height"
+    primary_keys: t.ClassVar[list[str]] = ["unique_key"]
     is_sorted = False
 
     @property
-    def schema(self) -> dict:
-        return json.loads(Path(self.schema_filepath).read_text())
-
-    @property
     def partitions(self) -> list[dict] | None:
-        return [{"chain": c, "height": 0} for c in all_chains]
-
-    def _generate_schema_messages(
-        self,
-    ) -> t.Generator[singer.SchemaMessage, None, None]:
-        """Generate schema messages from stream maps.
-
-        Yields:
-            Schema message objects.
-        """
-        bookmark_keys = [self.replication_key] if self.replication_key else None
-        for stream_map in self.stream_maps:
-            if isinstance(stream_map, RemoveRecordTransform):
-                # Don't emit schema if the stream's records are all ignored.
-                continue
-
-            yield singer.SchemaMessage(
-                stream_map.stream_alias,
-                stream_map.transformed_schema,
-                stream_map.transformed_key_properties,
-                bookmark_keys,
-            )
+        # return [{"chain": c, "height": 0} for c in all_chains]
+        return [{"chain": c, "height": 0} for c in all_chains[0:1]]
 
     def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:  # noqa: ARG002
-        self.logger.info("Fetching contract creation date: %s", self.schema)
+        self.logger.info("Fetching squid events")
 
         by_chain: dict[ChainType, list[ContractEventWatch]] = {}
-        for contract in self._get_contract_list():
+        for contract in self._get_watch_list():
             by_chain.setdefault(contract.chain, []).append(contract)
 
         for chain, contracts in by_chain.items():
-            yield from self._get_records_for_chain(chain, contracts)
+            for event in self._get_records_for_chain(chain, contracts):
+                yield RootModel[SquidEventStreamRecord](event).model_dump()
 
     def _get_watch_list(self) -> t.Iterable[ContractEventWatch]:
         """Get the list of contracts to watch for events."""
@@ -94,11 +78,21 @@ class SquidContractEventsStream(Stream):
                 SELECT
                     chain,
                     contract_address,
-                    events
+                    events,
+                    creation_block_number,
+                    creation_block_datetime
                 FROM analytics.event_indexer_watchlist
             """,
             )
             return cur.fetchall()
+
+    def _get_records_for_chain(self, chain: ChainType, contracts: list[ContractEventWatch]):
+        """Get the records for a given chain."""
+        block_number = 12
+        log_index = 0
+        unique_key = f"{chain}-{block_number}-{log_index}"
+        yield SquidEventStreamRecord(unique_key=unique_key, chain=chain, last_seen_height=0, watched_contract=contracts, event=None)
+        yield SquidEventStreamRecord(unique_key=unique_key, chain=chain, last_seen_height=0, watched_contract=contracts, event=None)
 
     # def _get_records_for_chain(self, contracts: list[ContractEventWatch]):
     #     assert 0 <= first_block <= last_block

@@ -20,15 +20,18 @@ plugins:
         path: /vaults
         primary_keys: [id]
         num_inference_records: 5000
+        soft_delete: True
       - name: beefy_boosts
         path: /boosts
         primary_keys: [id]
+        soft_delete: True
       - name: beefy_tokens
         path: /tokens
         flattening_enabled: false
         records_path: $.*.*
         primary_keys: [id]
-  
+        soft_delete: True
+
   - name: tap-github-files
     namespace: tap_github_files
     executable: tap-rest-api-msdk
@@ -40,6 +43,7 @@ plugins:
       - name: beefy_zap_v3
         path: /beefyfinance/beefy-v2/main/src/config/zap/zaps.json
         primary_keys: ["chainId", "router"]
+        soft_delete: True
 
   - name: tap-block-explorer-contract-creation-infos
     namespace: tap_beefy_databarn
@@ -47,6 +51,10 @@ plugins:
     executable: tap-block-explorer-contract-creation-infos
     capabilities:
     - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
     config:
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
 
@@ -56,8 +64,48 @@ plugins:
     executable: tap-squid-contract-events
     capabilities:
     - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
     config:
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
+      stream_maps:
+        squid_event_stream: 
+          __alias__: all_events
+        IERC20_Transfers:
+          __source__: all_events
+          __filter__: event_type == "IERC20:Transfer"
+          # event fields
+          chain: chain
+          contract_address: contract_address
+          transaction_hash: transaction_hash
+          block_number: block_number
+          log_index: log_index
+          # erc20_transfer fields
+          from_address: from_address
+          to_address: to_address
+          amount: amount
+          # exclude anything not declared
+          __else__: __NULL__
+        BeefyZapRouter_FulfilledOrder:
+          __source__: all_events
+          __filter__: event_type == "BeefyZapRouter:FulfilledOrder"
+          # event fields
+          chain: chain
+          contract_address: contract_address
+          transaction_hash: transaction_hash
+          block_number: block_number
+          log_index: log_index
+          # fulfilled_order fields
+          maker: maker
+          taker: taker
+          input_token: input_token
+          output_token: output_token
+          input_amount: input_amount
+          output_amount: output_amount
+          # exclude anything not declared
+          __else__: __NULL__
 
   loaders:
   - name: target-jsonl

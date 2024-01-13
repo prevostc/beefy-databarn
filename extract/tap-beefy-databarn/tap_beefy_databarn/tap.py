@@ -14,54 +14,28 @@ if TYPE_CHECKING:
     from singer_sdk.streams import Stream
 
 
+POSTGRESQL_CONFIG = th.Property(
+    "postgres_connection_string",
+    th.StringType,
+    required=True,
+    description="Postgres connection string",
+)
+
+
 class TapBlockExplorerContractCreationInfos(Tap):
-    """TapBlockExplorerContractCreationInfos tap class."""
-
     name = "tap-block-explorer-contract-creation-infos"
-
-    config_jsonschema = th.PropertiesList(
-        th.Property(
-            "postgres_connection_string",
-            th.StringType,
-            required=True,
-            description="Postgres connection string",
-        ),
-    ).to_dict()
+    config_jsonschema = th.PropertiesList(POSTGRESQL_CONFIG).to_dict()
 
     def discover_streams(self) -> list[Stream]:
-        """Return a list of discovered streams.
-
-        Returns:
-            A list of discovered streams.
-        """
-        return [
-            ContractCreationDateStream(self),
-        ]
+        return [ContractCreationDateStream(self)]
 
 
 class TapSquidContractEvents(Tap):
-    """TapSquidContractEvents tap class."""
-
     name = "tap-squid-contract-events"
-
-    config_jsonschema = th.PropertiesList(
-        th.Property(
-            "postgres_connection_string",
-            th.StringType,
-            required=True,
-            description="Postgres connection string",
-        ),
-    ).to_dict()
+    config_jsonschema = th.PropertiesList(POSTGRESQL_CONFIG).to_dict()
 
     def discover_streams(self) -> list[Stream]:
-        """Return a list of discovered streams.
-
-        Returns:
-            A list of discovered streams.
-        """
-        return [
-            SquidContractEventsStream(self),
-        ]
+        return [SquidContractEventsStream(self)]
 
 
 if __name__ == "__main__":

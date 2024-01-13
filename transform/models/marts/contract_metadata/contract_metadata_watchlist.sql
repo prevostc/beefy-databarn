@@ -86,8 +86,8 @@ contracts_to_import as (
 
 select
     chain,
-    {{ bytea_to_hex_text("contract_address") }} as contract_address,
+    {{ bytea_to_hex_text("i", "contract_address") }} as contract_address,
     is_active
-from contracts_to_import
+from contracts_to_import i
 -- ingesting active contracts first
 order by is_active::integer desc

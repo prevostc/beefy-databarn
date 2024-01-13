@@ -1,19 +1,22 @@
-from pydantic import TypeAdapter
+import datetime
+import typing as t
 from pydantic.dataclasses import dataclass
 
 from tap_beefy_databarn.common.chains import ChainType
 
 
 @dataclass
-class Event_IERC20_Transfer:  # noqa: N801
-    # event context
+class BlockchainEvent:
     chain: ChainType
     contract_address: str
     transaction_hash: str
     block_number: int
+    block_datetime: datetime.datetime
     log_index: int
 
-    # event data
+
+@dataclass
+class Event_IERC20_Transfer:  # noqa: N801
     from_address: str
     to_address: str
     amount: int
@@ -49,18 +52,19 @@ class Event_BeefyZapRouter_Order:  # noqa: N801
 
 @dataclass
 class Event_BeefyZapRouter_FulfilledOrder:  # noqa: N801
-    # event context
-    chain: ChainType
-    contract_address: str
-    transaction_hash: str
-    block_number: int
-    log_index: int
-
-    # event data
     order: Event_BeefyZapRouter_Order
     caller_address: str
     recipient_address: str
 
 
-def get_dataclass_json_schema(cls):  # noqa: ANN201, ANN001
-    return TypeAdapter(cls).json_schema()
+EventType = t.Literal[
+    "IERC20:Transfer",
+    "BeefyZapRouter:FulfilledOrder",
+]
+
+
+@dataclass
+class AnyEvent(BlockchainEvent):
+    event_type: EventType
+    erc20_transfer: Event_IERC20_Transfer | None = None
+    beefy_zap_router_fulfilled_order: Event_BeefyZapRouter_FulfilledOrder | None = None
