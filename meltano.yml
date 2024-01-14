@@ -68,14 +68,18 @@ plugins:
     - discover
     - about
     - stream-maps
+    - schema-flattening
     config:
+      flattening_enabled: false
+      flattening_max_depth: 5
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
       stream_maps:
         squid_event_stream: 
           __alias__: all_events
-        IERC20_Transfers:
-          __source__: all_events
-          __filter__: event_type == "IERC20:Transfer"
+        IERC20_Transfer:
+          __source__: squid_event_stream
+          __filter__: event is not None and event['event_type'] == "IERC20_Transfer"
+          unique_key: unique_key
           # event fields
           chain: chain
           contract_address: contract_address
@@ -89,9 +93,10 @@ plugins:
           # exclude anything not declared
           __else__: __NULL__
         BeefyZapRouter_FulfilledOrder:
-          __source__: all_events
-          __filter__: event_type == "BeefyZapRouter:FulfilledOrder"
+          __source__: squid_event_stream
+          __filter__: event is not None and event['event_type'] == "BeefyZapRouter_FulfilledOrder"
           # event fields
+          unique_key: unique_key
           chain: chain
           contract_address: contract_address
           transaction_hash: transaction_hash

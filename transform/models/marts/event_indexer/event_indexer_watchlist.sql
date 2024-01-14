@@ -32,7 +32,7 @@ alls_contracts as (
     select
         contract_address,
         chain,
-        '{"IERC20:Transfer"}'::text [] as events
+        '{"IERC20_Transfer"}'::text [] as events
     from vaults
     where is_active
 
@@ -41,7 +41,7 @@ alls_contracts as (
     select
         contract_address,
         chain,
-        '{"IERC20:Transfer"}'::text [] as events
+        '{"IERC20_Transfer"}'::text [] as events
     from boosts
     where is_active
 
@@ -50,7 +50,7 @@ alls_contracts as (
     select
         router_contract_address as contract_address,
         chain,
-        '{"BeefyZapRouter:FulfilledOrder"}'::text [] as events
+        '{"BeefyZapRouter_FulfilledOrder"}'::text [] as events
     from zaps
 )
 

@@ -14,8 +14,8 @@ from tap_beefy_databarn.common.events import AnyEvent
 from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
 
 EventType = t.Literal[
-    "IERC20:Transfer",
-    "BeefyZapRouter:FulfilledOrder",
+    "IERC20_Transfer",
+    "BeefyZapRouter_FulfilledOrder",
 ]
 
 
@@ -55,8 +55,8 @@ class SquidContractEventsStream(PydanticDataclassStream):
 
     @property
     def partitions(self) -> list[dict] | None:
-        # return [{"chain": c, "height": 0} for c in all_chains]
-        return [{"chain": c, "height": 0} for c in all_chains[0:1]]
+        # return [{"chain": c, "last_seen_height": 0} for c in all_chains]
+        return [{"chain": c, "last_seen_height": 0} for c in all_chains[0:1]]
 
     def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:  # noqa: ARG002
         self.logger.info("Fetching squid events")

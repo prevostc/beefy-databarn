@@ -58,8 +58,8 @@ class Event_BeefyZapRouter_FulfilledOrder:  # noqa: N801
 
 
 EventType = t.Literal[
-    "IERC20:Transfer",
-    "BeefyZapRouter:FulfilledOrder",
+    "IERC20_Transfer",
+    "BeefyZapRouter_FulfilledOrder",
 ]
 
 
