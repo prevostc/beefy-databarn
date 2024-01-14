@@ -8,42 +8,38 @@ import typing as t
 import psycopg
 import requests
 from psycopg.rows import class_row
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
 from tap_beefy_databarn.common.chains import ChainType, all_chains
 from tap_beefy_databarn.common.events import AnyEvent
 from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
 from tap_beefy_databarn.squid_network_data.squid_config import get_squid_archive_url
+from tap_beefy_databarn.squid_network_data.squid_models import SquidArchiveBlockResponse
 
 EventType = t.Literal[
     "IERC20_Transfer",
     "BeefyZapRouter_FulfilledOrder",
 ]
 
-
-@dataclass
-class ContractEventWatch:
+class ContractEventWatch(BaseModel):
     chain: ChainType
     contract_address: str
-    events: list[EventType]
+    events: t.Iterable[EventType]
     creation_block_number: int
     creation_block_datetime: datetime.datetime
 
 
-@dataclass
-class SquidContext:
+class SquidContext(BaseModel):
     chain: ChainType
 
 
-@dataclass
-class SquidImportState:
+class SquidImportState(BaseModel):
     chain: ChainType
     last_seen_height: int
-    watched_contract: list[ContractEventWatch]
+    watched_contract: t.Iterable[ContractEventWatch]
 
 
-@dataclass
-class SquidEventStreamRecord:
+class SquidEventStreamRecord(BaseModel):
     unique_key: str
     chain: ChainType
     last_seen_height: int
@@ -66,16 +62,16 @@ class SquidContractEventsStream(PydanticDataclassStream):
         return [{"chain": c} for c in all_chains]
 
     def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:
-        last_seen_heigth = self.get_starting_replication_key_value(context) or 0
-        context = SquidContext(**context)
+        last_seen_heigth = self.get_starting_replication_key_value(context or {}) or 0
+        squid_context = SquidContext(**t.cast(dict[t.Any, t.Any], context))
 
-        self.logger.info("Fetching squid events for chain %s from block %s", context.chain, last_seen_heigth)
+        self.logger.info("Fetching squid events for chain %s from block %s", squid_context.chain, last_seen_heigth)
 
-        contracts = self._get_watch_list(context)
+        contracts = self._get_watch_list(squid_context)
         if not contracts:
-            self.logger.info("No contracts to watch for chain %s", context.chain)
+            self.logger.info("No contracts to watch for chain %s", squid_context.chain)
             return
-        state = SquidImportState(chain=context.chain, last_seen_height=last_seen_heigth, watched_contract=contracts)
+        state = SquidImportState(chain=squid_context.chain, last_seen_height=last_seen_heigth, watched_contract=contracts)
 
         for event in self._get_records_for_chain(state):
             yield self._pydantic_dataclass_to_dict(event)
@@ -139,34 +135,6 @@ class SquidContractEventsStream(PydanticDataclassStream):
         last_block = archived_height
         self.logger.debug("Archived height for chain %s is %s", state.chain, archived_height)
 
-        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#logs
-        log_fields = [
-            "address",
-            "data",
-            "topics",
-            "transactionHash",
-        ]
-        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#block-headers
-        block_fields = [
-            "timestamp",
-            "gasUsed",
-        ]
-        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#transactions
-        transaction_fields = [
-            "gas",
-            "gasPrice",
-            "maxFeePerGas",
-            "maxPriorityFeePerGas",
-            "value",
-            "gasUsed",
-            "cumulativeGasUsed",
-            "effectiveGasPrice",
-            "contractAddress",
-            "type",
-            "status",
-            "sighash",
-        ]
-
         # TODO: derive this from the watched contract abi
         topics_map = {
             "IERC20_Transfer": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
@@ -178,7 +146,9 @@ class SquidContractEventsStream(PydanticDataclassStream):
         # https://docs.subsquid.io/subsquid-network/reference/evm-api/
         query = {
             "logs": [{"address": [c.contract_address for c in state.watched_contract], "topic0": event_topics, "transaction": True}],
-            "fields": {"block": {f: True for f in block_fields}, "log": {f: True for f in log_fields}, "transaction": {f: True for f in transaction_fields}},
+            "fields": SquidArchiveBlockResponse.get_archive_query_fields(),
+            "fromBlock": next_block,
+            "toBlock": last_block,
         }
 
         while next_block <= last_block:
@@ -199,5 +169,5 @@ class SquidContractEventsStream(PydanticDataclassStream):
                     block_number = 12
                     log_index = 0
                     unique_key = f"{state.chain}-{block_number}-{log_index}"
-                    yield SquidEventStreamRecord(unique_key=unique_key, chain=state.chain, last_seen_height=0, watched_contract=state.watched_contract, event=None)
+                    yield SquidEventStreamRecord(unique_key=unique_key, chain=state.chain, last_seen_height=0, event=None)
                     return

@@ -3,13 +3,13 @@
 from __future__ import annotations
 
 import typing as t
-from datetime import UTC, datetime
+from datetime import UTC, datetime # type: ignore
 
 import psycopg
 import requests
 from dateutil import parser
 from psycopg.rows import class_row
-from pydantic.dataclasses import dataclass
+from pydantic import BaseModel
 
 from tap_beefy_databarn.common.chains import ChainType
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
@@ -17,14 +17,12 @@ from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclas
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
 
 
-@dataclass
-class ContractWatch:
+class ContractWatch(BaseModel):
     chain: ChainType
     contract_address: str
 
 
-@dataclass
-class ContractCreationInfo:
+class ContractCreationInfo(BaseModel):
     chain: ChainType
     contract_address: str
     block_number: int

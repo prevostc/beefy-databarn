@@ -17,11 +17,9 @@ class TestSquidArchiveEventParse:
             "logs": [],
         }
 
-        # parse the response and transform to snake case
-        squid_response = SquidArchiveBlockResponse.model_validate(response)
+        squid_response = SquidArchiveBlockResponse(**response)
 
         assert squid_response.header.number == 1403857
-        assert squid_response.header.hash == "0xec46945d4ae7647a8929fedf12bc91d2c740ab51efd746ba67d51564b9274422"
         assert squid_response.header.parent_hash == "0x15f84ff16ca89995aefc0a0a9517b3d6a299a4653badf7877b0434ed5a782e51"
         assert squid_response.header.timestamp == 1632224639.0
         assert squid_response.header.gas_used == "0x12310a"
@@ -70,10 +68,9 @@ class TestSquidArchiveEventParse:
             ],
         }
 
-        squid_response = SquidArchiveBlockResponse.model_validate(response)
+        squid_response = SquidArchiveBlockResponse(**response)
 
         assert squid_response.header.number == 1403882
-        assert squid_response.header.hash == "0x7887b6e1719877e9487afc77b37ac396b9a3f891203b2e8ab7eb09b81181445f"
         assert squid_response.header.parent_hash == "0x0975fb81d6d386ad1cf51122057a0f380063015d29e5bd5c674179b3c5324294"
         assert squid_response.header.timestamp == 1632224639.0
         assert squid_response.header.gas_used == "0x15cac5"

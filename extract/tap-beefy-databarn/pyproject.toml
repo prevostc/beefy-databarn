@@ -15,7 +15,7 @@ python = ">=3.8,<4"
 singer-sdk = { version="~=0.34.1" }
 fs-s3fs = { version = "~=1.1.1", optional = true }
 psycopg = "^3.1.16"
-requests = "^2.31.0"
+requests = "^2.30.0"
 types-python-dateutil = "2.8.19.14"
 pydantic = "^2.5.3"
 portion = "^2.4.2"
@@ -24,12 +24,14 @@ jsonref = "^1.1.0"
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0"
 singer-sdk = { version="~=0.34.1", extras = ["testing"] }
+mypy = "1.8.0"
+types-requests = "2.30.0.0"
 
 [tool.poetry.extras]
 s3 = ["fs-s3fs"]
 
 [tool.mypy]
-python_version = "3.9"
+python_version = "3.11"
 warn_unused_configs = true
 
 [build-system]

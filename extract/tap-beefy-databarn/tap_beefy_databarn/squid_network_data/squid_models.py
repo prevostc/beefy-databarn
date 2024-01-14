@@ -1,48 +1,51 @@
-from pydantic import BaseModel, ConfigDict
+
+import datetime
+from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
-class BaseSquidModel(BaseModel):
-    model_config = ConfigDict(
-        alias_generator=to_camel,
-        populate_by_name=True,
-        from_attributes=True,
-        extra="ignore",
-        frozen=True,
-    )
 
-class SquidBlockHeader(BaseSquidModel):
+# https://docs.pydantic.dev/latest/api/config/
+_squid_model_config = ConfigDict(
+    extra = "ignore",
+    frozen = True,
+    populate_by_name = True,
+    validate_assignment = True,
+    arbitrary_types_allowed = False,
+    from_attributes = True,
+    loc_by_alias = True,
+    alias_generator = to_camel,
+    allow_inf_nan = False,
+    strict = True,
+)
+
+
+class SquidBlockHeader(BaseModel):
+    model_config = _squid_model_config
+
     number: int
     parent_hash: str
-    timestamp: float
+    timestamp: datetime.datetime
     gas_used: str
 
-    def query_block_fields() -> list[str]:
-        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#block-headers
-        return [
-            "timestamp",
-            "gasUsed",
-        ]
+    @field_validator("timestamp", mode="before")
+    def transform_datetime(cls, raw: str) -> tuple[int, int]:
+        x, y = raw.split("x")
+        return int(x), int(y)
 
 
-class SquidLog(BaseSquidModel):
+class SquidLog(BaseModel):
+    model_config = _squid_model_config
+
     log_index: int
     transaction_index: int
     address: str
     data: str
     topics: list[str]
     transaction_hash: str
-
-    def query_log_fields() -> list[str]:
-        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#logs
-        return [
-            "address",
-            "data",
-            "topics",
-            "transactionHash",
-        ]
-
-
-class SquidTransaction(BaseSquidModel):
+    
+class SquidTransaction(BaseModel):
+    model_config = _squid_model_config
+    
     transaction_index: int
     gas: str
     gas_price: str
@@ -56,9 +59,32 @@ class SquidTransaction(BaseSquidModel):
     status: int
     sighash: str
 
-    def query_transaction_fields() -> list[str]:
+
+
+class SquidArchiveBlockResponse(BaseModel):
+    model_config = _squid_model_config
+    
+    header: SquidBlockHeader
+    transactions: list[SquidTransaction]
+    logs: list[SquidLog]
+
+    @classmethod
+    def get_archive_query_fields(cls) -> dict[str, dict[str, bool]]:
+
+        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#logs
+        log_fields = [
+            "address",
+            "data",
+            "topics",
+            "transactionHash",
+        ]
+        # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#block-headers
+        block_fields = [
+            "timestamp",
+            "gasUsed",
+        ]
         # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#transactions
-        return [
+        transaction_fields = [
             "gas",
             "gasPrice",
             "maxFeePerGas",
@@ -73,8 +99,4 @@ class SquidTransaction(BaseSquidModel):
             "sighash",
         ]
 
-
-class SquidArchiveBlockResponse(BaseSquidModel):
-    header: SquidBlockHeader
-    transactions: list[SquidTransaction]
-    logs: list[SquidLog]
+        return {"block": {f: True for f in block_fields}, "log": {f: True for f in log_fields}, "transaction": {f: True for f in transaction_fields}}

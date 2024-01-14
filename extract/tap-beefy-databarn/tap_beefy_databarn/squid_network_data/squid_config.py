@@ -1,4 +1,5 @@
-from tap_beefy_databarn.common.chains import ChainType, all_chains
+from tap_beefy_databarn.common.chains import ChainType
+import typing as t
 
 
 # https://github.com/subsquid/archive-registry/blob/main/src/registry.ts
@@ -93,6 +94,9 @@ def get_squid_archive_url(chain: ChainType) -> str | None:
 
     for archive in _squid_raw_archive_config["archives"]:
         if archive["network"] == network_name:
-            return archive["providers"][0]["dataSourceUrl"]
-
+            for provider in archive["providers"]:
+                provider = t.cast(dict[str, t.Any], provider)
+                if provider["provider"] == "subsquid" and provider["release"] == "ArrowSquid":
+                    return provider["dataSourceUrl"]
+            
     return None
