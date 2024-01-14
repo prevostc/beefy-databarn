@@ -1,5 +1,5 @@
 # test that we can indeed parse the archive event
-
+import datetime
 from tap_beefy_databarn.squid_network_data.squid_models import SquidArchiveBlockResponse
 
 
@@ -17,12 +17,12 @@ class TestSquidArchiveEventParse:
             "logs": [],
         }
 
-        squid_response = SquidArchiveBlockResponse(**response)
+        squid_response = SquidArchiveBlockResponse.model_validate(response)
 
         assert squid_response.header.number == 1403857
         assert squid_response.header.parent_hash == "0x15f84ff16ca89995aefc0a0a9517b3d6a299a4653badf7877b0434ed5a782e51"
-        assert squid_response.header.timestamp == 1632224639.0
-        assert squid_response.header.gas_used == "0x12310a"
+        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 13, 43, 59)
+        assert squid_response.header.gas_used == 1192202
         assert squid_response.transactions == []
         assert squid_response.logs == []
 
@@ -68,24 +68,22 @@ class TestSquidArchiveEventParse:
             ],
         }
 
-        squid_response = SquidArchiveBlockResponse(**response)
+        squid_response = SquidArchiveBlockResponse.model_validate(response)
 
         assert squid_response.header.number == 1403882
         assert squid_response.header.parent_hash == "0x0975fb81d6d386ad1cf51122057a0f380063015d29e5bd5c674179b3c5324294"
-        assert squid_response.header.timestamp == 1632224639.0
-        assert squid_response.header.gas_used == "0x15cac5"
+        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 13, 43, 59)
+        assert squid_response.header.gas_used == 1428165
         assert squid_response.transactions[0].transaction_index == 0
-        assert squid_response.transactions[0].gas == "0x4c4b40"
-        assert squid_response.transactions[0].gas_price == "0x4fc4f95a"
+        assert squid_response.transactions[0].gas == 5000000
+        assert squid_response.transactions[0].gas_price == 1338308954
         assert squid_response.transactions[0].max_fee_per_gas is None
         assert squid_response.transactions[0].max_priority_fee_per_gas is None
-        assert squid_response.transactions[0].value == "0x0"
-        assert squid_response.transactions[0].gas_used == "0x1fae91"
-        assert squid_response.transactions[0].cumulative_gas_used == "0x15cac5"
-        assert squid_response.transactions[0].effective_gas_price == "0x27e27cad"
+        assert squid_response.transactions[0].value == 0
+        assert squid_response.transactions[0].gas_used == 2076305
+        assert squid_response.transactions[0].cumulative_gas_used == 1428165
+        assert squid_response.transactions[0].effective_gas_price == 669154477
         assert squid_response.transactions[0].contract_address is None
-        assert squid_response.transactions[0].status == 1
-        assert squid_response.transactions[0].sighash == "0xde5f6268"
         assert squid_response.logs[0].log_index == 5
         assert squid_response.logs[0].transaction_index == 0
         assert squid_response.logs[0].address == "0xec7c0205a6f426c2cb1667d783b5b4fd2f875434"

@@ -19,18 +19,33 @@ _squid_model_config = ConfigDict(
 )
 
 
+def transform_datetime(raw: float) -> datetime.datetime:
+    return datetime.datetime.fromtimestamp(raw) 
+
+def transform_hex_to_int(raw: str) -> int :
+    return int(raw, 16)
+
+def transform_maybe_hex_to_int(raw: str | None) -> int | None:
+    if raw is None:
+        return None
+    return int(raw, 16)
+
 class SquidBlockHeader(BaseModel):
     model_config = _squid_model_config
 
     number: int
     parent_hash: str
     timestamp: datetime.datetime
-    gas_used: str
+    gas_used: int
 
     @field_validator("timestamp", mode="before")
-    def transform_datetime(cls, raw: str) -> tuple[int, int]:
-        x, y = raw.split("x")
-        return int(x), int(y)
+    def transform_timestamp(cls, v: float) -> datetime.datetime:
+        return transform_datetime(v)
+    
+    @field_validator("gas_used", mode="before")
+    def transform_gas_used(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+
 
 
 class SquidLog(BaseModel):
@@ -47,18 +62,49 @@ class SquidTransaction(BaseModel):
     model_config = _squid_model_config
     
     transaction_index: int
-    gas: str
-    gas_price: str
-    max_fee_per_gas: str | None
-    max_priority_fee_per_gas: str | None
-    value: str
-    gas_used: str
-    cumulative_gas_used: str
-    effective_gas_price: str
+    gas: int
+    gas_price: int
+    max_fee_per_gas: int | None
+    max_priority_fee_per_gas: int | None
+    value: int
+    gas_used: int
+    cumulative_gas_used: int
+    effective_gas_price: int
     contract_address: str | None
-    status: int
-    sighash: str
 
+    @field_validator("gas", mode="before")
+    def transform_gas(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+    
+    @field_validator("gas_price", mode="before")
+    def transform_gas_price(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+    
+    @field_validator("max_fee_per_gas", mode="before")
+    def transform_max_fee_per_gas(cls, v: str | None) -> int | None:
+        return transform_maybe_hex_to_int(v)
+    
+    @field_validator("max_priority_fee_per_gas", mode="before")
+    def transform_max_priority_fee_per_gas(cls, v: str | None) -> int | None:
+        return transform_maybe_hex_to_int(v)
+    
+    @field_validator("value", mode="before")
+    def transform_value(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+    
+    @field_validator("gas_used", mode="before")
+    def transform_gas_used(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+    
+    @field_validator("cumulative_gas_used", mode="before")
+    def transform_cumulative_gas_used(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+    
+    @field_validator("effective_gas_price", mode="before")
+    def transform_effective_gas_price(cls, v: str) -> int:
+        return transform_hex_to_int(v)
+    
+    
 
 
 class SquidArchiveBlockResponse(BaseModel):
