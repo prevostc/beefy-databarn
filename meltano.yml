@@ -75,7 +75,9 @@ plugins:
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
       stream_maps:
         squid_event_stream: 
-          __alias__: all_events
+          # we don't want anything from the full stream
+          __alias__: all_contract_events
+          __filter__: None is not None
         IERC20_Transfer:
           __source__: squid_event_stream
           __filter__: event is not None and event['event_type'] == "IERC20_Transfer"

@@ -4,10 +4,10 @@ import typing as t
 from os import PathLike
 
 import singer_sdk._singerlib as singer
-from pydantic import TypeAdapter
+from pydantic import RootModel, TypeAdapter
 from singer_sdk import Tap
 from singer_sdk.streams import Stream
-from pydantic import RootModel
+import jsonref
 
 
 class PydanticDataclassStream(Stream):
@@ -25,8 +25,11 @@ class PydanticDataclassStream(Stream):
             raise Exception(msg)
 
         schema = TypeAdapter(self.record_dataclass).json_schema()
+        schema = jsonref.replace_refs(schema, jsonschema=True)
 
         super().__init__(tap, schema, name)
+
+        self.logger.info("schema: %s", schema)
 
     def _pydantic_dataclass_to_dict(self, obj: t.Any) -> dict[str, t.Any]:
         return RootModel[self.record_dataclass](obj).model_dump()

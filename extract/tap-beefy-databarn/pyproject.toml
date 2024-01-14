@@ -19,6 +19,7 @@ requests = "^2.31.0"
 types-python-dateutil = "2.8.19.14"
 pydantic = "^2.5.3"
 portion = "^2.4.2"
+jsonref = "^1.1.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0"

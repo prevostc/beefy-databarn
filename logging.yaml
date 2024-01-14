@@ -16,7 +16,7 @@ handlers:
     stream: "ext://sys.stderr"
   file:
     class: logging.FileHandler
-    level: INFO
+    level: ERROR
     filename: meltano.log
     formatter: json
 
