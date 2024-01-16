@@ -1,5 +1,6 @@
 # test that we can indeed parse the archive event
 import datetime
+
 from tap_beefy_databarn.squid_network_data.squid_models import SquidArchiveBlockResponse
 
 
@@ -21,7 +22,7 @@ class TestSquidArchiveEventParse:
 
         assert squid_response.header.number == 1403857
         assert squid_response.header.parent_hash == "0x15f84ff16ca89995aefc0a0a9517b3d6a299a4653badf7877b0434ed5a782e51"
-        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 13, 43, 59)
+        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 11, 43, 59, tzinfo=datetime.timezone.utc)
         assert squid_response.header.gas_used == 1192202
         assert squid_response.transactions == []
         assert squid_response.logs == []
@@ -72,7 +73,7 @@ class TestSquidArchiveEventParse:
 
         assert squid_response.header.number == 1403882
         assert squid_response.header.parent_hash == "0x0975fb81d6d386ad1cf51122057a0f380063015d29e5bd5c674179b3c5324294"
-        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 13, 43, 59)
+        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 11, 43, 59, tzinfo=datetime.timezone.utc)
         assert squid_response.header.gas_used == 1428165
         assert squid_response.transactions[0].transaction_index == 0
         assert squid_response.transactions[0].gas == 5000000

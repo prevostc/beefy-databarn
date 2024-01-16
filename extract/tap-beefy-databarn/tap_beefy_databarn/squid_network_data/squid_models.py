@@ -1,34 +1,36 @@
-
 import datetime
+
 from pydantic import BaseModel, ConfigDict, field_validator
 from pydantic.alias_generators import to_camel
 
-
 # https://docs.pydantic.dev/latest/api/config/
 _squid_model_config = ConfigDict(
-    extra = "ignore",
-    frozen = True,
-    populate_by_name = True,
-    validate_assignment = True,
-    arbitrary_types_allowed = False,
-    from_attributes = True,
-    loc_by_alias = True,
-    alias_generator = to_camel,
-    allow_inf_nan = False,
-    strict = True,
+    extra="ignore",
+    frozen=True,
+    populate_by_name=True,
+    validate_assignment=True,
+    arbitrary_types_allowed=False,
+    from_attributes=True,
+    loc_by_alias=True,
+    alias_generator=to_camel,
+    allow_inf_nan=False,
+    strict=True,
 )
 
 
 def transform_datetime(raw: float) -> datetime.datetime:
-    return datetime.datetime.fromtimestamp(raw) 
+    return datetime.datetime.fromtimestamp(raw, tz=datetime.timezone.utc)
 
-def transform_hex_to_int(raw: str) -> int :
+
+def transform_hex_to_int(raw: str) -> int:
     return int(raw, 16)
+
 
 def transform_maybe_hex_to_int(raw: str | None) -> int | None:
     if raw is None:
         return None
     return int(raw, 16)
+
 
 class SquidBlockHeader(BaseModel):
     model_config = _squid_model_config
@@ -41,11 +43,10 @@ class SquidBlockHeader(BaseModel):
     @field_validator("timestamp", mode="before")
     def transform_timestamp(cls, v: float) -> datetime.datetime:
         return transform_datetime(v)
-    
+
     @field_validator("gas_used", mode="before")
     def transform_gas_used(cls, v: str) -> int:
         return transform_hex_to_int(v)
-
 
 
 class SquidLog(BaseModel):
@@ -57,10 +58,11 @@ class SquidLog(BaseModel):
     data: str
     topics: list[str]
     transaction_hash: str
-    
+
+
 class SquidTransaction(BaseModel):
     model_config = _squid_model_config
-    
+
     transaction_index: int
     gas: int
     gas_price: int
@@ -75,48 +77,45 @@ class SquidTransaction(BaseModel):
     @field_validator("gas", mode="before")
     def transform_gas(cls, v: str) -> int:
         return transform_hex_to_int(v)
-    
+
     @field_validator("gas_price", mode="before")
     def transform_gas_price(cls, v: str) -> int:
         return transform_hex_to_int(v)
-    
+
     @field_validator("max_fee_per_gas", mode="before")
     def transform_max_fee_per_gas(cls, v: str | None) -> int | None:
         return transform_maybe_hex_to_int(v)
-    
+
     @field_validator("max_priority_fee_per_gas", mode="before")
     def transform_max_priority_fee_per_gas(cls, v: str | None) -> int | None:
         return transform_maybe_hex_to_int(v)
-    
+
     @field_validator("value", mode="before")
     def transform_value(cls, v: str) -> int:
         return transform_hex_to_int(v)
-    
+
     @field_validator("gas_used", mode="before")
     def transform_gas_used(cls, v: str) -> int:
         return transform_hex_to_int(v)
-    
+
     @field_validator("cumulative_gas_used", mode="before")
     def transform_cumulative_gas_used(cls, v: str) -> int:
         return transform_hex_to_int(v)
-    
+
     @field_validator("effective_gas_price", mode="before")
     def transform_effective_gas_price(cls, v: str) -> int:
         return transform_hex_to_int(v)
-    
-    
 
 
 class SquidArchiveBlockResponse(BaseModel):
     model_config = _squid_model_config
-    
+
     header: SquidBlockHeader
     transactions: list[SquidTransaction]
     logs: list[SquidLog]
 
     @classmethod
     def get_archive_query_fields(cls) -> dict[str, dict[str, bool]]:
-
         # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#logs
         log_fields = [
             "address",

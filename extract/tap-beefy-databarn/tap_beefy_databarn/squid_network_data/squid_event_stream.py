@@ -21,6 +21,7 @@ EventType = t.Literal[
     "BeefyZapRouter_FulfilledOrder",
 ]
 
+
 class ContractEventWatch(BaseModel):
     chain: ChainType
     contract_address: str
@@ -164,6 +165,8 @@ class SquidContractEventsStream(PydanticDataclassStream):
             next_block = last_processed_block + 1
             for block in blocks:
                 self.logger.info("Processing block %s", block)
+                squid_block_response = SquidArchiveBlockResponse.model_validate(block)
+                self.logger.debug("Got block %s", squid_block_response)
                 for tx in block["transactions"]:
                     self.logger.info("Processing tx %s", tx)
                     block_number = 12
