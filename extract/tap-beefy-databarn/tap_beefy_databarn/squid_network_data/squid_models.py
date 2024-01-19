@@ -1,6 +1,6 @@
 import datetime
 
-from pydantic import BaseModel, ConfigDict, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 from pydantic.alias_generators import to_camel
 
 # https://docs.pydantic.dev/latest/api/config/
@@ -35,6 +35,7 @@ def transform_maybe_hex_to_int(raw: str | None) -> int | None:
 class SquidBlockHeader(BaseModel):
     model_config = _squid_model_config
 
+    block_hash: str = Field(alias="hash")
     number: int
     parent_hash: str
     timestamp: datetime.datetime
@@ -110,7 +111,7 @@ class SquidTransaction(BaseModel):
 class SquidArchiveBlockResponse(BaseModel):
     model_config = _squid_model_config
 
-    header: SquidBlockHeader
+    block: SquidBlockHeader = Field(alias="header")
     transactions: list[SquidTransaction]
     logs: list[SquidLog]
 

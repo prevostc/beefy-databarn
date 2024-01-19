@@ -20,10 +20,11 @@ class TestSquidArchiveEventParse:
 
         squid_response = SquidArchiveBlockResponse.model_validate(response)
 
-        assert squid_response.header.number == 1403857
-        assert squid_response.header.parent_hash == "0x15f84ff16ca89995aefc0a0a9517b3d6a299a4653badf7877b0434ed5a782e51"
-        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 11, 43, 59, tzinfo=datetime.timezone.utc)
-        assert squid_response.header.gas_used == 1192202
+        assert squid_response.block.number == 1403857
+        assert squid_response.block.block_hash == "0xec46945d4ae7647a8929fedf12bc91d2c740ab51efd746ba67d51564b9274422"
+        assert squid_response.block.parent_hash == "0x15f84ff16ca89995aefc0a0a9517b3d6a299a4653badf7877b0434ed5a782e51"
+        assert squid_response.block.timestamp == datetime.datetime(2021, 9, 21, 11, 43, 59, tzinfo=datetime.timezone.utc)
+        assert squid_response.block.gas_used == 1192202
         assert squid_response.transactions == []
         assert squid_response.logs == []
 
@@ -71,10 +72,11 @@ class TestSquidArchiveEventParse:
 
         squid_response = SquidArchiveBlockResponse.model_validate(response)
 
-        assert squid_response.header.number == 1403882
-        assert squid_response.header.parent_hash == "0x0975fb81d6d386ad1cf51122057a0f380063015d29e5bd5c674179b3c5324294"
-        assert squid_response.header.timestamp == datetime.datetime(2021, 9, 21, 11, 43, 59, tzinfo=datetime.timezone.utc)
-        assert squid_response.header.gas_used == 1428165
+        assert squid_response.block.number == 1403882
+        assert squid_response.block.block_hash == "0x7887b6e1719877e9487afc77b37ac396b9a3f891203b2e8ab7eb09b81181445f"
+        assert squid_response.block.parent_hash == "0x0975fb81d6d386ad1cf51122057a0f380063015d29e5bd5c674179b3c5324294"
+        assert squid_response.block.timestamp == datetime.datetime(2021, 9, 21, 11, 43, 59, tzinfo=datetime.timezone.utc)
+        assert squid_response.block.gas_used == 1428165
         assert squid_response.transactions[0].transaction_index == 0
         assert squid_response.transactions[0].gas == 5000000
         assert squid_response.transactions[0].gas_price == 1338308954

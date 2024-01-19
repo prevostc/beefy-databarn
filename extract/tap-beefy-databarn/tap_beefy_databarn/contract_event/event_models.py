@@ -7,7 +7,7 @@ import datetime
 import typing as t
 
 from eth_pydantic_types import Address, HexBytes
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 from tap_beefy_databarn.common.chains import ChainType
 
@@ -20,23 +20,32 @@ class BlockchainEvent(BaseModel):
     block_datetime: datetime.datetime
     log_index: int
 
-
-class Event_IERC20_Transfer(BaseModel):  # noqa: N801
-    from_address: Address
-    to_address: Address
-    value: int
-
-
-class Event_BeefyZapRouter_FulfilledOrder(BaseModel):  # noqa: N801
-    # the order structs are indexed and we only get the caller and recipient addresses
-    caller_address: Address
-    recipient_address: Address
+    @property
+    def unique_key(self) -> str:
+        return f"{self.chain} - {self.block_number!s} - {self.log_index!s}"
 
 
 EventType = t.Literal[
     "IERC20_Transfer",
     "BeefyZapRouter_FulfilledOrder",
 ]
+
+
+class Event_IERC20_Transfer(BaseModel):  # noqa: N801
+    event_type: t.Literal["IERC20_Transfer"]
+
+    from_address: Address
+    to_address: Address
+    value: int
+
+
+class Event_BeefyZapRouter_FulfilledOrder(BaseModel):  # noqa: N801
+    event_type: t.Literal["BeefyZapRouter_FulfilledOrder"]
+
+    # the order structs are indexed and we only get the caller and recipient addresses
+    caller_address: Address
+    recipient_address: Address
+
 
 event_topic0_to_event_type: dict[str, EventType] = {
     "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef": "IERC20_Transfer",
@@ -46,6 +55,4 @@ event_event_type_to_topic0: dict[EventType, str] = {v: k for k, v in event_topic
 
 
 class AnyEvent(BlockchainEvent):
-    event_type: EventType
-    ierc20_transfer: Event_IERC20_Transfer | None = None
-    beefyzaprouter_fulfilledorder: Event_BeefyZapRouter_FulfilledOrder | None = None
+    data: Event_IERC20_Transfer | Event_BeefyZapRouter_FulfilledOrder = Field(..., discriminator="event_type")

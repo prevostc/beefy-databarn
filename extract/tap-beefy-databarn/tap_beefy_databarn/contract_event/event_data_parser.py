@@ -29,15 +29,16 @@ class BeefyEventParser:
         }
 
     def parse_any_event(self, chain: ChainType, log_receipt: LogReceipt, block_datetime: datetime.datetime) -> AnyEvent:
-        topic0 = next(iter(log_receipt["topics"]))
+        topics = list(log_receipt["topics"])
+        assert len(topics) > 0, "topics must not be empty"
+
+        topic0 = topics[0]
         assert topic0 is not None, "topics must not be empty"
 
         topic0_str = topic0.hex()
         assert topic0_str in self._topic0_to_contract_event, f"unknown topic0: {topic0_str}"
 
         (event_type, contract_event) = self._topic0_to_contract_event[topic0_str]
-        parsed_event = contract_event.process_log(log_receipt)
-
         any_event_data: dict[str, t.Any] = {
             "chain": chain,
             "contract_address": log_receipt["address"],
@@ -45,18 +46,21 @@ class BeefyEventParser:
             "block_number": log_receipt["blockNumber"],
             "block_datetime": block_datetime,
             "log_index": log_receipt["logIndex"],
-            "event_type": event_type,
-            "ierc20_transfer": None,
-            "beefyzaprouter_fulfilledorder": None,
+            "data": None,
         }
 
         if event_type == "IERC20_Transfer":
-            any_event_data["ierc20_transfer"] = {
+            parsed_event = contract_event.process_log(log_receipt)
+            any_event_data["data"] = {
+                "event_type": event_type,
                 "from_address": parsed_event["args"]["from"],
                 "to_address": parsed_event["args"]["to"],
                 "value": parsed_event["args"]["value"],
             }
         elif event_type == "BeefyZapRouter_FulfilledOrder":
-            any_event_data["beefyzaprouter_fulfilledorder"] = parsed_event["args"]
+            # contract_event.process_log fails to parse BeefyZapRouter_FulfilledOrder events
+            # probably due to the indexed order structs in the event data
+            assert len(topics) == 4, "BeefyZapRouter_FulfilledOrder event must have 4 topics"
+            any_event_data["data"] = {"event_type": event_type, "caller_address": topics[2], "recipient_address": topics[3]}
 
         return AnyEvent(**any_event_data)

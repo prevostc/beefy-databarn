@@ -3,15 +3,18 @@
 from __future__ import annotations
 
 import typing as t
-from datetime import datetime, timezone
+from datetime import datetime  # noqa: TCH003
 
 import psycopg
 import requests
+from eth_typing.evm import BlockNumber, ChecksumAddress, HexAddress, HexStr
 from psycopg.rows import class_row
 from pydantic import BaseModel
+from web3.types import HexBytes, LogReceipt
 
 from tap_beefy_databarn.common.chains import ChainType, all_chains
 from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
+from tap_beefy_databarn.contract_event.event_data_parser import BeefyEventParser
 from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 from tap_beefy_databarn.squid_network_data.squid_config import get_squid_archive_url
 from tap_beefy_databarn.squid_network_data.squid_models import SquidArchiveBlockResponse
@@ -52,6 +55,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
     is_sorted = False
     replication_method = "INCREMENTAL"
     replication_key = "last_seen_height"
+    event_parser = BeefyEventParser()
 
     @property
     def partitions(self) -> list[dict] | None:
@@ -91,6 +95,66 @@ class SquidContractEventsStream(PydanticDataclassStream):
             )
             return cur.fetchall()
 
+    def _get_records_for_chain(self, state: SquidImportState) -> t.Iterable[SquidEventStreamRecord]:
+        """Get the records for a given chain."""
+
+        # first, identify the first block to fetch
+        min_contract_creation_block = min([c.creation_block_number for c in state.watched_contract])
+        start_block = max(min_contract_creation_block, state.last_seen_height)
+
+        # get the archive node url
+        archive_url = get_squid_archive_url(state.chain)
+        if archive_url is None:
+            self.logger.info("No archive node url for chain %s", state.chain)
+            return
+        self.logger.debug("Archive url for chain %s is %s", state.chain, archive_url)
+
+        archived_height = int(self._get_url_as_text(f"{archive_url}/height"))
+        next_block = start_block
+        last_block = archived_height
+        self.logger.debug("Archived height for chain %s is %s", state.chain, archived_height)
+
+        event_types = list({e for c in state.watched_contract for e in c.events})
+        event_topics = [event_event_type_to_topic0[e] for e in event_types]
+
+        # https://docs.subsquid.io/subsquid-network/reference/evm-api/
+        query = {
+            "logs": [{"address": [c.contract_address for c in state.watched_contract], "topic0": event_topics, "transaction": True}],
+            "fields": SquidArchiveBlockResponse.get_archive_query_fields(),
+            "fromBlock": next_block,
+            "toBlock": last_block,
+        }
+
+        while next_block <= last_block:
+            worker_url = self._get_url_as_text(f"{archive_url}/{next_block}/worker")
+            self.logger.debug("Fetching events for chain %s from block %s to %s using worker %s", state.chain, next_block, last_block, worker_url)
+
+            query["fromBlock"] = next_block
+            query["toBlock"] = last_block
+
+            blocks = self._post_url_as_json(worker_url, query)
+
+            last_processed_block = blocks[-1]["header"]["number"]
+            next_block = last_processed_block + 1
+            for block in blocks:
+                self.logger.debug("Processing block %s", block)
+                squid_block_response = SquidArchiveBlockResponse.model_validate(block)
+                for log in squid_block_response.logs:
+                    self.logger.info("Processing log %s", log)
+                    log_receipt = LogReceipt(
+                        topics=[HexBytes(topic) for topic in log.topics],
+                        data=HexBytes(log.data),
+                        logIndex=log.log_index,
+                        blockHash=HexBytes(squid_block_response.block.block_hash),
+                        blockNumber=BlockNumber(squid_block_response.block.number),
+                        address=ChecksumAddress(HexAddress(HexStr(log.address))),
+                        transactionIndex=log.transaction_index,
+                        transactionHash=HexBytes(log.transaction_hash),
+                        removed=False,
+                    )
+                    parsed_event = self.event_parser.parse_any_event(state.chain, log_receipt, squid_block_response.block.timestamp)
+                    yield SquidEventStreamRecord(unique_key=parsed_event.unique_key, chain=state.chain, last_seen_height=0, event=parsed_event)
+
     def _get_url_as_text(self, url: str) -> str:
         """Fetch the url and return the text."""
         # TODO: add retry logic and extract in a common client class
@@ -112,67 +176,3 @@ class SquidContractEventsStream(PydanticDataclassStream):
             raise Exception(msg)
         self.logger.debug("Got json response")
         return res.json()
-
-    def _get_records_for_chain(self, state: SquidImportState) -> t.Iterable[SquidEventStreamRecord]:
-        """Get the records for a given chain."""
-
-        # first, identify the first block to fetch
-        min_contract_creation_block = min([c.creation_block_number for c in state.watched_contract])
-        start_block = max(min_contract_creation_block, state.last_seen_height)
-
-        state.chain = "fantom"  # TODO: REMOVE THIS
-
-        # get the archive node url
-        archive_url = get_squid_archive_url(state.chain)
-        if archive_url is None:
-            self.logger.info("No archive node url for chain %s", state.chain)
-            return
-        self.logger.info("Archive url for chain %s is %s", state.chain, archive_url)
-
-        archived_height = int(self._get_url_as_text(f"{archive_url}/height"))
-        next_block = start_block
-        last_block = archived_height
-        self.logger.info("Archived height for chain %s is %s", state.chain, archived_height)
-
-        # TODO: derive this from the watched contract abi
-        event_types = list({e for c in state.watched_contract for e in c.events})
-        event_topics = [event_event_type_to_topic0[e] for e in event_types]
-
-        # https://docs.subsquid.io/subsquid-network/reference/evm-api/
-        next_block = 72501997
-        last_block = 72501999
-        query = {
-            "logs": [{"address": [c.contract_address for c in state.watched_contract], "topic0": event_topics, "transaction": True}],
-            "fields": SquidArchiveBlockResponse.get_archive_query_fields(),
-            "fromBlock": next_block,
-            "toBlock": last_block,
-        }
-
-        query["logs"] = [{"address": [], "topic0": ["0x1ba5b6ed656994657175705961138c96bd8ec133c35817fa85903f450129e0b1"], "transaction": True}]
-
-        while next_block <= last_block:
-            worker_url = self._get_url_as_text(f"{archive_url}/{next_block}/worker")
-            self.logger.debug("Fetching events for chain %s from block %s to %s using worker %s", state.chain, next_block, last_block, worker_url)
-
-            query["fromBlock"] = next_block
-            query["toBlock"] = last_block
-
-            blocks = self._post_url_as_json(worker_url, query)
-
-            self.logger.info("Got %s blocks", len(blocks))
-            self.logger.info("Got blocks %s", blocks)
-
-            last_processed_block = blocks[-1]["header"]["number"]
-            next_block = last_processed_block + 1
-            for block in blocks:
-                self.logger.info("Processing block %s", block)
-                squid_block_response = SquidArchiveBlockResponse.model_validate(block)
-
-                self.logger.debug("Got block %s", squid_block_response)
-                for tx in block["transactions"]:
-                    self.logger.info("Processing tx %s", tx)
-                    block_number = 12
-                    log_index = 0
-                    unique_key = f"{state.chain}-{block_number}-{log_index}"
-                    yield SquidEventStreamRecord(unique_key=unique_key, chain=state.chain, last_seen_height=0, event=None)
-                    return

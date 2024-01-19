@@ -26,11 +26,11 @@ class TestBeefyEventParser:
         block_datetime = datetime.now(tz=UTC)
         event = self.parser.parse_any_event("bsc", log_receipt, block_datetime)
 
-        assert event.event_type == "IERC20_Transfer"
-        assert event.ierc20_transfer is not None
-        assert event.ierc20_transfer.value == 4993463171213016141
-        assert event.ierc20_transfer.from_address == "0x0000000000000000000000000000000000000000"
-        assert event.ierc20_transfer.to_address == "0x982F264ce97365864181df65dF4931C593A515ad"
+        assert event.data is not None
+        assert event.data.event_type == "IERC20_Transfer"
+        assert event.data.value == 4993463171213016141
+        assert event.data.from_address == "0x0000000000000000000000000000000000000000"
+        assert event.data.to_address == "0x982F264ce97365864181df65dF4931C593A515ad"
 
     def test_parse_beefyzaprouter_fulfilledorder_event(self) -> None:
         raw_data = {
@@ -49,9 +49,10 @@ class TestBeefyEventParser:
         block_datetime = datetime.now(tz=UTC)
         event = self.parser.parse_any_event("bsc", log_receipt, block_datetime)
 
-        assert event.event_type == "BeefyZapRouter_FulfilledOrder"
-        assert event.beefyzaprouter_fulfilledorder is not None
-        assert event.beefyzaprouter_fulfilledorder
+        assert event.data is not None
+        assert event.data.event_type == "BeefyZapRouter_FulfilledOrder"
+        assert event.data.caller_address == "0x3EDB7d5b494cCB9bb84D11CA25F320Af2bb15f40"
+        assert event.data.recipient_address == "0x3EDB7d5b494cCB9bb84D11CA25F320Af2bb15f40"
 
     def _log_data_to_log_receipt(self, raw_data: dict[str, t.Any]) -> LogReceipt:
         return LogReceipt(
