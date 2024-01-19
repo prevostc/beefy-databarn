@@ -41,11 +41,11 @@ class SquidBlockHeader(BaseModel):
     gas_used: int
 
     @field_validator("timestamp", mode="before")
-    def transform_timestamp(cls, v: float) -> datetime.datetime:
+    def transform_timestamp(cls, v: float) -> datetime.datetime:  # noqa: N805
         return transform_datetime(v)
 
     @field_validator("gas_used", mode="before")
-    def transform_gas_used(cls, v: str) -> int:
+    def transform_gas_used(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
 
@@ -75,35 +75,35 @@ class SquidTransaction(BaseModel):
     contract_address: str | None
 
     @field_validator("gas", mode="before")
-    def transform_gas(cls, v: str) -> int:
+    def transform_gas(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
     @field_validator("gas_price", mode="before")
-    def transform_gas_price(cls, v: str) -> int:
+    def transform_gas_price(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
     @field_validator("max_fee_per_gas", mode="before")
-    def transform_max_fee_per_gas(cls, v: str | None) -> int | None:
+    def transform_max_fee_per_gas(cls, v: str | None) -> int | None:  # noqa: N805
         return transform_maybe_hex_to_int(v)
 
     @field_validator("max_priority_fee_per_gas", mode="before")
-    def transform_max_priority_fee_per_gas(cls, v: str | None) -> int | None:
+    def transform_max_priority_fee_per_gas(cls, v: str | None) -> int | None:  # noqa: N805
         return transform_maybe_hex_to_int(v)
 
     @field_validator("value", mode="before")
-    def transform_value(cls, v: str) -> int:
+    def transform_value(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
     @field_validator("gas_used", mode="before")
-    def transform_gas_used(cls, v: str) -> int:
+    def transform_gas_used(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
     @field_validator("cumulative_gas_used", mode="before")
-    def transform_cumulative_gas_used(cls, v: str) -> int:
+    def transform_cumulative_gas_used(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
     @field_validator("effective_gas_price", mode="before")
-    def transform_effective_gas_price(cls, v: str) -> int:
+    def transform_effective_gas_price(cls, v: str) -> int:  # noqa: N805
         return transform_hex_to_int(v)
 
 
@@ -115,7 +115,7 @@ class SquidArchiveBlockResponse(BaseModel):
     logs: list[SquidLog]
 
     @classmethod
-    def get_archive_query_fields(cls) -> dict[str, dict[str, bool]]:
+    def get_archive_query_fields(cls) -> dict[str, dict[str, bool]]:  # noqa: ANN102
         # https://docs.subsquid.io/sdk/reference/processors/evm-batch/field-selection/#logs
         log_fields = [
             "address",

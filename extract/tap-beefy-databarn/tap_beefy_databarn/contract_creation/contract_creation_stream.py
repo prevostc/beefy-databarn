@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import typing as t
-from datetime import UTC, datetime # type: ignore
+from datetime import UTC, datetime  # type: ignore  # noqa: PGH003
 
 import psycopg
 import requests
@@ -11,10 +11,12 @@ from dateutil import parser
 from psycopg.rows import class_row
 from pydantic import BaseModel
 
-from tap_beefy_databarn.common.chains import ChainType
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
 from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
+
+if t.TYPE_CHECKING:
+    from tap_beefy_databarn.common.chains import ChainType
 
 
 class ContractWatch(BaseModel):

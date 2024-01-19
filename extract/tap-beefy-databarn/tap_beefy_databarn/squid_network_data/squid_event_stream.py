@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-import datetime
 import typing as t
+from datetime import datetime, timezone
 
 import psycopg
 import requests
@@ -11,15 +11,10 @@ from psycopg.rows import class_row
 from pydantic import BaseModel
 
 from tap_beefy_databarn.common.chains import ChainType, all_chains
-from tap_beefy_databarn.common.events import AnyEvent
 from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
+from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 from tap_beefy_databarn.squid_network_data.squid_config import get_squid_archive_url
 from tap_beefy_databarn.squid_network_data.squid_models import SquidArchiveBlockResponse
-
-EventType = t.Literal[
-    "IERC20_Transfer",
-    "BeefyZapRouter_FulfilledOrder",
-]
 
 
 class ContractEventWatch(BaseModel):
@@ -27,7 +22,7 @@ class ContractEventWatch(BaseModel):
     contract_address: str
     events: t.Iterable[EventType]
     creation_block_number: int
-    creation_block_datetime: datetime.datetime
+    creation_block_datetime: datetime
 
 
 class SquidContext(BaseModel):
@@ -44,7 +39,7 @@ class SquidEventStreamRecord(BaseModel):
     unique_key: str
     chain: ChainType
     last_seen_height: int
-    # watched_contract: list[ContractEventWatch]
+    # TODO: add the list of watched contracts to the state
     event: AnyEvent | None  # None when we just want to update the last_seen_height
 
 
@@ -125,32 +120,35 @@ class SquidContractEventsStream(PydanticDataclassStream):
         min_contract_creation_block = min([c.creation_block_number for c in state.watched_contract])
         start_block = max(min_contract_creation_block, state.last_seen_height)
 
+        state.chain = "fantom"  # TODO: REMOVE THIS
+
         # get the archive node url
         archive_url = get_squid_archive_url(state.chain)
         if archive_url is None:
             self.logger.info("No archive node url for chain %s", state.chain)
             return
+        self.logger.info("Archive url for chain %s is %s", state.chain, archive_url)
 
         archived_height = int(self._get_url_as_text(f"{archive_url}/height"))
         next_block = start_block
         last_block = archived_height
-        self.logger.debug("Archived height for chain %s is %s", state.chain, archived_height)
+        self.logger.info("Archived height for chain %s is %s", state.chain, archived_height)
 
         # TODO: derive this from the watched contract abi
-        topics_map = {
-            "IERC20_Transfer": "0xddf252ad1be2c89b69c2b068fc378daa952ba7f163c4a11628f55a4df523b3ef",
-            "BeefyZapRouter_FulfilledOrder": "0x1ba5b6ed656994657175705961138c96bd8ec133c35817fa85903f450129e0b1",
-        }
         event_types = list({e for c in state.watched_contract for e in c.events})
-        event_topics = [topics_map[e] for e in event_types]
+        event_topics = [event_event_type_to_topic0[e] for e in event_types]
 
         # https://docs.subsquid.io/subsquid-network/reference/evm-api/
+        next_block = 72501997
+        last_block = 72501999
         query = {
             "logs": [{"address": [c.contract_address for c in state.watched_contract], "topic0": event_topics, "transaction": True}],
             "fields": SquidArchiveBlockResponse.get_archive_query_fields(),
             "fromBlock": next_block,
             "toBlock": last_block,
         }
+
+        query["logs"] = [{"address": [], "topic0": ["0x1ba5b6ed656994657175705961138c96bd8ec133c35817fa85903f450129e0b1"], "transaction": True}]
 
         while next_block <= last_block:
             worker_url = self._get_url_as_text(f"{archive_url}/{next_block}/worker")
@@ -161,11 +159,15 @@ class SquidContractEventsStream(PydanticDataclassStream):
 
             blocks = self._post_url_as_json(worker_url, query)
 
+            self.logger.info("Got %s blocks", len(blocks))
+            self.logger.info("Got blocks %s", blocks)
+
             last_processed_block = blocks[-1]["header"]["number"]
             next_block = last_processed_block + 1
             for block in blocks:
                 self.logger.info("Processing block %s", block)
                 squid_block_response = SquidArchiveBlockResponse.model_validate(block)
+
                 self.logger.debug("Got block %s", squid_block_response)
                 for tx in block["transactions"]:
                     self.logger.info("Processing tx %s", tx)

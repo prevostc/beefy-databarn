@@ -11,7 +11,7 @@ keywords = [
 license = "Apache-2.0"
 
 [tool.poetry.dependencies]
-python = ">=3.8,<4"
+python = ">=3.9,<4"
 singer-sdk = { version="~=0.34.1" }
 fs-s3fs = { version = "~=1.1.1", optional = true }
 psycopg = "^3.1.16"
@@ -20,6 +20,8 @@ types-python-dateutil = "2.8.19.14"
 pydantic = "^2.5.3"
 portion = "^2.4.2"
 jsonref = "^1.1.0"
+eth-pydantic-types = "^0.1.0a5"
+web3 = "^6.14.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = ">=7.4.0"

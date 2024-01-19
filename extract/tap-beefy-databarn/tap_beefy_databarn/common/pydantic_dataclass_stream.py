@@ -1,13 +1,16 @@
 from __future__ import annotations
 
 import typing as t
-from os import PathLike
 
-import singer_sdk._singerlib as singer
-from pydantic import BaseModel
-from singer_sdk import Tap
+import jsonref  # type: ignore  # noqa: PGH003
 from singer_sdk.streams import Stream
-import jsonref # type: ignore
+
+if t.TYPE_CHECKING:
+    from os import PathLike
+
+    import singer_sdk._singerlib as singer
+    from pydantic import BaseModel
+    from singer_sdk import Tap
 
 
 class PydanticDataclassStream(Stream):
