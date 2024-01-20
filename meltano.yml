@@ -74,43 +74,38 @@ plugins:
       flattening_max_depth: 5
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
       stream_maps:
-        squid_event_stream: 
-          # we don't want anything from the full stream
-          __alias__: all_contract_events
-          __filter__: None is not None
+        __else__: __NULL__
         IERC20_Transfer:
           __source__: squid_event_stream
           __filter__: event["data"]["event_type"] == "IERC20_Transfer"
-          unique_key: unique_key
-          chain: chain
+          # key fields
+          unique_key: str(unique_key)
           # event fields
-          contract_address: event["contract_address"]
-          transaction_hash: event["transaction_hash"]
-          block_number: event["block_number"]
-          log_index: event["log_index"]
+          chain: str(event["chain"])
+          contract_address: str(event["contract_address"])
+          transaction_hash: str(event["transaction_hash"])
+          block_number: int(event["block_number"])
+          log_index: int(event["log_index"])
           # erc20_transfer fields
-          from_address: event["data"]["from_address"]
-          to_address: event["data"]["to_address"]
-          value: event["data"]["value"]
+          from_address: str(event["data"]["from_address"])
+          to_address: str(event["data"]["to_address"])
+          value: int(event["data"]["value"])
           # exclude anything not declared
           __else__: __NULL__
         BeefyZapRouter_FulfilledOrder:
           __source__: squid_event_stream
           __filter__: event["data"]["event_type"] == "BeefyZapRouter_FulfilledOrder"
+          # key fields
+          unique_key: str(unique_key)
           # event fields
-          unique_key: unique_key
-          chain: chain
-          contract_address: contract_address
-          transaction_hash: transaction_hash
-          block_number: block_number
-          log_index: log_index
+          chain: str(event["chain"])
+          contract_address: str(event["contract_address"])
+          transaction_hash: str(event["transaction_hash"])
+          block_number: int(event["block_number"])
+          log_index: int(event["log_index"])
           # fulfilled_order fields
-          maker: maker
-          taker: taker
-          input_token: input_token
-          output_token: output_token
-          input_amount: input_amount
-          output_amount: output_amount
+          caller_address: str(event["data"]["caller_address"])
+          recipient_address: str(event["data"]["recipient_address"])
           # exclude anything not declared
           __else__: __NULL__
 

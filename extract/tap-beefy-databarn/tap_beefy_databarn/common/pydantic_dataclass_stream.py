@@ -28,7 +28,10 @@ class PydanticDataclassStream(Stream):
             raise Exception(msg)
 
         schema = self.record_dataclass.model_json_schema()
-        schema = jsonref.replace_refs(schema, jsonschema=True)
+        schema = jsonref.replace_refs(schema, jsonschema=True, lazy_load=False)
+        schema = t.cast(dict[str, t.Any], schema)  # we can cast because lazy_load=False
+        if "$defs" in schema:
+            del schema["$defs"]
 
         super().__init__(tap, schema, name)
 
