@@ -45,13 +45,15 @@ meltano run tap-github-files target-postgres
 # run taps once to initialize the schemas
 # this should fail on first run because their input tables do not exist yet
 meltano run tap-block-explorer-contract-creation-infos target-postgres
+meltano run tap-squid-contract-events target-postgres
 
 # run dbt to create input tables
 meltano invoke dbt-postgres:run
 meltano invoke dbt-postgres:test
 
-# actually fetch the creation dates
+# actually fetch the data
 meltano run tap-block-explorer-contract-creation-infos target-postgres
+meltano run tap-squid-contract-events target-postgres
 ```
 
 ## Test

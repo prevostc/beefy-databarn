@@ -35,7 +35,7 @@ class SquidContext(BaseModel):
 class SquidImportState(BaseModel):
     chain: ChainType
     last_seen_height: int
-    watched_contract: t.Iterable[ContractEventWatch]
+    watched_contracts: list[ContractEventWatch]
 
 
 class SquidEventStreamRecord(BaseModel):
@@ -65,13 +65,11 @@ class SquidContractEventsStream(PydanticDataclassStream):
         last_seen_heigth = self.get_starting_replication_key_value(context or {}) or 0
         squid_context = SquidContext(**t.cast(dict[t.Any, t.Any], context))
 
-        self.logger.info("Fetching squid events for chain %s from block %s", squid_context.chain, last_seen_heigth)
-
         contracts = self._get_watch_list(squid_context)
         if not contracts:
             self.logger.info("No contracts to watch for chain %s", squid_context.chain)
             return
-        state = SquidImportState(chain=squid_context.chain, last_seen_height=last_seen_heigth, watched_contract=contracts)
+        state = SquidImportState(chain=squid_context.chain, last_seen_height=last_seen_heigth, watched_contracts=list(contracts))
 
         for event in self._get_records_for_chain(state):
             yield self._pydantic_dataclass_to_dict(event)
@@ -97,10 +95,11 @@ class SquidContractEventsStream(PydanticDataclassStream):
 
     def _get_records_for_chain(self, state: SquidImportState) -> t.Iterable[SquidEventStreamRecord]:
         """Get the records for a given chain."""
-
         # first, identify the first block to fetch
-        min_contract_creation_block = min([c.creation_block_number for c in state.watched_contract])
+        min_contract_creation_block = min([c.creation_block_number for c in state.watched_contracts])
         start_block = max(min_contract_creation_block, state.last_seen_height)
+        assert start_block >= 0, f"start_block should be >= 0, got {start_block}"
+        self.logger.info("Fetching events for chain %s from block %s", state.chain, start_block)
 
         # get the archive node url
         archive_url = get_squid_archive_url(state.chain)
@@ -114,12 +113,19 @@ class SquidContractEventsStream(PydanticDataclassStream):
         last_block = archived_height
         self.logger.debug("Archived height for chain %s is %s", state.chain, archived_height)
 
-        event_types = list({e for c in state.watched_contract for e in c.events})
+        event_types = list({e for c in state.watched_contracts for e in c.events})
+        assert event_types, "event_types should not be empty"
+
         event_topics = [event_event_type_to_topic0[e] for e in event_types]
+        contract_addresses = [c.contract_address for c in state.watched_contracts]
+
+        assert next_block <= last_block, f"next_block should be <= last_block, got {next_block} and {last_block}"
+        assert len(event_topics) > 0, "event_topics should not be empty"
+        assert len(contract_addresses) > 0, "contract_addresses should not be empty"
 
         # https://docs.subsquid.io/subsquid-network/reference/evm-api/
         query = {
-            "logs": [{"address": [c.contract_address for c in state.watched_contract], "topic0": event_topics, "transaction": True}],
+            "logs": [{"address": contract_addresses, "topic0": event_topics, "transaction": True}],
             "fields": SquidArchiveBlockResponse.get_archive_query_fields(),
             "fromBlock": next_block,
             "toBlock": last_block,
@@ -133,6 +139,8 @@ class SquidContractEventsStream(PydanticDataclassStream):
             query["toBlock"] = last_block
 
             blocks = self._post_url_as_json(worker_url, query)
+
+            self.logger.debug("Got %s blocks", len(blocks))
 
             last_processed_block = blocks[-1]["header"]["number"]
             next_block = last_processed_block + 1
