@@ -16,7 +16,8 @@ test = [
     "pytest==7.4.4",
     "ruff==0.1.11",
     "mypy==1.8.0",
-    "types-requests==2.30.0.0"
+    "types-requests==2.30.0.0",
+    "types-python-dateutil==2.8.19.20240106",
 ]
 dev = ["pre-commit==3.6.0", "poetry==1.7.1"]
 

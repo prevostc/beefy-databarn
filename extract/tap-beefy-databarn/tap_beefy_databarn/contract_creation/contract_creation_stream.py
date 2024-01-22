@@ -10,11 +10,12 @@ import requests
 from dateutil import parser
 from psycopg.rows import class_row
 from pydantic import BaseModel
-
-from tap_beefy_databarn.common.chains import ChainType  # noqa: TCH001
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
-from tap_beefy_databarn.common.pydantic_dataclass_stream import PydanticDataclassStream
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
+from tap_beefy_databarn.singer.pydantic_dataclass_stream import PydanticDataclassStream
+
+if t.TYPE_CHECKING:
+    from tap_beefy_databarn.common.chains import ChainType
 
 
 class ContractWatch(BaseModel):
