@@ -139,7 +139,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
 
             blocks = self._post_url_as_json(worker_url, query)
 
-            self.logger.debug("Got %s blocks", len(blocks))
+            self.logger.info("Got %s blocks with %s logs", len(blocks), sum([len(b["logs"]) for b in blocks]))
 
             last_processed_block = blocks[-1]["header"]["number"]
             next_block = last_processed_block + 1
@@ -147,7 +147,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
                 self.logger.debug("Processing block %s", block)
                 squid_block_response = SquidArchiveBlockResponse.model_validate(block)
                 for log in squid_block_response.logs:
-                    self.logger.info("Processing log %s", log)
+                    self.logger.debug("Processing log %s", log)
                     log_receipt = LogReceipt(
                         topics=[HexBytes(topic) for topic in log.topics],
                         data=HexBytes(log.data),
@@ -160,6 +160,9 @@ class SquidContractEventsStream(PydanticDataclassStream):
                         removed=False,
                     )
                     parsed_event = self.event_parser.parse_any_event(state.chain, log_receipt, squid_block_response.block.timestamp)
+                    # set the last seen height to the block before the current one
+                    # so we can retry the whole block on the next iteration
+                    squid_block_response.block.number - 1
                     yield SquidEventStreamRecord(unique_key=parsed_event.unique_key, chain=state.chain, last_seen_height=0, event=parsed_event)
 
     def _get_url_as_text(self, url: str) -> str:

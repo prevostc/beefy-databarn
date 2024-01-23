@@ -33,7 +33,16 @@
     "sqlfluff.format.arguments": ["--FIX-EVEN-UNPARSABLE"],
     "sqlfluff.format.enabled": true,
     "sqlfluff.executablePath": "${workspaceFolder}/../../.meltano/utilities/sqlfluff/venv/bin/sqlfluff",
-    "dbt.dbtPythonPathOverride": "${workspaceFolder}/../../.meltano/utilities/dbt-postgres/venv/bin/python"
+    "dbt.dbtPythonPathOverride": "${workspaceFolder}/../../.meltano/utilities/dbt-postgres/venv/bin/python",
+    "sqltools.connections": [
+      {
+        "previewLimit": 50,
+        "server": "localhost",
+        "driver": "PostgreSQL",
+        "name": "Local beefy",
+        "connectString": "postgresql://beefy:beefy@localhost:5432/beefy"
+      }
+    ]
   },
   "extensions": {
     "recommendations": [

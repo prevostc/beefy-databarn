@@ -76,10 +76,6 @@ plugins:
       flattening_enabled: true
       flattening_max_depth: 5
       postgres_connection_string: postgresql://beefy:beefy@localhost:5432/beefy
-      stream_maps:
-        __else__: __NULL__
-        squid_contract_events_flattenned:
-          __source__: squid_contract_events
 
 
   mappers:
@@ -92,7 +88,7 @@ plugins:
         stream_maps:
           __else__: __NULL__
           IERC20_Transfer:
-            __source__: squid_contract_events_flattenned
+            __source__: squid_event_stream
             __filter__: event__data__event_type == "IERC20_Transfer"
             # key fields
             unique_key: unique_key
@@ -100,16 +96,16 @@ plugins:
             chain: event__chain
             contract_address: event__contract_address
             transaction_hash: event__transaction_hash
-            block_number: event__block_number
-            log_index: event__log_index
+            block_number: int(event__block_number)
+            log_index: int(event__log_index)
             # erc20_transfer fields
             from_address: event__data__from_address
             to_address: event__data__to_address
-            value: event__data__value
+            value: int(event__data__value)
             # exclude anything not declared
             __else__: __NULL__
           BeefyZapRouter_FulfilledOrder:
-            __source__: squid_contract_events_flattenned
+            __source__: squid_event_stream
             __filter__: event__data__event_type == "BeefyZapRouter_FulfilledOrder"
             # key fields
             unique_key: unique_key
@@ -117,8 +113,8 @@ plugins:
             chain: event__chain
             contract_address: event__contract_address
             transaction_hash: event__transaction_hash
-            block_number: event__block_number
-            log_index: event__log_index
+            block_number: int(event__block_number)
+            log_index: int(event__log_index)
             # fulfilled_order fields
             caller_address: event__data__caller_address
             recipient_address: event__data__recipient_address
