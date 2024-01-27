@@ -38,11 +38,28 @@ class SquidImportState(BaseModel):
 
 
 class SquidEventStreamRecord(BaseModel):
-    unique_key: str
     chain: ChainType
     last_seen_height: int
     # TODO: add the list of watched contracts to the state
-    event: AnyEvent | None  # None when we just want to update the last_seen_height
+    event: AnyEvent | None  # None when we just want to update the last_seen_height of the state
+
+    @property
+    def contract_address(self) -> str:
+        if self.event is None:
+            return ""
+        return self.event.contract_address
+
+    @property
+    def block_number(self) -> int:
+        if self.event is None:
+            return 0
+        return self.event.block_number
+
+    @property
+    def log_index(self) -> int:
+        if self.event is None:
+            return 0
+        return self.event.log_index
 
 
 class SquidContractEventsStream(PydanticDataclassStream):
@@ -50,7 +67,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
 
     name = "squid_event_stream"
     record_dataclass = SquidEventStreamRecord
-    primary_keys: t.ClassVar[list[str]] = ["unique_key"]
+    primary_keys: t.ClassVar[list[str]] = ["chain", "contract_address", "block_number", "log_index"]
     is_sorted = False
     replication_method = "INCREMENTAL"
     replication_key = "last_seen_height"
@@ -163,7 +180,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
                     # set the last seen height to the block before the current one
                     # so we can retry the whole block on the next iteration
                     squid_block_response.block.number - 1
-                    yield SquidEventStreamRecord(unique_key=parsed_event.unique_key, chain=state.chain, last_seen_height=0, event=parsed_event)
+                    yield SquidEventStreamRecord(chain=state.chain, last_seen_height=0, event=parsed_event)
 
     def _get_url_as_text(self, url: str) -> str:
         """Fetch the url and return the text."""

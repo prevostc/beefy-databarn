@@ -8,7 +8,6 @@ import typing as t
 
 from eth_pydantic_types import Address, HexBytes
 from pydantic import BaseModel, Field
-
 from tap_beefy_databarn.common.chains import ChainType
 
 
@@ -19,10 +18,6 @@ class BlockchainEvent(BaseModel):
     block_number: int
     block_datetime: datetime.datetime
     log_index: int
-
-    @property
-    def unique_key(self) -> str:
-        return f"{self.chain} - {self.block_number!s} - {self.log_index!s}"
 
 
 EventType = t.Literal[

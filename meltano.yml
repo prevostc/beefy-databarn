@@ -87,11 +87,9 @@ plugins:
       config:
         stream_maps:
           __else__: __NULL__
-          IERC20_Transfer:
+          event__ierc20__transfer:
             __source__: squid_event_stream
             __filter__: event__data__event_type == "IERC20_Transfer"
-            # key fields
-            unique_key: unique_key
             # event fields
             chain: event__chain
             contract_address: event__contract_address
@@ -104,11 +102,16 @@ plugins:
             value: int(event__data__value)
             # exclude anything not declared
             __else__: __NULL__
-          BeefyZapRouter_FulfilledOrder:
+            # and set the new key
+            __key_properties__:
+              - chain
+              - contract_address
+              - transaction_hash
+              - block_number
+              - log_index
+          event__beefy_zap_router__fulfilled_order:
             __source__: squid_event_stream
             __filter__: event__data__event_type == "BeefyZapRouter_FulfilledOrder"
-            # key fields
-            unique_key: unique_key
             # event fields
             chain: event__chain
             contract_address: event__contract_address
@@ -120,6 +123,13 @@ plugins:
             recipient_address: event__data__recipient_address
             # exclude anything not declared
             __else__: __NULL__
+            # and set the new key
+            __key_properties__:
+              - chain
+              - contract_address
+              - transaction_hash
+              - block_number
+              - log_index
 
 
   loaders:
