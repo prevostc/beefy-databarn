@@ -52,12 +52,11 @@
       "charliermarsh.ruff",
       "innoverio.vscode-dbt-power-user",
       "bastienboutonnet.vscode-dbt",
-      "mtxr.sqltools",
-      "mtxr.sqltools-driver-pg",
       "Evidence.evidence-vscode",
       "ms-toolsai.jupyter",
       "z3z1ma.meltano-power-user",
-      "dorzey.vscode-sqlfluff"
+      "dorzey.vscode-sqlfluff",
+      "cweijan.vscode-database-client2"
     ]
   }
 }
