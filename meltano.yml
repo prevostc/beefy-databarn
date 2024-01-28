@@ -142,7 +142,7 @@ plugins:
     config:
       user: beefy
       database: beefy
-      add_record_metadata: false
+      add_record_metadata: true
       host: localhost
       port: 5432
 

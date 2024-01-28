@@ -1,6 +1,6 @@
 import typing as t
 
-from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.common.chains import Chain
 
 # https://github.com/subsquid/archive-registry/blob/main/src/registry.ts
 # https://cdn.subsquid.io/archives/evm.json
@@ -55,38 +55,38 @@ _squid_raw_archive_config = {
     ],
 }
 
-# ChainType to squid network name
-_chain_map = {
-    "arbitrum": "arbitrum",
-    "aurora": None,
-    "avax": "avalanche",
-    "base": "base-mainnet",
-    "bsc": "binance",
-    "canto": None,
-    "celo": None,
-    "cronos": None,
-    "emerald": None,
-    "ethereum": "eth-mainnet",
-    "fantom": "fantom",
-    "fuse": None,
-    "gnosis": "gnosis-mainnet",
-    "one": None,
-    "heco": None,
-    "kava": None,
-    "linea": "linea-mainnet",
-    "metis": None,
-    "moonbeam": "moonbeam",
-    "moonriver": "moonriver",
-    "optimism": "optimism-mainnet",
-    "polygon": "polygon",
-    "rollux": None,
-    "scroll": None,
-    "zkevm": "polygon-zkevm",
-    "zksync": "zksync-mainnet",
+# Chain to squid network name
+_chain_map: dict[Chain, str | None] = {
+    Chain.ARBITRUM: "arbitrum",
+    Chain.AURORA: None,
+    Chain.AVAX: "avalanche",
+    Chain.BASE: "base-mainnet",
+    Chain.BSC: "binance",
+    Chain.CANTO: None,
+    Chain.CELO: None,
+    Chain.CRONOS: None,
+    Chain.EMERALD: None,
+    Chain.ETHEREUM: "eth-mainnet",
+    Chain.FANTOM: "fantom",
+    Chain.FUSE: None,
+    Chain.GNOSIS: "gnosis-mainnet",
+    Chain.HARMONY: None,
+    Chain.HECO: None,
+    Chain.KAVA: None,
+    Chain.LINEA: "linea-mainnet",
+    Chain.METIS: None,
+    Chain.MOONBEAM: "moonbeam",
+    Chain.MOONRIVER: "moonriver",
+    Chain.OPTIMISM: "optimism-mainnet",
+    Chain.POLYGON: "polygon",
+    Chain.ROLLUX: None,
+    Chain.SCROLL: None,
+    Chain.ZKEVM: "polygon-zkevm",
+    Chain.ZKSYNC: "zksync-mainnet",
 }
 
 
-def get_squid_archive_url(chain: ChainType) -> str | None:
+def get_squid_archive_url(chain: Chain) -> str | None:
     """Get the squid archive url for a given chain."""
     network_name = _chain_map[chain]
     if network_name is None:

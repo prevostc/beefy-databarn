@@ -24,7 +24,9 @@ POSTGRESQL_CONFIG = th.Property(
 
 class TapBlockExplorerContractCreationInfos(Tap):
     name = "tap-block-explorer-contract-creation-infos"
-    config_jsonschema = th.PropertiesList(POSTGRESQL_CONFIG).to_dict()
+    config_jsonschema = th.PropertiesList(
+        POSTGRESQL_CONFIG,
+    ).to_dict()
 
     def discover_streams(self) -> list[Stream]:
         return [ContractCreationDateStream(self)]

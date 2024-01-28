@@ -8,11 +8,11 @@ import typing as t
 
 from eth_pydantic_types import Address, HexBytes
 from pydantic import BaseModel, Field
-from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.common.chains import Chain
 
 
 class BlockchainEvent(BaseModel):
-    chain: ChainType
+    chain: Chain
     contract_address: Address
     transaction_hash: HexBytes
     block_number: int

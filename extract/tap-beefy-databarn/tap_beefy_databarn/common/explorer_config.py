@@ -1,42 +1,52 @@
-import typing as t
 from dataclasses import dataclass
+from enum import StrEnum
 
-from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.common.chains import Chain
 
+
+class ExplorerType(StrEnum):
+    ETHERSCAN = "etherscan"
+    CANTO = "canto"
+    BLOCKSCOUT = "blockscout"
+    ROUTESCAN = "routescan"
+    BLOCKSCOUT_TRX_LIST_API = "blockscout-trx-list-api"
+    BLOCKSCOUT_V5 = "blockscout-v5"
+    HARMONY = "harmony"
+    ZKSYNC = "zksync"
 
 @dataclass
 class ExplorerConfig:
-    explorer_type: t.Literal["etherscan", "canto", "blockscout", "routescan", "blockscout-trx-list-api", "blockscout-v5", "harmony", "zksync"]
+    explorer_type: ExplorerType
     url: str
     max_rps: float = 0.1  # 10s between requests
 
 
-EXPLORER_CONFIG: dict[ChainType, ExplorerConfig] = {
-    "arbitrum": ExplorerConfig(explorer_type="etherscan", url="https://api.arbiscan.io/api"),
-    "aurora": ExplorerConfig(explorer_type="blockscout-v5", url="https://old.explorer.aurora.dev/api"),
-    "avax": ExplorerConfig(explorer_type="routescan", url="https://api.routescan.io"),
-    "base": ExplorerConfig(explorer_type="etherscan", url="https://api.basescan.org/api"),
-    "bsc": ExplorerConfig(explorer_type="etherscan", url="https://api.bscscan.com/api"),
-    "canto": ExplorerConfig(explorer_type="blockscout-v5", url="https://explorer.plexnode.wtf/api"),
-    "celo": ExplorerConfig(explorer_type="blockscout", url="https://explorer.celo.org"),
-    "cronos": ExplorerConfig(explorer_type="etherscan", url="https://api.cronoscan.com/api"),
-    "emerald": ExplorerConfig(explorer_type="blockscout", url="https://explorer.emerald.oasis.dev/"),
-    "ethereum": ExplorerConfig(explorer_type="etherscan", url="https://api.etherscan.io/api"),
-    "fantom": ExplorerConfig(explorer_type="etherscan", url="https://api.ftmscan.com/api"),
-    "fuse": ExplorerConfig(explorer_type="blockscout-v5", url="https://explorer.fuse.io/api"),
-    "gnosis": ExplorerConfig(explorer_type="etherscan", url="https://api.gnosisscan.io/api"),
-    "one": ExplorerConfig(explorer_type="harmony", url="https://explorer.harmony.one/"),
-    "heco": ExplorerConfig(explorer_type="etherscan", url="https://api.hecoinfo.com/api"),
-    "kava": ExplorerConfig(explorer_type="blockscout", url="https://kavascan.com"),
-    "linea": ExplorerConfig(explorer_type="blockscout-trx-list-api", url="https://explorer.linea.build"),
-    "metis": ExplorerConfig(explorer_type="blockscout", url="https://andromeda-explorer.metis.io"),
-    "mantle": ExplorerConfig(explorer_type="etherscan", url="https://explorer.mantle.xyz/api"),
-    "moonbeam": ExplorerConfig(explorer_type="etherscan", url="https://api-moonbeam.moonscan.io/api"),
-    "moonriver": ExplorerConfig(explorer_type="etherscan", url="https://api-moonriver.moonscan.io/api"),
-    "optimism": ExplorerConfig(explorer_type="etherscan", url="https://api-optimistic.etherscan.io/api"),
-    "polygon": ExplorerConfig(explorer_type="etherscan", url="https://api.polygonscan.com/api"),
-    "rollux": ExplorerConfig(explorer_type="blockscout-trx-list-api", url="https://explorer.rollux.com"),
-    "scroll": ExplorerConfig(explorer_type="etherscan", url="https://scrollscan.com"),
-    "zkevm": ExplorerConfig(explorer_type="etherscan", url="https://api-zkevm.polygonscan.com/api"),
-    "zksync": ExplorerConfig(explorer_type="zksync", url="https://block-explorer-api.mainnet.zksync.io"),
+EXPLORER_CONFIG: dict[Chain, ExplorerConfig] = {
+    Chain.ARBITRUM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.arbiscan.io/api"),
+    Chain.AURORA: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_V5, url="https://old.explorer.aurora.dev/api"),
+    Chain.AVAX: ExplorerConfig(explorer_type=ExplorerType.ROUTESCAN, url="https://api.routescan.io"),
+    Chain.BASE: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.basescan.org/api"),
+    Chain.BSC: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.bscscan.com/api"),
+    Chain.CANTO: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_V5, url="https://explorer.plexnode.wtf/api"),
+    Chain.CELO: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://explorer.celo.org"),
+    Chain.CRONOS: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.cronoscan.com/api"),
+    Chain.EMERALD: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://explorer.emerald.oasis.dev/"),
+    Chain.ETHEREUM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.etherscan.io/api"),
+    Chain.FANTOM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.ftmscan.com/api"),
+    Chain.FUSE: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_V5, url="https://explorer.fuse.io/api"),
+    Chain.GNOSIS: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.gnosisscan.io/api"),
+    Chain.HARMONY: ExplorerConfig(explorer_type=ExplorerType.HARMONY, url="https://explorer.harmony.one/"),
+    Chain.HECO: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.hecoinfo.com/api"),
+    Chain.KAVA: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://kavascan.com"),
+    Chain.LINEA: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_TRX_LIST_API, url="https://explorer.linea.build"),
+    Chain.METIS: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://andromeda-explorer.metis.io"),
+    Chain.MANTLE: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://explorer.mantle.xyz/api"),
+    Chain.MOONBEAM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-moonbeam.moonscan.io/api"),
+    Chain.MOONRIVER: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-moonriver.moonscan.io/api"),
+    Chain.OPTIMISM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-optimistic.etherscan.io/api"),
+    Chain.POLYGON: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.polygonscan.com/api"),
+    Chain.ROLLUX: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_TRX_LIST_API, url="https://explorer.rollux.com"),
+    Chain.SCROLL: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://scrollscan.com"),
+    Chain.ZKEVM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-zkevm.polygonscan.com/api"),
+    Chain.ZKSYNC: ExplorerConfig(explorer_type=ExplorerType.ZKSYNC, url="https://block-explorer-api.mainnet.zksync.io"),
 }

@@ -1,61 +1,32 @@
-import typing as t
+from enum import StrEnum, unique
 
-ChainType = t.Literal[
-    "arbitrum",
-    "aurora",
-    "avax",
-    "base",
-    "bsc",
-    "canto",
-    "celo",
-    "cronos",
-    "emerald",
-    "ethereum",
-    "fantom",
-    "fuse",
-    "gnosis",
-    "one",
-    "heco",
-    "kava",
-    "linea",
-    "mantle",
-    "metis",
-    "moonbeam",
-    "moonriver",
-    "optimism",
-    "polygon",
-    "rollux",
-    "scroll",
-    "zkevm",
-    "zksync",
-]
 
-all_chains: list[ChainType] = [
-    "arbitrum",
-    "aurora",
-    "avax",
-    "base",
-    "bsc",
-    "canto",
-    "celo",
-    "cronos",
-    "emerald",
-    "ethereum",
-    "fantom",
-    "fuse",
-    "gnosis",
-    "one",
-    "heco",
-    "kava",
-    "linea",
-    "mantle",
-    "metis",
-    "moonbeam",
-    "moonriver",
-    "optimism",
-    "polygon",
-    "rollux",
-    "scroll",
-    "zkevm",
-    "zksync",
-]
+@unique
+class Chain(StrEnum):
+    ARBITRUM = "arbitrum"
+    AURORA = "aurora"
+    AVAX = "avax"
+    BASE = "base"
+    BSC = "bsc"
+    CANTO = "canto"
+    CELO = "celo"
+    CRONOS = "cronos"
+    EMERALD = "emerald"
+    ETHEREUM = "ethereum"
+    FANTOM = "fantom"
+    FUSE = "fuse"
+    GNOSIS = "gnosis"
+    HARMONY = "one"
+    HECO = "heco"
+    KAVA = "kava"
+    LINEA = "linea"
+    MANTLE = "mantle"
+    METIS = "metis"
+    MOONBEAM = "moonbeam"
+    MOONRIVER = "moonriver"
+    OPTIMISM = "optimism"
+    POLYGON = "polygon"
+    ROLLUX = "rollux"
+    SCROLL = "scroll"
+    ZKEVM = "zkevm"
+    ZKSYNC = "zksync"

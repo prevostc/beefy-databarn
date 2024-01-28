@@ -11,24 +11,24 @@ import requests
 from dateutil import parser
 from psycopg.rows import class_row
 from pydantic import BaseModel
-from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.common.chains import Chain
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
 from tap_beefy_databarn.singer.pydantic_multithread_stream import PydanticMultithreadStream
 
 
 class ContractWatch(BaseModel):
-    chain: ChainType
+    chain: Chain
     contract_address: str
 
 
 class ContractCreationInfo(BaseModel):
-    chain: ChainType
+    chain: Chain
     contract_address: str
     block_number: int
     block_datetime: datetime
 
-ThreadParams = tuple[ChainType, list[ContractWatch]]
+ThreadParams = tuple[Chain, list[ContractWatch]]
 
 class ContractCreationDateStream(PydanticMultithreadStream[ThreadParams, ContractCreationInfo]):
     """Fetches the contract creation date for a given contract address."""
@@ -40,8 +40,18 @@ class ContractCreationDateStream(PydanticMultithreadStream[ThreadParams, Contrac
 
     def get_thread_params(self, _: dict[Any, Any] | None) -> t.Iterable[ThreadParams]:
         """Get the contract creation infos from any explorer"""
-        by_type: dict[ChainType, list[ContractWatch]] = {}
+        chain_filter: Chain | None = self.config.get("chain")
+        contract_address_filter: str | None = self.config.get("contract_address")
+        self.logger.info("Fetching contract creation infos with filters: (chain=%s, contract_address=%s)", chain_filter, contract_address_filter)
+
+        by_type: dict[Chain, list[ContractWatch]] = {}
         for contract in self._get_contract_list():
+            if chain_filter and contract.chain != chain_filter:
+                self.logger.debug("Skipping %s because of chain filter: %s", contract, chain_filter)
+                continue
+            if contract_address_filter and contract.contract_address.lower() != contract_address_filter.lower():
+                self.logger.debug("Skipping %s because of contract address filter: %s", contract, contract_address_filter)
+                continue
             by_type.setdefault(contract.chain, []).append(contract)
 
         yield from by_type.items()

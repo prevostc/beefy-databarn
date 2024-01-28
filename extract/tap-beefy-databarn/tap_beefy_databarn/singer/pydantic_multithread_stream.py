@@ -56,6 +56,9 @@ class PydanticMultithreadStream(t.Generic[T,R], PydanticDataclassStream[R], meta
         for params in self.get_thread_params(context):
             self.logger.debug("Starting thread with params: %s", params)
             t = threading.Thread(target=self._run_thread_and_write_to_queue, args=(context, params, q))
+            # make sure threads are killed when the main thread is killed
+            # https://docs.python.org/3/library/threading.html#threading.Thread.daemon
+            t.daemon = True
             t.start()
             threads.append(t)
 

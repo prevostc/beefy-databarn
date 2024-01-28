@@ -3,7 +3,7 @@ import json
 import typing as t
 from pathlib import Path
 
-from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.common.chains import Chain
 from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 from web3 import Web3
 from web3.contract.base_contract import BaseContractEvent
@@ -30,7 +30,7 @@ class BeefyEventParser:
             event_event_type_to_topic0["BeefyVault_UpgradeStrat"]: ("BeefyVault_UpgradeStrat", beefy_vault_contract.events.UpgradeStrat()),
         }
 
-    def parse_any_event(self, chain: ChainType, log_receipt: LogReceipt, block_datetime: datetime.datetime) -> AnyEvent:
+    def parse_any_event(self, chain: Chain, log_receipt: LogReceipt, block_datetime: datetime.datetime) -> AnyEvent:
         topics = list(log_receipt["topics"])
         assert len(topics) > 0, "topics must not be empty"
 

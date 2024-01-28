@@ -10,7 +10,7 @@ import requests
 from eth_typing.evm import BlockNumber, ChecksumAddress, HexAddress, HexStr
 from psycopg.rows import class_row
 from pydantic import BaseModel
-from tap_beefy_databarn.common.chains import ChainType, all_chains
+from tap_beefy_databarn.common.chains import Chain
 from tap_beefy_databarn.contract_event.event_data_parser import BeefyEventParser
 from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 from tap_beefy_databarn.singer.pydantic_dataclass_stream import PydanticDataclassStream
@@ -20,7 +20,7 @@ from web3.types import HexBytes, LogReceipt
 
 
 class ContractEventWatch(BaseModel):
-    chain: ChainType
+    chain: Chain
     contract_address: str
     events: t.Iterable[EventType]
     creation_block_number: int
@@ -28,17 +28,17 @@ class ContractEventWatch(BaseModel):
 
 
 class SquidContext(BaseModel):
-    chain: ChainType
+    chain: Chain
 
 
 class SquidImportState(BaseModel):
-    chain: ChainType
+    chain: Chain
     last_seen_height: int
     watched_contracts: list[ContractEventWatch]
 
 
 class SquidEventStreamRecord(BaseModel):
-    chain: ChainType
+    chain: Chain
     last_seen_height: int
     # TODO: add the list of watched contracts to the state
     event: AnyEvent | None  # None when we just want to update the last_seen_height of the state
@@ -75,7 +75,7 @@ class SquidContractEventsStream(PydanticDataclassStream[SquidEventStreamRecord])
 
     @property
     def partitions(self) -> list[dict] | None:
-        return [{"chain": c} for c in all_chains]
+        return [{"chain": c} for c in Chain]
 
     def get_models(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[SquidEventStreamRecord]:
         last_seen_heigth = self.get_starting_replication_key_value(context or {}) or 0
