@@ -2,9 +2,8 @@ import typing as t
 from datetime import UTC, datetime
 
 from eth_typing.evm import BlockNumber, ChecksumAddress, HexAddress, HexStr
-from web3.types import HexBytes, LogReceipt
-
 from tap_beefy_databarn.contract_event.event_data_parser import BeefyEventParser
+from web3.types import HexBytes, LogReceipt
 
 
 class TestBeefyEventParser:
@@ -53,6 +52,24 @@ class TestBeefyEventParser:
         assert event.data.event_type == "BeefyZapRouter_FulfilledOrder"
         assert event.data.caller_address == "0x3EDB7d5b494cCB9bb84D11CA25F320Af2bb15f40"
         assert event.data.recipient_address == "0x3EDB7d5b494cCB9bb84D11CA25F320Af2bb15f40"
+
+    def test_parse_beefyvault_upgradestrat_event(self) -> None:
+        raw_data = {
+            "address": "0x0383E88A19E5c387FeBafbF51E5bA642d2ad8bE0",
+            "topics": [
+                "0x7f37d440e85aba7fbf641c4bda5ca4ef669a80bffaacde2aa8d9feb1b048c82c",
+            ],
+            "data": "0x000000000000000000000000a8bf778716e0630f56a4bdca9ae9a3e0b2bd29f5",
+            "transaction_hash": "0xefd2789ac10235a835bcb24d15f3fa4ec34f3572e53ae9eb066fc3eb1030715e",
+        }
+
+        log_receipt = self._log_data_to_log_receipt(raw_data)
+        block_datetime = datetime.now(tz=UTC)
+        event = self.parser.parse_any_event("bsc", log_receipt, block_datetime)
+
+        assert event.data is not None
+        assert event.data.event_type == "BeefyVault_UpgradeStrat"
+        assert event.data.implementation == "0xA8bf778716e0630F56A4bDCa9AE9A3e0B2BD29f5"
 
     def _log_data_to_log_receipt(self, raw_data: dict[str, t.Any]) -> LogReceipt:
         return LogReceipt(

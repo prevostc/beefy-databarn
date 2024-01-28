@@ -142,9 +142,11 @@ plugins:
     config:
       user: beefy
       database: beefy
-      add_record_metadata: true
+      add_record_metadata: false
       host: localhost
       port: 5432
+
+
   utilities:
   - name: dbt-postgres
     variant: dbt-labs
