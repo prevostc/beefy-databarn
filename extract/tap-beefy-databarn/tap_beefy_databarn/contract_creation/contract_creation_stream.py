@@ -3,19 +3,18 @@
 from __future__ import annotations
 
 import typing as t
-from datetime import UTC, datetime  # type: ignore  # noqa: PGH003
+from datetime import UTC, datetime
+from typing import Any
 
 import psycopg
 import requests
 from dateutil import parser
 from psycopg.rows import class_row
 from pydantic import BaseModel
+from tap_beefy_databarn.common.chains import ChainType
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig
 from tap_beefy_databarn.common.rate_limit import rate_limit_iterator, sleep_rps
-from tap_beefy_databarn.singer.pydantic_dataclass_stream import PydanticDataclassStream
-
-if t.TYPE_CHECKING:
-    from tap_beefy_databarn.common.chains import ChainType
+from tap_beefy_databarn.singer.pydantic_multithread_stream import PydanticMultithreadStream
 
 
 class ContractWatch(BaseModel):
@@ -29,8 +28,9 @@ class ContractCreationInfo(BaseModel):
     block_number: int
     block_datetime: datetime
 
+ThreadParams = tuple[ChainType, list[ContractWatch]]
 
-class ContractCreationDateStream(PydanticDataclassStream):
+class ContractCreationDateStream(PydanticMultithreadStream[ThreadParams, ContractCreationInfo]):
     """Fetches the contract creation date for a given contract address."""
 
     record_dataclass = ContractCreationInfo
@@ -38,39 +38,13 @@ class ContractCreationDateStream(PydanticDataclassStream):
     primary_keys: t.ClassVar[list[str]] = ["chain", "contract_address"]
     replication_key = None
 
-    def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:  # noqa: ARG002
-        self.logger.info("Fetching contract creation date: %s", self.schema)
-        for infos in self._get_contract_creation_info():
-            yield self._pydantic_dataclass_to_dict(infos)
-
-    def _get_contract_creation_info(self) -> t.Iterable[ContractCreationInfo]:
+    def get_thread_params(self, _: dict[Any, Any] | None) -> t.Iterable[ThreadParams]:
         """Get the contract creation infos from any explorer"""
         by_type: dict[ChainType, list[ContractWatch]] = {}
         for contract in self._get_contract_list():
             by_type.setdefault(contract.chain, []).append(contract)
 
-        fn_map = {
-            "etherscan": self._get_from_etherscan,
-            "routescan": self._get_from_routescan,
-            "blockscout-trx-list-api": self._get_from_blockscout_transaction_list_api,
-            "blockscout-v5": self._get_from_blockscout_v5,
-            "blockscout": self._get_from_blockscout,
-            "zksync": self._get_from_zksync,
-        }
-
-        for chain, contracts in by_type.items():
-            explorer_config = EXPLORER_CONFIG[chain]
-
-            if explorer_config.explorer_type not in fn_map:
-                self.logger.warning("No explorer function for %s", explorer_config.explorer_type)
-                continue
-
-            fn = fn_map[explorer_config.explorer_type]
-            for contract in rate_limit_iterator(contracts, explorer_config.max_rps):
-                try:
-                    yield fn(explorer_config, contract)
-                except Exception as exc:
-                    self.logger.exception("Error while fetching contract creation info for %s:%s: %s", contract.chain, contract.contract_address, exc_info=exc)
+        yield from by_type.items()
 
     def _get_contract_list(self) -> t.Iterable[ContractWatch]:
         """Get the list of contracts to watch for metadata."""
@@ -85,6 +59,32 @@ class ContractCreationDateStream(PydanticDataclassStream):
             """,
             )
             return cur.fetchall()
+
+    def thread_record_producer(self, _: dict[Any, Any] | None, params: ThreadParams) -> t.Iterable[ContractCreationInfo]:
+        """Get the contract creation infos from any explorer"""
+        fn_map = {
+            "etherscan": self._get_from_etherscan,
+            "routescan": self._get_from_routescan,
+            "blockscout-trx-list-api": self._get_from_blockscout_transaction_list_api,
+            "blockscout-v5": self._get_from_blockscout_v5,
+            "blockscout": self._get_from_blockscout,
+            "zksync": self._get_from_zksync,
+        }
+
+        (chain, contracts) = params
+        explorer_config = EXPLORER_CONFIG[chain]
+
+        if explorer_config.explorer_type not in fn_map:
+            self.logger.warning("No explorer function for %s", explorer_config.explorer_type)
+            return
+
+        fn = fn_map[explorer_config.explorer_type]
+        for contract in rate_limit_iterator(contracts, explorer_config.max_rps):
+            try:
+                yield fn(explorer_config, contract)
+            except Exception as exc:
+                self.logger.exception("Error while fetching contract creation info for %s:%s: %s", contract.chain, contract.contract_address, exc_info=exc)
+
 
     def _get_from_etherscan(self, explorer_config: ExplorerConfig, watch: ContractWatch) -> ContractCreationInfo:
         """Get the contract creation info from Etherscan-like api."""

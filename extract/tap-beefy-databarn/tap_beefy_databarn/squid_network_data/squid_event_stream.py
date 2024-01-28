@@ -62,7 +62,7 @@ class SquidEventStreamRecord(BaseModel):
         return self.event.log_index
 
 
-class SquidContractEventsStream(PydanticDataclassStream):
+class SquidContractEventsStream(PydanticDataclassStream[SquidEventStreamRecord]):
     """Fetches the contract creation date for a given contract address."""
 
     name = "squid_event_stream"
@@ -77,7 +77,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
     def partitions(self) -> list[dict] | None:
         return [{"chain": c} for c in all_chains]
 
-    def get_records(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[dict]:
+    def get_models(self, context: dict[t.Any, t.Any] | None) -> t.Iterable[SquidEventStreamRecord]:
         last_seen_heigth = self.get_starting_replication_key_value(context or {}) or 0
         squid_context = SquidContext(**t.cast(dict[t.Any, t.Any], context))
 
@@ -87,8 +87,7 @@ class SquidContractEventsStream(PydanticDataclassStream):
             return
         state = SquidImportState(chain=squid_context.chain, last_seen_height=last_seen_heigth, watched_contracts=list(contracts))
 
-        for event in self._get_records_for_chain(state):
-            yield self._pydantic_dataclass_to_dict(event)
+        yield from self._get_records_for_chain(state)
 
     def _get_watch_list(self, context: SquidContext) -> t.Iterable[ContractEventWatch]:
         """Get the list of contracts to watch for events."""
