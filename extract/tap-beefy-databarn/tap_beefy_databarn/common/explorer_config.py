@@ -8,7 +8,7 @@ class ExplorerType(StrEnum):
     ETHERSCAN = "etherscan"
     CANTO = "canto"
     BLOCKSCOUT = "blockscout"
-    ROUTESCAN = "routescan"
+    SNOWTRACE = "snowtrace"
     BLOCKSCOUT_TRX_LIST_API = "blockscout-trx-list-api"
     BLOCKSCOUT_V5 = "blockscout-v5"
     HARMONY = "harmony"
@@ -24,7 +24,7 @@ class ExplorerConfig:
 EXPLORER_CONFIG: dict[Chain, ExplorerConfig] = {
     Chain.ARBITRUM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.arbiscan.io/api"),
     Chain.AURORA: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_V5, url="https://old.explorer.aurora.dev/api"),
-    Chain.AVAX: ExplorerConfig(explorer_type=ExplorerType.ROUTESCAN, url="https://api.routescan.io"),
+    Chain.AVAX: ExplorerConfig(explorer_type=ExplorerType.SNOWTRACE, url="https://snowtrace.dev/api"),
     Chain.BASE: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.basescan.org/api"),
     Chain.BSC: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api.bscscan.com/api"),
     Chain.CANTO: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_V5, url="https://explorer.plexnode.wtf/api"),

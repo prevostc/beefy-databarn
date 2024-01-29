@@ -2,12 +2,10 @@
 from __future__ import annotations
 
 from datetime import datetime  # noqa: TCH003
-from typing import TYPE_CHECKING
 
 from pydantic import BaseModel
 
-if TYPE_CHECKING:
-    from tap_beefy_databarn.common.chains import Chain
+from tap_beefy_databarn.common.chains import Chain  # noqa: TCH001
 
 
 class ContractWatch(BaseModel):

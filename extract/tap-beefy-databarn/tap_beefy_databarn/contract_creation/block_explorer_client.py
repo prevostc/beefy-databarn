@@ -9,12 +9,12 @@ from datetime import UTC, datetime
 from dateutil import parser
 from requests import Session
 from requests.adapters import HTTPAdapter
-from requests_ratelimiter import LimiterMixin
 from urllib3 import Timeout
 from urllib3.util import Retry
 
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig, ExplorerType
 from tap_beefy_databarn.contract_creation.contract_creation_models import ContractCreationInfo, ContractWatch
+from tap_beefy_databarn.http.rate_limit import InMemoryRateLimitMixin
 from tap_beefy_databarn.http.response_code import ResponseCodeMixin
 from tap_beefy_databarn.http.retry import RetryMixin
 from tap_beefy_databarn.http.timeout import TimeoutMixin
@@ -33,35 +33,27 @@ class BlockExplorerClient:
 
     def __init__(self, logger: Logger, explorer_config: ExplorerConfig) -> None:
 
-        # prepare a session with a rate limiter, a timeout, and a retry policy in order
-        # this is somewhat equivalent to retry(rate_limiter(timeout(httpAdapter)))
-        # we want to make sure retry is applied including the rate limiter
-        # and timeout is applied last
-        class TimeoutHTTPAdapter(TimeoutMixin, HTTPAdapter):
-            def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
-                super().__init__(*args, **kwargs, timeout=Timeout(connect=5, read=10))
+        class ExplorerHTTPAdapter(ResponseCodeMixin, RetryMixin, InMemoryRateLimitMixin, TimeoutMixin, HTTPAdapter): # type: ignore  # noqa: PGH003
+            """
+            A session with a rate limiter, a timeout, and a retry policy in order
+            this is somewhat equivalent to retry(rate_limiter(timeout(httpAdapter)))
+            we want to make sure retry is applied including the rate limiter
+            and timeout is applied last.
+            """
 
-        class LimiterTimeoutAdapter(LimiterMixin, TimeoutHTTPAdapter): # type: ignore  # noqa: PGH003
-            def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
-                super().__init__(*args, **kwargs, per_second=explorer_config.max_rps) # type: ignore # noqa: PGH003
-
-        class RetryLimiterTimeoutAdapter(RetryMixin, LimiterTimeoutAdapter): # type: ignore  # noqa: PGH003
-            def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
-                retry_config = Retry(
-                    total=3,
-                    backoff_factor=5.0,
-                    status_forcelist=[502, 503, 504],
-                    allowed_methods={"POST", "GET"},
-                )
-                super().__init__(*args, **kwargs, max_retries=retry_config)
-
-        class ExpectRetryLimiterTimeoutAdapter(ResponseCodeMixin, RetryLimiterTimeoutAdapter): # type: ignore  # noqa: PGH003
-            def __init__(self, *args, **kwargs) -> None:  # noqa: ANN002, ANN003
-                super().__init__(*args, **kwargs, expect_response_code=200)
-
+        adapter = ExplorerHTTPAdapter(
+            timeout=Timeout(connect=5, read=10),
+            per_second=explorer_config.max_rps,
+            max_retries=Retry(
+                total=3,
+                backoff_factor=5.0,
+                status_forcelist=[502, 503, 504],
+                allowed_methods={"POST", "GET"},
+            ),
+            expected_response_code=200,
+        )
 
         session = Session()
-        adapter = ExpectRetryLimiterTimeoutAdapter()
         session.mount("https://", adapter)
         session.mount("http://", adapter)
 
@@ -76,7 +68,7 @@ class BlockExplorerClient:
         logger = parent_logger.getChild(f"explorer.{chain}")
         class_map: dict[ExplorerType, type[BlockExplorerClient]] = {
             ExplorerType.ETHERSCAN: EtherscanClient,
-            ExplorerType.ROUTESCAN: RoutescanBlockExplorerClient,
+            ExplorerType.SNOWTRACE: SnowtraceBlockExplorerClient,
             ExplorerType.BLOCKSCOUT: BlockscoutClient,
             ExplorerType.BLOCKSCOUT_V5: BlockscoutV5Client,
             ExplorerType.BLOCKSCOUT_TRX_LIST_API: BlockscoutTransactionListApiClient,
@@ -160,32 +152,28 @@ class EtherscanClient(BlockExplorerClient):
         )
 
 
-class RoutescanBlockExplorerClient(BlockExplorerClient):
+class SnowtraceBlockExplorerClient(BlockExplorerClient):
 
     def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
+        # https://snowtrace.dev/api/blockchain/43114/address/0x595786A3848B1de66C6056C87BA91977935fBC46/contract?ecosystem=43114
         # https://api.routescan.io/v2/network/mainnet/evm/43114/address/0x595786A3848B1de66C6056C87BA91977935fBC46/transactions?ecosystem=avalanche&includedChainIds=43114&categories=evm_tx&sort=asc&limit=1
+        chain_id = 43114
         params: t.Any = {
-            "ecosystem": "avalanche",
-            "includedChainIds": 43114,
-            "categories": "evm_tx",
-            "sort": "asc",
-            "limit": 1,
+            "ecosystem": chain_id,
         }
-        api_path = f"{self.explorer_config.url}/v2/network/mainnet/evm/43114/address/{contract.contract_address}/transactions"
+        api_path = f"{self.explorer_config.url}/blockchain/{chain_id}/address/{contract.contract_address}/contract"
         data = self.session.get(api_path, params=params).json()
 
-        self.logger.debug("Got data from Routescan api for (%s:%s): %s", contract.chain, contract.contract_address, data)
-        if "items" not in data or len(data["items"]) == 0:
-            msg = "Error from Routescan api: no items"
+        if "createdAt" not in data:
+            msg = "Error from Routescan api: no 'createdAt' field, data: %s", data
             raise Exception(msg)
 
-        block_number = data["items"][0]["blockNumber"]
-        if isinstance(block_number, str):
-            block_number = int(block_number, 10)
+        self.logger.debug("Got data from Routescan api for (%s:%s): %s", contract.chain, contract.contract_address, data["createdAt"])
 
-        block_datetime = data["items"][0]["timestamp"]
-        if isinstance(block_datetime, str):
-            block_datetime = parser.parse(block_datetime)
+        block_number = data["createdAt"]["blockNumber"]
+        block_datetime_str = data["createdAt"]["timestamp"]
+        block_datetime = parser.parse(block_datetime_str)
+        block_datetime = block_datetime.astimezone(UTC)
 
         return ContractCreationInfo(
             chain=contract.chain,
@@ -209,6 +197,7 @@ class BlockscoutV5Client(BlockExplorerClient):
         block_number = data["block"]
         block_datetime_str = data["timestamp"]
         block_datetime = parser.parse(block_datetime_str)
+        block_datetime = block_datetime.astimezone(UTC)
 
         return ContractCreationInfo(
             chain=contract.chain,

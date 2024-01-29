@@ -7,6 +7,7 @@ from typing import Any
 
 import psycopg
 from psycopg.rows import class_row
+
 from tap_beefy_databarn.common.chains import Chain
 from tap_beefy_databarn.contract_creation.block_explorer_client import BlockExplorerClient
 from tap_beefy_databarn.contract_creation.contract_creation_models import ContractCreationInfo, ContractWatch

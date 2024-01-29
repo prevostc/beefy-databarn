@@ -18,3 +18,9 @@ class RedisSharedRateLimitMixin(CacheMixin, LimiterMixin, MIXIN_BASE): # type: i
         kwargs["backend"] = kwargs.get("backend", RedisCache("redis://localhost:6379/0"))
 
         super().__init__(*args, **kwargs)
+
+
+class InMemoryRateLimitMixin(LimiterMixin, MIXIN_BASE): # type: ignore  # noqa: PGH003
+    """
+    Session class with rate-limiting behavior. Accepts arguments for LimiterSession.
+    """
