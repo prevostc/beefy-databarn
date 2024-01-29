@@ -93,12 +93,12 @@ class BlockExplorerClient:
         """Get the contract creation info from any explorer"""
         for contract in contracts:
             try:
-                yield self.get_contract_creation_info(contract=contract)
+                yield self._get_contract_creation_info(contract=contract)
             except Exception as exc:
                 self.logger.exception("Error while fetching contract creation info for %s:%s: %s", contract.chain, contract.contract_address, exc_info=exc)
 
     @abstractmethod
-    def get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         """Get the contract creation info from any explorer"""
         raise NotImplementedError
 
@@ -111,7 +111,7 @@ class CouldNotParseExplorerResponseError(Exception):
 
 class EtherscanClient(BlockExplorerClient):
 
-    def get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
         """Get the contract creation info from Etherscan-like api."""
 
         params: t.Any = {
@@ -161,7 +161,7 @@ class EtherscanClient(BlockExplorerClient):
 
 class RoutescanBlockExplorerClient(BlockExplorerClient):
 
-    def get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
         # https://api.routescan.io/v2/network/mainnet/evm/43114/address/0x595786A3848B1de66C6056C87BA91977935fBC46/transactions?ecosystem=avalanche&includedChainIds=43114&categories=evm_tx&sort=asc&limit=1
         params: t.Any = {
             "ecosystem": "avalanche",
@@ -195,7 +195,7 @@ class RoutescanBlockExplorerClient(BlockExplorerClient):
 
 
 class BlockscoutV5Client(BlockExplorerClient):
-    def get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
         # https://explorer.plexnode.wtf/api/v2/addresses/0x5B19bd330A84c049b62D5B0FC2bA120217a18C1C
         api_path = f"{self.explorer_config.url}/v2/addresses/{watch.contract_address}"
         data = self.session.get(api_path).json()
@@ -217,7 +217,7 @@ class BlockscoutV5Client(BlockExplorerClient):
         )
 
 class BlockscoutTransactionListApiClient(BlockExplorerClient):
-    def get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
         data = {"items": [], "next_page_path": f"/address/{watch.contract_address}/transactions"}
 
         while data["next_page_path"]:
@@ -249,13 +249,13 @@ class BlockscoutTransactionListApiClient(BlockExplorerClient):
 
 
 class BlockscoutClient(BlockscoutTransactionListApiClient):
-    def get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
         # https://andromeda-explorer.metis.io/address/0x01A3c8E513B758EBB011F7AFaf6C37616c9C24d9
         data = self.session.get(f"{self.explorer_config.url}/address/{watch.contract_address}").json()
 
         # if the contract is unverified we need to fetch the transaction hash from the internal transaction log
         if "transaction_hash_link" not in data:
-            return super().get_contract_creation_info(watch)
+            return super()._get_contract_creation_info(watch)
 
         tx_hash = data.split('data-test="transaction_hash_link"')[1]
 
@@ -291,7 +291,7 @@ class BlockscoutClient(BlockscoutTransactionListApiClient):
         )
 
 class ZksyncExplorerClient(BlockExplorerClient):
-    def get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
         # https://block-explorer-api.mainnet.zksync.io/address/0x923C15333516A8784BfA77b235bFA92Ac649B889
         api_path = f"{self.explorer_config.url}/address/{watch.contract_address}"
         data = self.session.get(api_path).json()
