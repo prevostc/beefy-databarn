@@ -6,6 +6,7 @@ import typing as t
 from abc import ABCMeta, abstractmethod
 
 from pydantic import BaseModel
+
 from tap_beefy_databarn.singer.pydantic_dataclass_stream import PydanticDataclassStream
 
 T = t.TypeVar("T")

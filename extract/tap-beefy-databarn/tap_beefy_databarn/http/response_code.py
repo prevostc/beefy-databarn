@@ -16,5 +16,10 @@ class ResponseCodeMixin(MIXIN_BASE):
         super().__init__(*args, **kwargs)
 
     def send(self, request, **kwargs):  # noqa: ANN201, ANN003, ANN001
-        kwargs["expect_response_code"] = self.expect_response_code
-        return super().send(request, **kwargs)
+        res = super().send(request, **kwargs)
+
+        if res.status_code != self.expect_response_code:
+            msg = f"Error from api: {res.status_code}"
+            raise Exception(msg)
+
+        return res

@@ -10,13 +10,14 @@ from dateutil import parser
 from requests import Session
 from requests.adapters import HTTPAdapter
 from requests_ratelimiter import LimiterMixin
+from urllib3 import Timeout
+from urllib3.util import Retry
+
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig, ExplorerType
 from tap_beefy_databarn.contract_creation.contract_creation_models import ContractCreationInfo, ContractWatch
 from tap_beefy_databarn.http.response_code import ResponseCodeMixin
 from tap_beefy_databarn.http.retry import RetryMixin
 from tap_beefy_databarn.http.timeout import TimeoutMixin
-from urllib3 import Timeout
-from urllib3.util import Retry
 
 if t.TYPE_CHECKING:
     from logging import Logger
@@ -111,13 +112,13 @@ class CouldNotParseExplorerResponseError(Exception):
 
 class EtherscanClient(BlockExplorerClient):
 
-    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         """Get the contract creation info from Etherscan-like api."""
 
         params: t.Any = {
             "module": "account",
             "action": "txlist",
-            "address": watch.contract_address,
+            "address": contract.contract_address,
             "startblock": 1,
             "endblock": 999999999,
             "page": 1,
@@ -152,8 +153,8 @@ class EtherscanClient(BlockExplorerClient):
         block_datetime = datetime.fromtimestamp(block_datetime_int, tz=UTC)
 
         return ContractCreationInfo(
-            chain=watch.chain,
-            contract_address=watch.contract_address,
+            chain=contract.chain,
+            contract_address=contract.contract_address,
             block_number=block_number,
             block_datetime=block_datetime,
         )
@@ -161,7 +162,7 @@ class EtherscanClient(BlockExplorerClient):
 
 class RoutescanBlockExplorerClient(BlockExplorerClient):
 
-    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         # https://api.routescan.io/v2/network/mainnet/evm/43114/address/0x595786A3848B1de66C6056C87BA91977935fBC46/transactions?ecosystem=avalanche&includedChainIds=43114&categories=evm_tx&sort=asc&limit=1
         params: t.Any = {
             "ecosystem": "avalanche",
@@ -170,10 +171,10 @@ class RoutescanBlockExplorerClient(BlockExplorerClient):
             "sort": "asc",
             "limit": 1,
         }
-        api_path = f"{self.explorer_config.url}/v2/network/mainnet/evm/43114/address/{watch.contract_address}/transactions"
+        api_path = f"{self.explorer_config.url}/v2/network/mainnet/evm/43114/address/{contract.contract_address}/transactions"
         data = self.session.get(api_path, params=params).json()
 
-        self.logger.debug("Got data from Routescan api for (%s:%s): %s", watch.chain, watch.contract_address, data)
+        self.logger.debug("Got data from Routescan api for (%s:%s): %s", contract.chain, contract.contract_address, data)
         if "items" not in data or len(data["items"]) == 0:
             msg = "Error from Routescan api: no items"
             raise Exception(msg)
@@ -187,17 +188,17 @@ class RoutescanBlockExplorerClient(BlockExplorerClient):
             block_datetime = parser.parse(block_datetime)
 
         return ContractCreationInfo(
-            chain=watch.chain,
-            contract_address=watch.contract_address,
+            chain=contract.chain,
+            contract_address=contract.contract_address,
             block_number=block_number,
             block_datetime=block_datetime,
         )
 
 
 class BlockscoutV5Client(BlockExplorerClient):
-    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         # https://explorer.plexnode.wtf/api/v2/addresses/0x5B19bd330A84c049b62D5B0FC2bA120217a18C1C
-        api_path = f"{self.explorer_config.url}/v2/addresses/{watch.contract_address}"
+        api_path = f"{self.explorer_config.url}/v2/addresses/{contract.contract_address}"
         data = self.session.get(api_path).json()
         creation_tx = data["creation_tx_hash"]
 
@@ -210,15 +211,15 @@ class BlockscoutV5Client(BlockExplorerClient):
         block_datetime = parser.parse(block_datetime_str)
 
         return ContractCreationInfo(
-            chain=watch.chain,
-            contract_address=watch.contract_address,
+            chain=contract.chain,
+            contract_address=contract.contract_address,
             block_number=block_number,
             block_datetime=block_datetime,
         )
 
 class BlockscoutTransactionListApiClient(BlockExplorerClient):
-    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
-        data = {"items": [], "next_page_path": f"/address/{watch.contract_address}/transactions"}
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
+        data = {"items": [], "next_page_path": f"/address/{contract.contract_address}/transactions"}
 
         while data["next_page_path"]:
             api_path = f"{self.explorer_config.url}{data['next_page_path']}"
@@ -233,7 +234,7 @@ class BlockscoutTransactionListApiClient(BlockExplorerClient):
             raise Exception(msg)
 
         tx = data["items"][-1]
-        self.logger.debug("Got tx from Blockscout JSON api for (%s:%s): %s", watch.chain, watch.contract_address, tx)
+        self.logger.debug("Got tx from Blockscout JSON api for (%s:%s): %s", contract.chain, contract.contract_address, tx)
         block_number_str = tx.split('href="/block/')[1].split('"')[0]
         block_number = int(block_number_str, 10)
 
@@ -241,21 +242,21 @@ class BlockscoutTransactionListApiClient(BlockExplorerClient):
         block_datetime = parser.parse(block_datetime_str)
 
         return ContractCreationInfo(
-            chain=watch.chain,
-            contract_address=watch.contract_address,
+            chain=contract.chain,
+            contract_address=contract.contract_address,
             block_number=block_number,
             block_datetime=block_datetime,
         )
 
 
 class BlockscoutClient(BlockscoutTransactionListApiClient):
-    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         # https://andromeda-explorer.metis.io/address/0x01A3c8E513B758EBB011F7AFaf6C37616c9C24d9
-        data = self.session.get(f"{self.explorer_config.url}/address/{watch.contract_address}").json()
+        data = self.session.get(f"{self.explorer_config.url}/address/{contract.contract_address}").json()
 
         # if the contract is unverified we need to fetch the transaction hash from the internal transaction log
         if "transaction_hash_link" not in data:
-            return super()._get_contract_creation_info(watch)
+            return super()._get_contract_creation_info(contract)
 
         tx_hash = data.split('data-test="transaction_hash_link"')[1]
 
@@ -284,16 +285,16 @@ class BlockscoutClient(BlockscoutTransactionListApiClient):
         block_datetime = parser.parse(block_datetime_str)
 
         return ContractCreationInfo(
-            chain=watch.chain,
-            contract_address=watch.contract_address,
+            chain=contract.chain,
+            contract_address=contract.contract_address,
             block_number=block_number,
             block_datetime=block_datetime,
         )
 
 class ZksyncExplorerClient(BlockExplorerClient):
-    def _get_contract_creation_info(self, watch: ContractWatch) -> ContractCreationInfo:
+    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         # https://block-explorer-api.mainnet.zksync.io/address/0x923C15333516A8784BfA77b235bFA92Ac649B889
-        api_path = f"{self.explorer_config.url}/address/{watch.contract_address}"
+        api_path = f"{self.explorer_config.url}/address/{contract.contract_address}"
         data = self.session.get(api_path).json()
         create_tx = data["creatorTxHash"]
 
@@ -306,8 +307,8 @@ class ZksyncExplorerClient(BlockExplorerClient):
         block_datetime = parser.parse(block_datetime)
 
         return ContractCreationInfo(
-            chain=watch.chain,
-            contract_address=watch.contract_address,
+            chain=contract.chain,
+            contract_address=contract.contract_address,
             block_number=block_number,
             block_datetime=block_datetime,
         )
