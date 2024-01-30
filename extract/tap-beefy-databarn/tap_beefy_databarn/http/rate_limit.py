@@ -9,6 +9,12 @@ if t.TYPE_CHECKING:
 else:
     MIXIN_BASE = object
 
+
+# TODO: requests_ratelimiter aims to fill the RPS as much as possible, but we want to
+#       ensure we have a minimum delay between requests. We could implement this by
+#       overriding the Limiter.try_acquire method, but it would be nice to have a
+#       more general solution.
+
 class RedisSharedRateLimitMixin(CacheMixin, LimiterMixin, MIXIN_BASE): # type: ignore  # noqa: PGH003
     """Session class with caching and rate-limiting behavior. Accepts arguments for both
     LimiterSession and CachedSession.
