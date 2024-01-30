@@ -14,7 +14,7 @@ from urllib3.util import Retry
 
 from tap_beefy_databarn.common.explorer_config import EXPLORER_CONFIG, ExplorerConfig, ExplorerType
 from tap_beefy_databarn.contract_creation.contract_creation_models import ContractCreationInfo, ContractWatch
-from tap_beefy_databarn.http.rate_limit import InMemoryRateLimitMixin
+from tap_beefy_databarn.http.rate_limit import InMemoryBucketRateLimitMixin
 from tap_beefy_databarn.http.response_code import ResponseCodeMixin
 from tap_beefy_databarn.http.retry import RetryMixin
 from tap_beefy_databarn.http.timeout import TimeoutMixin
@@ -33,7 +33,7 @@ class BlockExplorerClient:
 
     def __init__(self, logger: Logger, explorer_config: ExplorerConfig) -> None:
 
-        class ExplorerHTTPAdapter(ResponseCodeMixin, RetryMixin, InMemoryRateLimitMixin, TimeoutMixin, HTTPAdapter): # type: ignore  # noqa: PGH003
+        class ExplorerHTTPAdapter(ResponseCodeMixin, RetryMixin, InMemoryBucketRateLimitMixin, TimeoutMixin, HTTPAdapter): # type: ignore  # noqa: PGH003
             """
             A session with a rate limiter, a timeout, and a retry policy in order
             this is somewhat equivalent to retry(rate_limiter(timeout(httpAdapter)))
@@ -52,7 +52,7 @@ class BlockExplorerClient:
             # rate limiter
             limit_statuses=[429, 200, 404, 400, 401, 403, 500, 502, 503, 504], # basically all statuses
             per_host=True,
-            per_minute=explorer_config.max_rpm,
+            min_seconds_between_requests=explorer_config.min_seconds_between_requests,
         )
 
         session = Session()
