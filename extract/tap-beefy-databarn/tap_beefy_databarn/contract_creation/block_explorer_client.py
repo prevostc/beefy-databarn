@@ -69,7 +69,6 @@ class BlockExplorerClient:
         logger = parent_logger.getChild(f"explorer.{chain}")
         class_map: dict[ExplorerType, type[BlockExplorerClient]] = {
             ExplorerType.ETHERSCAN: EtherscanClient,
-            ExplorerType.SNOWTRACE: SnowtraceBlockExplorerClient,
             ExplorerType.BLOCKSCOUT: BlockscoutClient,
             ExplorerType.BLOCKSCOUT_V5: BlockscoutV5Client,
             ExplorerType.BLOCKSCOUT_TRX_LIST_API: BlockscoutTransactionListApiClient,
@@ -145,37 +144,6 @@ class EtherscanClient(BlockExplorerClient):
         else:
             raise CouldNotParseExplorerResponseError({"timeStamp": block_datetime_str})
         block_datetime = datetime.fromtimestamp(block_datetime_int, tz=UTC)
-
-        return ContractCreationInfo(
-            chain=contract.chain,
-            contract_address=contract.contract_address,
-            block_number=block_number,
-            block_datetime=block_datetime,
-        )
-
-
-class SnowtraceBlockExplorerClient(BlockExplorerClient):
-
-    def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
-        # https://snowtrace.dev/api/blockchain/43114/address/0x595786A3848B1de66C6056C87BA91977935fBC46/contract?ecosystem=43114
-        # https://api.routescan.io/v2/network/mainnet/evm/43114/address/0x595786A3848B1de66C6056C87BA91977935fBC46/transactions?ecosystem=avalanche&includedChainIds=43114&categories=evm_tx&sort=asc&limit=1
-        chain_id = 43114
-        params: t.Any = {
-            "ecosystem": chain_id,
-        }
-        api_path = f"{self.explorer_config.url}/blockchain/{chain_id}/address/{contract.contract_address}/contract"
-        data = self.session.get(api_path, params=params).json()
-
-        if "createdAt" not in data:
-            msg = f"Error from Routescan api: no 'createdAt' field, data: {data}"
-            raise Exception(msg)
-
-        self.logger.debug("Got data from Routescan api for (%s:%s): %s", contract.chain, contract.contract_address, data["createdAt"])
-
-        block_number = data["createdAt"]["blockNumber"]
-        block_datetime_str = data["createdAt"]["timestamp"]
-        block_datetime = parser.parse(block_datetime_str)
-        block_datetime = block_datetime.astimezone(UTC)
 
         return ContractCreationInfo(
             chain=contract.chain,

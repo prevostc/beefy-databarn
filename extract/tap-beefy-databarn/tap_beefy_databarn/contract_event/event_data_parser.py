@@ -3,11 +3,12 @@ import json
 import typing as t
 from pathlib import Path
 
-from tap_beefy_databarn.common.chains import Chain
-from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 from web3 import Web3
 from web3.contract.base_contract import BaseContractEvent
 from web3.types import LogReceipt
+
+from tap_beefy_databarn.common.chains import Chain
+from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 
 
 class BeefyEventParser:

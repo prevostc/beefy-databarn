@@ -10,13 +10,14 @@ import requests
 from eth_typing.evm import BlockNumber, ChecksumAddress, HexAddress, HexStr
 from psycopg.rows import class_row
 from pydantic import BaseModel
+from web3.types import HexBytes, LogReceipt
+
 from tap_beefy_databarn.common.chains import Chain
 from tap_beefy_databarn.contract_event.event_data_parser import BeefyEventParser
 from tap_beefy_databarn.contract_event.event_models import AnyEvent, EventType, event_event_type_to_topic0
 from tap_beefy_databarn.singer.pydantic_dataclass_stream import PydanticDataclassStream
 from tap_beefy_databarn.squid_network_data.squid_config import get_squid_archive_url
 from tap_beefy_databarn.squid_network_data.squid_models import SquidArchiveBlockResponse
-from web3.types import HexBytes, LogReceipt
 
 
 class ContractEventWatch(BaseModel):

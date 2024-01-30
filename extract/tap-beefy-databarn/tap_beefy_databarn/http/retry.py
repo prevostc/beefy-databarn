@@ -10,7 +10,7 @@ else:
 
 class RetryMixin(MIXIN_BASE):
     def __init__(self, *args, **kwargs) -> None:  # noqa: ANN003, ANN002
-        kwargs["max_retries"] = kwargs.get("max_retries", Retry(total=3, backoff_factor=0.5))
+        kwargs["max_retries"] = kwargs.get("max_retries", Retry(total=3, backoff_factor=0.2))
         super().__init__(*args, **kwargs)
 
     # TODO: retry on requests.exceptions.ReadTimeout
