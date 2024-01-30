@@ -18,7 +18,7 @@ class ExplorerType(StrEnum):
 class ExplorerConfig:
     explorer_type: ExplorerType
     url: str
-    max_rps: float = 0.1  # 10s between requests
+    max_rpm: int = 15 # ~5s between requests + safety margin
 
 
 EXPLORER_CONFIG: dict[Chain, ExplorerConfig] = {

@@ -7,19 +7,20 @@ else:
     MIXIN_BASE = object
 
 class ResponseCodeMixin(MIXIN_BASE):
+
+    expect_response_codes: list[int] = [200, 301, 302]  # noqa: RUF012
+
     def __init__(self, *args, **kwargs) -> None:  # noqa: ANN003, ANN002
-        if "expect_response_code" in kwargs:
-            self.expect_response_code = kwargs["expect_response_code"]
-            del kwargs["expect_response_code"]
-        else:
-            self.expect_response_code = 200
+        if "expected_response_codes" in kwargs:
+            self.expect_response_codes = kwargs["expected_response_codes"]
+            del kwargs["expected_response_codes"]
         super().__init__(*args, **kwargs)
 
     def send(self, request, **kwargs):  # noqa: ANN201, ANN003, ANN001
-        res = super().send(request, **kwargs)
+        response = super().send(request, **kwargs)
 
-        if res.status_code != self.expect_response_code:
-            msg = f"Error from api: {res.status_code}"
+        if response.status_code not in self.expect_response_codes:
+            msg = f"Error from api: {response.status_code}. Expected {self.expect_response_codes}"
             raise Exception(msg)
 
-        return res
+        return response

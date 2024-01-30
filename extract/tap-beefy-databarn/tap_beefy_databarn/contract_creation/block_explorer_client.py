@@ -43,14 +43,16 @@ class BlockExplorerClient:
 
         adapter = ExplorerHTTPAdapter(
             timeout=Timeout(connect=5, read=10),
-            per_second=explorer_config.max_rps,
             max_retries=Retry(
                 total=3,
                 backoff_factor=5.0,
                 status_forcelist=[502, 503, 504],
                 allowed_methods={"POST", "GET"},
             ),
-            expected_response_code=200,
+            # rate limiter
+            limit_statuses=[429, 200, 404, 400, 401, 403, 500, 502, 503, 504], # basically all statuses
+            per_host=True,
+            per_minute=explorer_config.max_rpm,
         )
 
         session = Session()
@@ -88,7 +90,7 @@ class BlockExplorerClient:
             try:
                 yield self._get_contract_creation_info(contract=contract)
             except Exception as exc:
-                self.logger.exception("Error while fetching contract creation info for %s:%s: %s", contract.chain, contract.contract_address, exc_info=exc)
+                self.logger.exception("Error while fetching contract creation info for %s:%s", contract.chain, contract.contract_address, exc_info=exc)
 
     @abstractmethod
     def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
@@ -122,7 +124,7 @@ class EtherscanClient(BlockExplorerClient):
         data = self.session.get(self.explorer_config.url, params=params).json()
 
         if data.get("status") != "1":
-            msg = f"Error from Etherscan-like api: {data.get('message')}"
+            msg = f"Error from Etherscan-like api: {data}"
             raise Exception(msg)
 
         data = data["result"][0]
@@ -165,7 +167,7 @@ class SnowtraceBlockExplorerClient(BlockExplorerClient):
         data = self.session.get(api_path, params=params).json()
 
         if "createdAt" not in data:
-            msg = "Error from Routescan api: no 'createdAt' field, data: %s", data
+            msg = f"Error from Routescan api: no 'createdAt' field, data: {data}"
             raise Exception(msg)
 
         self.logger.debug("Got data from Routescan api for (%s:%s): %s", contract.chain, contract.contract_address, data["createdAt"])
@@ -241,7 +243,7 @@ class BlockscoutTransactionListApiClient(BlockExplorerClient):
 class BlockscoutClient(BlockscoutTransactionListApiClient):
     def _get_contract_creation_info(self, contract: ContractWatch) -> ContractCreationInfo:
         # https://andromeda-explorer.metis.io/address/0x01A3c8E513B758EBB011F7AFaf6C37616c9C24d9
-        data = self.session.get(f"{self.explorer_config.url}/address/{contract.contract_address}").json()
+        data = self.session.get(f"{self.explorer_config.url}/address/{contract.contract_address}").text
 
         # if the contract is unverified we need to fetch the transaction hash from the internal transaction log
         if "transaction_hash_link" not in data:
@@ -258,7 +260,7 @@ class BlockscoutClient(BlockscoutTransactionListApiClient):
             raise CouldNotParseExplorerResponseError({"tx_hash": tx_hash})
 
         # https://andromeda-explorer.metis.io/tx/0x9bbc84d8b646db3416a40bfdbb5a0028f93eb7a867f7ea6bb81f80c383d0bf28
-        data = self.session.get(f"{self.explorer_config.url}/tx/{tx_hash}").json()
+        data = self.session.get(f"{self.explorer_config.url}/tx/{tx_hash}").text
 
         block_number_str = data.split('class="transaction__link"')[1]
         if 'href="/block/' in block_number_str:

@@ -9,6 +9,9 @@ else:
     MIXIN_BASE = object
 
 class TimeoutMixin(MIXIN_BASE):
+
+    timeout: Timeout
+
     def __init__(self, *args, **kwargs) -> None:  # noqa: ANN003, ANN002
         if "timeout" in kwargs:
             self.timeout = kwargs["timeout"]

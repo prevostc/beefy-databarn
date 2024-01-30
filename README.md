@@ -84,7 +84,13 @@ pre-commit run --all-files
 ### Debug commands
 
 ```bash
-meltano invoke tap-block-explorer-contract-creation-infos --chain=avax --contract_address=0x22eafb9c7e2858cfda712940896464ddaa83d053
+cd extract/tap-beefy-databarn
+source .venv/bin/activate
+```
+
+#### Show a contract creation date and block
+```bash
+poetry run show-contract-creation --chain=avax --contract_address=0x22eafb9c7e2858cfda712940896464ddaa83d053
 ``````
 
 ## Other
