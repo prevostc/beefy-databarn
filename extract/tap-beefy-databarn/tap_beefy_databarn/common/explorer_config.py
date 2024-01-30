@@ -19,6 +19,7 @@ class ExplorerConfig:
     explorer_type: ExplorerType
     url: str
     min_seconds_between_requests: int = 10
+    request_timeout: int = 10
 
 
 EXPLORER_CONFIG: dict[Chain, ExplorerConfig] = {
@@ -40,7 +41,7 @@ EXPLORER_CONFIG: dict[Chain, ExplorerConfig] = {
     Chain.KAVA: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://kavascan.com"),
     Chain.LINEA: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT_TRX_LIST_API, url="https://explorer.linea.build"),
     Chain.METIS: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://andromeda-explorer.metis.io"),
-    Chain.MANTLE: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://explorer.mantle.xyz/api"),
+    Chain.MANTLE: ExplorerConfig(explorer_type=ExplorerType.BLOCKSCOUT, url="https://explorer.mantle.xyz", request_timeout=30),
     Chain.MOONBEAM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-moonbeam.moonscan.io/api"),
     Chain.MOONRIVER: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-moonriver.moonscan.io/api"),
     Chain.OPTIMISM: ExplorerConfig(explorer_type=ExplorerType.ETHERSCAN, url="https://api-optimistic.etherscan.io/api"),

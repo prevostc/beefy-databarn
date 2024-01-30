@@ -33,16 +33,15 @@ class BlockExplorerClient:
 
     def __init__(self, logger: Logger, explorer_config: ExplorerConfig) -> None:
 
-        class ExplorerHTTPAdapter(ResponseCodeMixin, RetryMixin, InMemoryBucketRateLimitMixin, TimeoutMixin, HTTPAdapter): # type: ignore  # noqa: PGH003
+        class ExplorerHTTPAdapter(ResponseCodeMixin, RetryMixin, TimeoutMixin, InMemoryBucketRateLimitMixin, HTTPAdapter): # type: ignore  # noqa: PGH003
             """
-            A session with a rate limiter, a timeout, and a retry policy in order
-            this is somewhat equivalent to retry(rate_limiter(timeout(httpAdapter)))
-            we want to make sure retry is applied including the rate limiter
-            and timeout is applied last.
+            A session with a rate limiter, a timeout, and a retry policy
+            we want to make sure we order the mixins correctly, so that the rate limiter
+            is the last one to be called as it is hiding the kwargs of the other mixins
             """
 
         adapter = ExplorerHTTPAdapter(
-            timeout=Timeout(connect=5, read=10),
+            timeout=Timeout(connect=5, read=explorer_config.request_timeout),
             max_retries=Retry(
                 total=3,
                 backoff_factor=5.0,
@@ -121,6 +120,7 @@ class EtherscanClient(BlockExplorerClient):
             "limit": 1,
         }
 
+        self.logger.debug("Fetching data from Etherscan-like api for (%s:%s)", contract.chain, contract.contract_address)
         data = self.session.get(self.explorer_config.url, params=params).json()
 
         if data.get("status") != "1":
@@ -247,6 +247,7 @@ class BlockscoutClient(BlockscoutTransactionListApiClient):
 
         # if the contract is unverified we need to fetch the transaction hash from the internal transaction log
         if "transaction_hash_link" not in data:
+            self.logger.debug("Contract %s:%s is unverified, fetching transaction hash from internal transaction log", contract.chain, contract.contract_address)
             return super()._get_contract_creation_info(contract)
 
         tx_hash = data.split('data-test="transaction_hash_link"')[1]
