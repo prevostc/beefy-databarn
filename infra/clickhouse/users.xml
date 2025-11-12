@@ -23,7 +23,7 @@
         </default>
 
         <grafana>
-            <password></password>
+            <password>changeme</password>
             <networks>
                 <ip>::/0</ip>
             </networks>

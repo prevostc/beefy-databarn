@@ -4,14 +4,12 @@ set -e
 # Remove empty cert files to prevent permission errors
 rm -rf /root/.postgresql/postgresql.crt
 rm -rf /root/.postgresql/postgresql.key
-curl -o /etc/postgres-ca/root.crt https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+wget -O /etc/postgres-ca/root.crt https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
 
 # Initialize ClickHouse schemas and prepare for external table definitions
 # This script is automatically executed on first startup via /docker-entrypoint-initdb.d/
 
 echo "Initializing ClickHouse database..."
-
-
 
 # Create analytics database
 clickhouse-client --password="$CLICKHOUSE_PASSWORD" --query="CREATE DATABASE IF NOT EXISTS analytics"

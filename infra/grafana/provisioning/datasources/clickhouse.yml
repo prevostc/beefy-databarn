@@ -6,13 +6,15 @@ datasources:
     access: proxy
     url: http://clickhouse:8123
     isDefault: true
+    basicAuth: true
+    basicAuthUser: $GRAFANA_CLICKHOUSE_USER
     jsonData:
       defaultDatabase: analytics
       port: 8123
       server: clickhouse
-      username: grafana
+      # username: $GRAFANA_CLICKHOUSE_USER
       secure: false
     secureJsonData:
-      password: ${CLICKHOUSE_PASSWORD}
+      # password: $GRAFANA_CLICKHOUSE_PASSWORD
+      basicAuthPassword: $GRAFANA_CLICKHOUSE_PASSWORD
     editable: true
-
