@@ -1,0 +1,20 @@
+{
+  "version": "10",
+  "credential": {
+    "accessKey": "${MINIO_ROOT_USER}",
+    "secretKey": "${MINIO_ROOT_PASSWORD}"
+  },
+  "region": "us-east-1",
+  "browser": "on",
+  "logger": {
+    "console": {
+      "level": "info"
+    },
+    "file": {
+      "level": "info",
+      "filename": "/var/log/minio/minio.log"
+    }
+  },
+  "notify": {}
+}
+

@@ -1,0 +1,40 @@
+groups:
+  - name: databarn_alerts
+    interval: 30s
+    rules:
+      - alert: ClickHouseDown
+        expr: up{job="clickhouse"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "ClickHouse is down"
+          description: "ClickHouse has been down for more than 1 minute"
+
+      - alert: HighClickHouseMemoryUsage
+        expr: clickhouse_metrics_MemoryTracking > 8000000000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High ClickHouse memory usage"
+          description: "ClickHouse memory usage is above 8GB"
+
+      - alert: TraefikDown
+        expr: up{job="traefik"} == 0
+        for: 1m
+        labels:
+          severity: critical
+        annotations:
+          summary: "Traefik is down"
+          description: "Traefik has been down for more than 1 minute"
+
+      - alert: HighRequestRate
+        expr: rate(traefik_entrypoint_requests_total[5m]) > 1000
+        for: 5m
+        labels:
+          severity: warning
+        annotations:
+          summary: "High request rate"
+          description: "Request rate is above 1000 req/s"
+

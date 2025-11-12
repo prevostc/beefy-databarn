@@ -1,0 +1,87 @@
+version: 2
+
+models:
+  - name: revenue_summary
+    description: "Daily revenue summary aggregated by date and currency (BIFI buybacks)"
+    tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "total_revenue >= 0"
+          config:
+            severity: error
+    columns:
+      - name: event_date
+        description: "Date of the buyback events"
+        tests:
+          - not_null
+      - name: currency
+        description: "Currency code (BIFI)"
+        tests:
+          - not_null
+      - name: total_revenue
+        description: "Total revenue for the day (sum of buyback_total)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: event_count
+        description: "Number of buyback events"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: total_bifi_amount
+        description: "Total BIFI tokens bought back"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: avg_bifi_price
+        description: "Average BIFI price for the day"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: unique_transactions
+        description: "Number of unique transactions"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+
+  - name: revenue_trends
+    description: "Monthly revenue trends with growth metrics (BIFI buybacks)"
+    tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "monthly_revenue >= 0"
+          config:
+            severity: error
+    columns:
+      - name: month
+        description: "First day of the month"
+        tests:
+          - not_null
+      - name: currency
+        description: "Currency code"
+        tests:
+          - not_null
+      - name: monthly_revenue
+        description: "Total revenue for the month"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+

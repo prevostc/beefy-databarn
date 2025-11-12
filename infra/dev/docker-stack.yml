@@ -1,0 +1,138 @@
+version: "3.8"
+
+services:
+  clickhouse:
+    image: clickhouse/clickhouse-server:latest
+    ports:
+      - "8123:8123"
+      - "9000:9000"
+    volumes:
+      - clickhouse_data:/var/lib/clickhouse
+      - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml
+      - ../clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ../clickhouse/init-clickhouse.sh:/docker-entrypoint-initdb.d/init-clickhouse.sh
+    environment:
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-default}
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=false"
+
+  traefik:
+    image: traefik:v2.11
+    command:
+      - --configfile=/traefik.yml
+    ports:
+      - "80:80"
+      - "443:443"
+      - "8080:8080"
+    volumes:
+      - ../traefik/traefik.yml:/traefik.yml
+      - ../traefik/dynamic:/dynamic
+      - traefik_certs:/letsencrypt
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.traefik.rule=Host(`traefik.${TRAEFIK_DOMAIN}`)"
+        - "traefik.http.routers.traefik.entrypoints=websecure"
+        - "traefik.http.routers.traefik.tls.certresolver=letsencrypt"
+        - "traefik.http.services.traefik.loadbalancer.server.port=8080"
+
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - prometheus_data:/prometheus
+      - ../prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
+      - ../prometheus/alerts.yml:/etc/prometheus/alerts.yml
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.prometheus.rule=Host(`prometheus.${TRAEFIK_DOMAIN}`)"
+        - "traefik.http.routers.prometheus.entrypoints=websecure"
+        - "traefik.http.routers.prometheus.tls.certresolver=letsencrypt"
+        - "traefik.http.services.prometheus.loadbalancer.server.port=9090"
+
+  grafana:
+    image: grafana/grafana:latest
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana_data:/var/lib/grafana
+      - ../grafana/provisioning:/etc/grafana/provisioning
+      - ../grafana/dashboards:/etc/grafana/dashboards
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_INSTALL_PLUGINS: vertamedia-clickhouse-datasource
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.grafana.rule=Host(`grafana.${TRAEFIK_DOMAIN}`)"
+        - "traefik.http.routers.grafana.entrypoints=websecure"
+        - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
+        - "traefik.http.services.grafana.loadbalancer.server.port=3000"
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    volumes:
+      - minio_data:/data
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-minioadmin}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      labels:
+        - "traefik.enable=true"
+        - "traefik.http.routers.minio.rule=Host(`minio.${TRAEFIK_DOMAIN}`)"
+        - "traefik.http.routers.minio.entrypoints=websecure"
+        - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
+        - "traefik.http.services.minio.loadbalancer.server.port=9000"
+
+volumes:
+  clickhouse_data:
+  prometheus_data:
+  grafana_data:
+  minio_data:
+  traefik_certs:
+
+networks:
+  databarn_network:
+    driver: overlay
+    attachable: true

@@ -1,0 +1,61 @@
+{
+  "dashboard": {
+    "title": "Revenue Dashboard",
+    "tags": ["revenue", "business"],
+    "timezone": "browser",
+    "schemaVersion": 16,
+    "version": 1,
+    "refresh": "30s",
+    "panels": [
+      {
+        "id": 1,
+        "title": "Daily Revenue",
+        "type": "timeseries",
+        "targets": [
+          {
+            "datasource": {
+              "type": "vertamedia-clickhouse-datasource",
+              "uid": "ClickHouse"
+            },
+            "rawSql": "SELECT date, revenue FROM analytics.revenue_summary ORDER BY date",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 0,
+          "y": 0
+        }
+      },
+      {
+        "id": 2,
+        "title": "Monthly Revenue Trend",
+        "type": "timeseries",
+        "targets": [
+          {
+            "datasource": {
+              "type": "vertamedia-clickhouse-datasource",
+              "uid": "ClickHouse"
+            },
+            "rawSql": "SELECT toStartOfMonth(date) as month, sum(revenue) as total_revenue FROM analytics.revenue_summary GROUP BY month ORDER BY month",
+            "format": "table",
+            "refId": "A"
+          }
+        ],
+        "gridPos": {
+          "h": 8,
+          "w": 12,
+          "x": 12,
+          "y": 0
+        }
+      }
+    ],
+    "time": {
+      "from": "now-30d",
+      "to": "now"
+    }
+  }
+}
+

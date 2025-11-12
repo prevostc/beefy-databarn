@@ -1,0 +1,41 @@
+name: "beefy_databarn"
+version: "1.0.0"
+config-version: 2
+
+profile: "beefy_databarn"
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  beefy_databarn:
+    staging:
+      +materialized: view
+      +tags: ["staging"]
+    intermediate:
+      +materialized: view
+      +tags: ["intermediate"]
+    marts:
+      +materialized: table
+      +tags: ["marts"]
+
+# tests:
+#   beefy_databarn:
+#     revenue:
+#       +severity: error
+
+vars:
+  beefy_db_host: "{{ env_var('BEEFY_DB_HOST') }}"
+  beefy_db_port: "{{ env_var('BEEFY_DB_PORT', '5432') }}"
+  beefy_db_name: "{{ env_var('BEEFY_DB_NAME') }}"
+  beefy_db_user: "{{ env_var('BEEFY_DB_USER') }}"
+  beefy_db_password: "{{ env_var('BEEFY_DB_PASSWORD') }}"

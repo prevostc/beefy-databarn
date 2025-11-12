@@ -1,0 +1,21 @@
+beefy_databarn:
+  target: dev
+  outputs:
+    dev:
+      type: clickhouse
+      schema: analytics
+      host: localhost
+      port: 8123
+      user: default
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      secure: false
+      verify: false
+    prod:
+      type: clickhouse
+      schema: analytics
+      host: clickhouse
+      port: 8123
+      user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
+      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      secure: false
+      verify: false
