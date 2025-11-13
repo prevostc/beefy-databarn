@@ -9,6 +9,7 @@ services:
     ports:
       - "8123:8123"
       - "9000:9000"
+      - "9363:9363"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
       - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml
