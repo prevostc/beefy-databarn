@@ -57,9 +57,9 @@ make dbt run        # Run dbt models
 
 5. Access services:
    - ClickHouse: http://localhost:8123
-   - Grafana: http://localhost:3000 (admin/admin by default)
+   - Grafana: http://localhost:3000 (admin/changeme by default)
    - Prometheus: http://localhost:9090
-   - MinIO Console: http://localhost:9001 (minioadmin/minioadmin by default)
+   - MinIO Console: http://localhost:9001 (admin/changeme by default)
    - MinIO API: http://localhost:9002
 
 **Other useful commands:**

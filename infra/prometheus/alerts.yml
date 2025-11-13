@@ -12,7 +12,7 @@ groups:
           description: "ClickHouse has been down for more than 1 minute"
 
       - alert: HighClickHouseMemoryUsage
-        expr: clickhouse_metrics_MemoryTracking > 8000000000
+        expr: ClickHouseMetrics_MemoryTracking > 8000000000
         for: 5m
         labels:
           severity: warning
