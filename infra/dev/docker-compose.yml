@@ -22,9 +22,9 @@ services:
       PGSSLCERT: /etc/postgres-ca/root.crt
     healthcheck:
       test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 1s
+      timeout: 20s
+      retries: 10
 
   grafana:
     image: grafana/grafana:latest
@@ -39,10 +39,15 @@ services:
       GRAFANA_CLICKHOUSE_PASSWORD: ${GRAFANA_CLICKHOUSE_PASSWORD}
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
       GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_INSTALL_PLUGINS: vertamedia-clickhouse-datasource
+      GF_INSTALL_PLUGINS: grafana-clickhouse-datasource
     depends_on:
       clickhouse:
         condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --no-verbose --tries=1 --spider http://localhost:3000/api/health || exit 1"]
+      interval: 1s
+      timeout: 20s
+      retries: 10
 
   prometheus:
     image: prom/prometheus:latest
@@ -59,7 +64,12 @@ services:
       - '--web.console.templates=/usr/share/prometheus/consoles'
     depends_on:
       - clickhouse
-
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9090/metrics"]
+      interval: 1s
+      timeout: 20s
+      retries: 10
+      
   minio:
     image: minio/minio:latest
     ports:
@@ -72,10 +82,10 @@ services:
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-minioadmin}
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
-      interval: 30s
+      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+      interval: 1s
       timeout: 20s
-      retries: 3
+      retries: 10
 
 volumes:
   clickhouse_data:

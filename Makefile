@@ -1,5 +1,5 @@
 .PHONY: help setup start dev
-.PHONY: infra dbt deps-check
+.PHONY: infra dbt grafana deps-check
 
 # Main help
 help: ## Show this help message
@@ -10,6 +10,7 @@ help: ## Show this help message
 	@echo "Infrastructure:"
 	@echo "  make infra start       Start infrastructure services"
 	@echo "  make infra stop        Stop infrastructure services"
+	@echo "  make infra restart     Restart infrastructure services"
 	@echo "  make infra logs        View infrastructure logs"
 	@echo "  make infra ps          Show service status"
 	@echo ""
@@ -18,6 +19,9 @@ help: ## Show this help message
 	@echo "  make dbt test          Run dbt tests"
 	@echo "  make dbt compile       Compile dbt models"
 	@echo "  make dbt docs          Generate and serve documentation"
+	@echo ""
+	@echo "Grafana:"
+	@echo "  make grafana restart Re-restart Grafana (reload configs)"
 	@echo ""
 	@echo "Dependencies:"
 	@echo "  make deps-check        Check for outdated dependencies"
@@ -33,12 +37,14 @@ infra:
 		$(MAKE) -s _infra-start; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "stop" ]; then \
 		$(MAKE) -s _infra-stop; \
+	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
+		$(MAKE) -s _infra-restart; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "logs" ]; then \
 		$(MAKE) -s _infra-logs; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "ps" ]; then \
 		$(MAKE) -s _infra-ps; \
 	else \
-		echo "Usage: make infra [start|stop|logs|ps]"; \
+		echo "Usage: make infra [start|stop|restart|logs|ps]"; \
 		exit 1; \
 	fi
 
@@ -57,8 +63,13 @@ _infra-logs:
 _infra-ps:
 	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml ps
 
+_infra-restart:
+	@echo "Restarting infrastructure services..."
+	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml restart
+	@echo "✓ Infrastructure services restarted"
+
 # Catch subcommands (prevents "No rule to make target" errors)
-stop logs ps:
+start stop logs ps:
 	@:
 
 # dbt commands - using subcommands
@@ -97,6 +108,25 @@ _dbt-docs:
 run test compile docs:
 	@:
 
+# Grafana commands - using subcommands
+grafana:
+	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
+		$(MAKE) -s _grafana-restart; \
+	else \
+		echo "Usage: make grafana [restart]"; \
+		exit 1; \
+	fi
+
+# Internal targets
+_grafana-restart:
+	@echo "Re-restarting Grafana (restarting service to reload configs)..."
+	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml restart grafana
+	@echo "✓ Grafana re-restarted"
+
+# Catch subcommands
+restart:
+	@:
+
 # Dependencies
 deps-check: ## Check for outdated dependencies
 	@echo "Checking for outdated dependencies..."
@@ -127,12 +157,6 @@ setup: ## Initial setup (copy .env, install deps)
 	@echo "  1. Edit .env with your credentials"
 	@echo "  2. make infra start"
 	@echo "  3. make dbt run"
-
-# Combined workflow
-start: ## Start infrastructure services
-	@$(MAKE) -s _infra-start
-	@echo ""
-	@echo "ℹ️  ClickHouse will initialize automatically on first startup"
 
 dev: ## Full development workflow (setup, start, run dbt)
 	@$(MAKE) -s setup

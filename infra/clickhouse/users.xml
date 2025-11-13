@@ -8,8 +8,19 @@
         </default>
         <readonly>
             <readonly>1</readonly>
+            <constraints>
+                <max_execution_time>
+                    <changeable_in_readonly/>
+                    <min>0</min>
+                    <max>180</max>
+                </max_execution_time>
+            </constraints>
         </readonly>
     </profiles>
+
+    <access_control_improvements>
+        <settings_constraints_replace_previous>true</settings_constraints_replace_previous>
+    </access_control_improvements>
 
     <users>
         <default>
