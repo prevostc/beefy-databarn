@@ -18,7 +18,7 @@ WITH cleaned_yield AS (
     dp.dim_product_id,
     h.block_number,
     -- Standardize timestamp (handle timezone issues if any)
-    toDateTime(h.txn_timestamp) as dim_time,
+    toDateTime(h.txn_timestamp) as date_time,
     h.txn_idx as tx_idx,
     h.event_idx,
     lower(h.txn_hash) as tx_hash,
@@ -29,9 +29,9 @@ WITH cleaned_yield AS (
     -- Cast result to Decimal256(20) to maintain full precision
     toDecimal256(h.harvest_amount * h.want_price, 20) as underlying_amount_compounded_usd
   FROM {{ ref('stg_beefy_db__harvests') }} h
-  INNER JOIN {{ ref('dim_chain') }} dc
+  INNER JOIN {{ ref('chain') }} dc
     ON h.chain_id = dc.dim_chain_id
-  INNER JOIN {{ ref('dim_product') }} dp
+  INNER JOIN {{ ref('product') }} dp
     ON h.vault_id = dp.beefy_id
   WHERE
     -- Filter out invalid records (ensure yield data quality)
@@ -73,7 +73,7 @@ WITH cleaned_yield AS (
 
 SELECT
   id,
-  dim_time,
+  date_time,
   dim_chain_id,
   dim_chain_name,
   dim_product_id,

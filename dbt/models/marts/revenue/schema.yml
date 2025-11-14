@@ -29,7 +29,7 @@ models:
         description: "Block number where the buyback event occurred"
         tests:
           - not_null
-      - name: dim_time
+      - name: date_time
         description: "Timestamp of the buyback event"
         tests:
           - not_null

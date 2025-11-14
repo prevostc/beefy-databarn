@@ -14,7 +14,7 @@ WITH cleaned_revenue AS (
     id,
     block_number,
     -- Standardize timestamp (handle timezone issues if any)
-    toDateTime(txn_timestamp) as dim_time,
+    toDateTime(txn_timestamp) as date_time,
     event_idx,
     lower(txn_hash) as tx_hash,
     -- Token symbol is BIFI (the token being bought back)
@@ -38,7 +38,7 @@ WITH cleaned_revenue AS (
 
 SELECT
   id,
-  dim_time,
+  date_time,
   block_number,
   event_idx,
   tx_hash,

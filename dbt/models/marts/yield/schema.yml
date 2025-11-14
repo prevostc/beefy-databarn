@@ -32,18 +32,18 @@ models:
           - not_null
           - unique
       - name: dim_chain_id
-        description: "Chain ID where the harvest occurred (foreign key to dim_chain.dim_chain_id)"
+        description: "Chain ID where the harvest occurred (foreign key to chain.dim_chain_id)"
         tests:
           - not_null
           - relationships:
               arguments:
-                to: ref('dim_chain')
+                to: ref('chain')
                 field: dim_chain_id
       - name: block_number
         description: "Block number where the harvest event occurred"
         tests:
           - not_null
-      - name: dim_time
+      - name: date_time
         description: "Timestamp of the harvest event"
         tests:
           - not_null
@@ -60,12 +60,12 @@ models:
         tests:
           - not_null
       - name: dim_product_id
-        description: "Product identifier (foreign key to dim_product.dim_product_id)"
+        description: "Product identifier (foreign key to product.dim_product_id)"
         tests:
           - not_null
           - relationships:
               arguments:
-                to: ref('dim_product')
+                to: ref('product')
                 field: dim_product_id
       - name: underlying_amount_compounded
         description: "Amount harvested"

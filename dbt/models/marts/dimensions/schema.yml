@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: dim_chain
+  - name: chain
     description: "Dimension table for chain reference data. Provides chain metadata for joining with fact tables."
     columns:
       - name: dim_chain_id
@@ -29,7 +29,7 @@ models:
               arguments:
                 values: [0, 1]
 
-  - name: dim_product
+  - name: product
     description: "Dimension table for product (vault) reference data. Provides product/vault metadata for joining with fact tables."
     columns:
       - name: dim_product_id

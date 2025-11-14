@@ -54,35 +54,51 @@ models:
     description: "Staging model for harvest events from beefy-db PostgreSQL database"
     columns:
       - name: chain_id
-        description: "Chain ID where the harvest occurred (references dim_chain.chain_id)"
+        description: "Chain ID where the harvest occurred (references chain.chain_id)"
+        data_type: Int64
+        codec: Delta, LZ4
         tests:
           - not_null
       - name: block_number
         description: "Block number when the harvest transaction occurred"
+        data_type: Int32
+        codec: Delta, LZ4
         tests:
           - not_null
       - name: txn_idx
         description: "Transaction index within the block"
+        data_type: Int16
+        codec: Delta, LZ4
         tests:
           - not_null
       - name: event_idx
         description: "Event index within the transaction"
+        data_type: Int16
+        codec: Delta, LZ4
         tests:
           - not_null
       - name: txn_timestamp
         description: "Timestamp when the harvest transaction occurred"
+        data_type: DateTime64(6, 'UTC')
+        codec: DoubleDelta, LZ4
         tests:
           - not_null
       - name: txn_hash
         description: "Transaction hash"
+        data_type: String
+        codec: LZ4
         tests:
           - not_null
       - name: vault_id
         description: "Vault identifier"
+        data_type: String
+        codec: LZ4
         tests:
           - not_null
       - name: harvest_amount
         description: "Amount harvested"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - not_null
           - dbt_utils.accepted_range:
@@ -91,6 +107,8 @@ models:
                 inclusive: true
       - name: want_price
         description: "Price of the want token at the time of harvest"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - not_null
           - dbt_utils.accepted_range:
@@ -99,6 +117,8 @@ models:
                 inclusive: true
       - name: call_fee
         description: "Call fee for the harvest"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - dbt_utils.accepted_range:
               arguments:
@@ -106,6 +126,8 @@ models:
                 inclusive: true
       - name: gas_fee
         description: "Gas fee for the harvest"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - dbt_utils.accepted_range:
               arguments:
@@ -113,6 +135,8 @@ models:
                 inclusive: true
       - name: platform_fee
         description: "Platform fee for the harvest"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - dbt_utils.accepted_range:
               arguments:
@@ -120,6 +144,8 @@ models:
                 inclusive: true
       - name: strategist_fee
         description: "Strategist fee for the harvest"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - dbt_utils.accepted_range:
               arguments:
@@ -127,6 +153,8 @@ models:
                 inclusive: true
       - name: native_price
         description: "Price of native token at the time of harvest"
+        data_type: Decimal256(20)
+        codec: ZSTD(3)
         tests:
           - dbt_utils.accepted_range:
               arguments:
@@ -134,8 +162,12 @@ models:
                 inclusive: true
       - name: is_cowllector
         description: "Whether this harvest is from a cowllector"
+        data_type: UInt8
+        codec: Delta, LZ4
       - name: strategist_address
         description: "Address of the strategist"
+        data_type: String
+        codec: LZ4
 
   - name: stg_beefy_db__chains
     description: "Staging model for chains reference data from beefy-db PostgreSQL database"
@@ -169,3 +201,66 @@ models:
         tests:
           - not_null
           - unique
+
+  - name: stg_beefy_db__address_metadata
+    description: "Staging model for address metadata from beefy-db PostgreSQL database"
+    columns:
+      - name: chain_id
+        description: "Chain ID (references chain.chain_id)"
+        tests:
+          - not_null
+      - name: address
+        description: "Address (42 character hex string)"
+        tests:
+          - not_null
+      - name: is_contract
+        description: "Whether the address is a contract"
+      - name: label
+        description: "Label for the address"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - chain_id
+            - address
+
+  - name: stg_beefy_db__prices
+    description: "Staging model for price data from beefy-db PostgreSQL database"
+    columns:
+      - name: oracle_id
+        description: "Oracle identifier (references price_oracles.id)"
+        tests:
+          - not_null
+      - name: t
+        description: "Timestamp for the price data point"
+        data_type: DateTime64(6, 'UTC')
+        codec: DoubleDelta, LZ4
+        tests:
+          - not_null
+      - name: val
+        description: "Price value"
+        data_type: Float64
+        codec: Gorilla, LZ4
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+
+  - name: stg_beefy_db__price_oracles
+    description: "Staging model for price oracle reference data from beefy-db PostgreSQL database"
+    columns:
+      - name: id
+        description: "Unique identifier for the price oracle"
+        tests:
+          - not_null
+          - unique
+      - name: oracle_id
+        description: "Oracle identifier string"
+        tests:
+          - not_null
+          - unique
+      - name: tokens
+        description: "Array of token addresses for this oracle"
+        tests:
+          - not_null

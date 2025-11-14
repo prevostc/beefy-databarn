@@ -24,7 +24,8 @@
     materialized='incremental',
     unique_key=['chain_id', 'block_number', 'txn_idx', 'event_idx'],
     incremental_strategy='delete+insert',
-    on_schema_change='sync_all_columns'
+    on_schema_change='sync_all_columns',
+    order_by=['txn_timestamp', 'chain_id', 'block_number', 'txn_idx', 'event_idx']
   )
 }}
 
