@@ -1,0 +1,93 @@
+version: 2
+
+models:
+  - name: yield_harvest_events
+    description: "Transform harvest events into yield structure. Maps harvest events to a yield model, where harvest_amount * want_price_usd represents yield."
+    tests:
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "harvest_amount > 0"
+          config:
+            severity: error
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "want_price_usd > 0"
+          config:
+            severity: error
+      - dbt_utils.expression_is_true:
+          arguments:
+            expression: "yield_usd > 0"
+          config:
+            severity: error
+      - row_count_drop_threshold:
+          arguments:
+            compare_model: ref('stg_beefy_db__harvests')
+            max_drop_percentage: 2.0
+          config:
+            severity: error
+    columns:
+      - name: id
+        description: "Unique identifier for the harvest event (surrogate key from dim_chain_id, block_number, txn_idx, event_idx)"
+        tests:
+          - not_null
+          - unique
+      - name: dim_chain_id
+        description: "Chain ID where the harvest occurred (foreign key to dim_chain.dim_chain_id)"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_chain')
+                field: dim_chain_id
+      - name: block_number
+        description: "Block number where the harvest event occurred"
+        tests:
+          - not_null
+      - name: dim_time
+        description: "Timestamp of the harvest event"
+        tests:
+          - not_null
+      - name: txn_idx
+        description: "Transaction index within the block"
+        tests:
+          - not_null
+      - name: event_idx
+        description: "Index of the event within the transaction"
+        tests:
+          - not_null
+      - name: txn_hash
+        description: "Transaction hash of the harvest"
+        tests:
+          - not_null
+      - name: dim_product_id
+        description: "Product identifier (foreign key to dim_product.dim_product_id)"
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: dim_product_id
+      - name: harvest_amount
+        description: "Amount harvested"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: want_price_usd
+        description: "Price of the want token at the time of harvest in USD"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: yield_usd
+        description: "Yield amount in USD (harvest_amount * want_price_usd)"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: false

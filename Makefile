@@ -17,8 +17,10 @@ help: ## Show this help message
 	@echo ""
 	@echo "dbt:"
 	@echo "  make dbt run           Run dbt models"
+	@echo "  make dbt run <model>   Run a specific dbt model"
 	@echo "  make dbt test          Run dbt tests"
 	@echo "  make dbt compile       Compile dbt models"
+	@echo "  make dbt sql [<model>]  Show compiled SQL (optionally for specific model)"
 	@echo "  make dbt docs          Generate and serve documentation"
 	@echo ""
 	@echo "Grafana:"
@@ -85,22 +87,33 @@ start build stop logs ps:
 # dbt commands - using subcommands
 dbt:
 	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "run" ]; then \
-		$(MAKE) -s _dbt-run; \
+		$(MAKE) -s _dbt-run MODEL=""; \
+	elif [ "$(word 2,$(MAKECMDGOALS))" = "run" ]; then \
+		$(MAKE) -s _dbt-run MODEL="$(word 3,$(MAKECMDGOALS))"; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "test" ]; then \
 		$(MAKE) -s _dbt-test; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "compile" ]; then \
 		$(MAKE) -s _dbt-compile; \
+	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "sql" ]; then \
+		$(MAKE) -s _dbt-sql MODEL=""; \
+	elif [ "$(word 2,$(MAKECMDGOALS))" = "sql" ]; then \
+		$(MAKE) -s _dbt-sql MODEL="$(word 3,$(MAKECMDGOALS))"; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "docs" ]; then \
 		$(MAKE) -s _dbt-docs; \
 	else \
-		echo "Usage: make dbt [run|test|compile|docs]"; \
+		echo "Usage: make dbt [run [model]|test|compile|sql [model_name]|docs]"; \
 		exit 1; \
 	fi
 
 # Internal targets
 _dbt-run:
-	@echo "Running dbt models..."
-	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt run
+	@if [ -n "$(MODEL)" ]; then \
+		echo "Running dbt model: $(MODEL)..."; \
+		set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt run --select $(MODEL) --show-all-deprecations; \
+	else \
+		echo "Running dbt models..."; \
+		set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt run --show-all-deprecations; \
+	fi
 
 _dbt-test:
 	@echo "Running dbt tests..."
@@ -110,12 +123,35 @@ _dbt-compile:
 	@echo "Compiling dbt models..."
 	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt compile
 
+_dbt-sql:
+	@echo "Compiling and showing SQL (no queries executed)..."
+	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && \
+	if [ -n "$(MODEL)" ]; then \
+		uv run dbt compile --select $(MODEL) > /dev/null 2>&1 && \
+		COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$(MODEL).sql" -type f | head -1) && \
+		if [ -n "$$COMPILED_FILE" ]; then \
+			echo "=== Compiled SQL for $(MODEL) ===" && \
+			cat "$$COMPILED_FILE"; \
+		else \
+			echo "Error: Could not find compiled SQL for $(MODEL)"; \
+			exit 1; \
+		fi; \
+	else \
+		uv run dbt compile > /dev/null 2>&1 && \
+		echo "Compiled SQL files are in target/compiled/beefy_databarn/models/"; \
+		find target/compiled/beefy_databarn/models -name "*.sql" -type f | head -10; \
+	fi
+
 _dbt-docs:
 	@echo "Generating dbt documentation..."
 	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt docs generate && dbt docs serve
 
 # Catch subcommands
-run test compile docs:
+run test compile sql docs:
+	@:
+
+# Catch model names passed to dbt sql (prevents "No rule to make target" errors)
+%:
 	@:
 
 # Grafana commands - using subcommands

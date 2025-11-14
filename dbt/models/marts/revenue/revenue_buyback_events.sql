@@ -14,17 +14,16 @@ WITH cleaned_revenue AS (
     id,
     block_number,
     -- Standardize timestamp (handle timezone issues if any)
-    toDateTime(txn_timestamp) AS event_timestamp,
+    toDateTime(txn_timestamp) as dim_time,
     event_idx,
     txn_hash,
-    bifi_amount,
-    bifi_price,
-    -- Revenue: buyback_total represents the revenue generated from the buyback
-    buyback_total AS revenue_amount,
     -- Currency is BIFI (the token being bought back)
     'BIFI' AS currency,
-    -- Extract date for grouping
-    toDate(txn_timestamp) AS event_date
+    bifi_price as currency_price_usd,
+    bifi_amount as buyback_amount,
+    -- Ensure proper Decimal multiplication with explicit casting
+    -- Multiply as Decimal128 to avoid precision/overflow issues
+    bifi_amount * bifi_price as buyback_usd
   FROM {{ ref('stg_beefy_db__bifi_buyback') }}
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
@@ -39,14 +38,12 @@ WITH cleaned_revenue AS (
 
 SELECT
   id,
+  dim_time,
   block_number,
-  event_timestamp,
   event_idx,
   txn_hash,
-  bifi_amount,
-  bifi_price,
-  revenue_amount,
   currency,
-  event_date
+  currency_price_usd,
+  buyback_amount,
+  buyback_usd
 FROM cleaned_revenue
-

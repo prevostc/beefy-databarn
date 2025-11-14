@@ -19,6 +19,8 @@ models:
           - not_null
       - name: event_idx
         description: "Event index within the transaction"
+        tests:
+          - not_null
       - name: txn_hash
         description: "Transaction hash"
         tests:
@@ -47,3 +49,123 @@ models:
               arguments:
                 min_value: 0
                 inclusive: true
+
+  - name: stg_beefy_db__harvests
+    description: "Staging model for harvest events from beefy-db PostgreSQL database"
+    columns:
+      - name: chain_id
+        description: "Chain ID where the harvest occurred (references dim_chain.chain_id)"
+        tests:
+          - not_null
+      - name: block_number
+        description: "Block number when the harvest transaction occurred"
+        tests:
+          - not_null
+      - name: txn_idx
+        description: "Transaction index within the block"
+        tests:
+          - not_null
+      - name: event_idx
+        description: "Event index within the transaction"
+        tests:
+          - not_null
+      - name: txn_timestamp
+        description: "Timestamp when the harvest transaction occurred"
+        tests:
+          - not_null
+      - name: txn_hash
+        description: "Transaction hash"
+        tests:
+          - not_null
+      - name: vault_id
+        description: "Vault identifier"
+        tests:
+          - not_null
+      - name: harvest_amount
+        description: "Amount harvested"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: want_price
+        description: "Price of the want token at the time of harvest"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: call_fee
+        description: "Call fee for the harvest"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: gas_fee
+        description: "Gas fee for the harvest"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: platform_fee
+        description: "Platform fee for the harvest"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: strategist_fee
+        description: "Strategist fee for the harvest"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: native_price
+        description: "Price of native token at the time of harvest"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: is_cowllector
+        description: "Whether this harvest is from a cowllector"
+      - name: strategist_address
+        description: "Address of the strategist"
+
+  - name: stg_beefy_db__chains
+    description: "Staging model for chains reference data from beefy-db PostgreSQL database"
+    columns:
+      - name: chain_id
+        description: "Unique identifier for the chain"
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Chain name"
+        tests:
+          - not_null
+      - name: beefy_name
+        description: "Beefy-specific chain name"
+        tests:
+          - not_null
+      - name: enabled
+        description: "Whether the chain is enabled"
+
+  - name: stg_beefy_db__vault_ids
+    description: "Staging model for vault/product IDs from beefy-db PostgreSQL database"
+    columns:
+      - name: id
+        description: "Unique identifier for the vault record"
+        tests:
+          - not_null
+          - unique
+      - name: vault_id
+        description: "Vault identifier (beefy_id)"
+        tests:
+          - not_null
+          - unique
