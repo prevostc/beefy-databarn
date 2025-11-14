@@ -6,7 +6,7 @@
 }}
 
 -- Intermediate model: Transform harvest events into yield structure
--- This model maps harvest events to a yield model, where harvest_amount * want_price_usd represents yield
+-- This model maps harvest events to a yield model, where underlying_amount_compounded * underlying_token_price_usd represents yield
 -- Handles data quality issues, standardizes formats, and prepares for yield aggregation
 
 WITH cleaned_yield AS (
@@ -19,15 +19,15 @@ WITH cleaned_yield AS (
     h.block_number,
     -- Standardize timestamp (handle timezone issues if any)
     toDateTime(h.txn_timestamp) as dim_time,
-    h.txn_idx,
+    h.txn_idx as tx_idx,
     h.event_idx,
-    lower(h.txn_hash) as txn_hash,
-    h.harvest_amount,
-    h.want_price as want_price_usd,
-    -- Calculate yield: harvest_amount * want_price_usd
+    lower(h.txn_hash) as tx_hash,
+    h.harvest_amount as underlying_amount_compounded,
+    h.want_price as underlying_token_price_usd,
+    -- Calculate yield: underlying_amount_compounded * underlying_token_price_usd
     -- Ensure proper Decimal multiplication with explicit casting
     -- Cast result to Decimal256(20) to maintain full precision
-    toDecimal256(h.harvest_amount * h.want_price, 20) as yield_usd
+    toDecimal256(h.harvest_amount * h.want_price, 20) as underlying_amount_compounded_usd
   FROM {{ ref('stg_beefy_db__harvests') }} h
   INNER JOIN {{ ref('dim_chain') }} dc
     ON h.chain_id = dc.dim_chain_id
@@ -46,7 +46,7 @@ WITH cleaned_yield AS (
     -- next biggest harvest is bugged and shows as $32M
     AND toDecimal256(h.harvest_amount * h.want_price, 20) < 30_000_000.00
 
-    AND (chain_id, lower(txn_hash)) NOT IN (
+    AND (chain_id, lower(h.txn_hash)) NOT IN (
       -- armads: "this one doesnt even have any large transfers in the tx 😅, same for the other avax transactions"
       (43114 /* avax */, '0xfd904cb8742ea0caa10bc8a1475f487a2af885938997ff00dcbc195533961162'),
       (43114 /* avax */, '0xffe824f13634da2f10daedb3c3cc123fea419e1b03fb6d169e9a98c89a29100e'),
@@ -78,11 +78,11 @@ SELECT
   dim_chain_name,
   dim_product_id,
   block_number,
-  txn_idx,
+  tx_idx,
   event_idx,
-  txn_hash,
-  harvest_amount,
-  want_price_usd,
-  yield_usd
+  tx_hash,
+  underlying_amount_compounded,
+  underlying_token_price_usd,
+  underlying_amount_compounded_usd
 FROM cleaned_yield
 

@@ -11,7 +11,7 @@ models:
             severity: error
       - dbt_utils.expression_is_true:
           arguments:
-            expression: "currency_price_usd > 0"
+            expression: "token_price_usd > 0"
           config:
             severity: error
       - dbt_utils.expression_is_true:
@@ -35,18 +35,18 @@ models:
           - not_null
       - name: event_idx
         description: "Index of the event within the transaction"
-      - name: txn_hash
+      - name: tx_hash
         description: "Transaction hash of the buyback"
         tests:
           - not_null
-      - name: currency
-        description: "Currency code (BIFI)"
+      - name: token_symbol
+        description: "Token symbol (BIFI)"
         tests:
           - not_null
           - accepted_values:
               arguments:
               values: ["BIFI"]
-      - name: currency_price_usd
+      - name: token_price_usd
         description: "Price of BIFI token at the time of buyback in USD"
         tests:
           - not_null

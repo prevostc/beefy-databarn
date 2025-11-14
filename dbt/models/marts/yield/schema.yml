@@ -2,21 +2,21 @@ version: 2
 
 models:
   - name: yield_harvest_events
-    description: "Transform harvest events into yield structure. Maps harvest events to a yield model, where harvest_amount * want_price_usd represents yield."
+    description: "Transform harvest events into yield structure. Maps harvest events to a yield model, where underlying_amount_compounded * underlying_token_price_usd represents yield."
     tests:
       - dbt_utils.expression_is_true:
           arguments:
-            expression: "harvest_amount > 0"
+            expression: "underlying_amount_compounded > 0"
           config:
             severity: error
       - dbt_utils.expression_is_true:
           arguments:
-            expression: "want_price_usd > 0"
+            expression: "underlying_token_price_usd > 0"
           config:
             severity: error
       - dbt_utils.expression_is_true:
           arguments:
-            expression: "yield_usd > 0"
+            expression: "underlying_amount_compounded_usd > 0"
           config:
             severity: error
       - row_count_drop_threshold:
@@ -27,7 +27,7 @@ models:
             severity: error
     columns:
       - name: id
-        description: "Unique identifier for the harvest event (surrogate key from dim_chain_id, block_number, txn_idx, event_idx)"
+        description: "Unique identifier for the harvest event (surrogate key from dim_chain_id, block_number, tx_idx, event_idx)"
         tests:
           - not_null
           - unique
@@ -47,7 +47,7 @@ models:
         description: "Timestamp of the harvest event"
         tests:
           - not_null
-      - name: txn_idx
+      - name: tx_idx
         description: "Transaction index within the block"
         tests:
           - not_null
@@ -55,7 +55,7 @@ models:
         description: "Index of the event within the transaction"
         tests:
           - not_null
-      - name: txn_hash
+      - name: tx_hash
         description: "Transaction hash of the harvest"
         tests:
           - not_null
@@ -67,7 +67,7 @@ models:
               arguments:
                 to: ref('dim_product')
                 field: dim_product_id
-      - name: harvest_amount
+      - name: underlying_amount_compounded
         description: "Amount harvested"
         tests:
           - not_null
@@ -75,7 +75,7 @@ models:
               arguments:
                 min_value: 0
                 inclusive: false
-      - name: want_price_usd
+      - name: underlying_token_price_usd
         description: "Price of the want token at the time of harvest in USD"
         tests:
           - not_null
@@ -83,8 +83,8 @@ models:
               arguments:
                 min_value: 0
                 inclusive: false
-      - name: yield_usd
-        description: "Yield amount in USD (harvest_amount * want_price_usd)"
+      - name: underlying_amount_compounded_usd
+        description: "Yield amount in USD (underlying_amount_compounded * underlying_token_price_usd)"
         tests:
           - not_null
           - dbt_utils.accepted_range:

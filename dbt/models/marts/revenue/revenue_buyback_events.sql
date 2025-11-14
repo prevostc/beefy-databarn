@@ -16,10 +16,10 @@ WITH cleaned_revenue AS (
     -- Standardize timestamp (handle timezone issues if any)
     toDateTime(txn_timestamp) as dim_time,
     event_idx,
-    txn_hash,
-    -- Currency is BIFI (the token being bought back)
-    'BIFI' AS currency,
-    bifi_price as currency_price_usd,
+    lower(txn_hash) as tx_hash,
+    -- Token symbol is BIFI (the token being bought back)
+    'BIFI' AS token_symbol,
+    bifi_price as token_price_usd,
     bifi_amount as buyback_amount,
     -- Ensure proper Decimal multiplication with explicit casting
     -- Multiply as Decimal128 to avoid precision/overflow issues
@@ -41,9 +41,9 @@ SELECT
   dim_time,
   block_number,
   event_idx,
-  txn_hash,
-  currency,
-  currency_price_usd,
+  tx_hash,
+  token_symbol,
+  token_price_usd,
   buyback_amount,
   buyback_usd
 FROM cleaned_revenue
