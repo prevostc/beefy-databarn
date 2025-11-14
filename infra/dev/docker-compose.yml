@@ -5,7 +5,7 @@ name: beefy-databarn
 
 services:
   clickhouse:
-    image: clickhouse/clickhouse-server:latest
+    image: clickhouse/clickhouse-server:25.10
     ports:
       - "8123:8123"
       - "9000:9000"
@@ -28,7 +28,7 @@ services:
       retries: 10
 
   grafana:
-    image: grafana/grafana:latest
+    image: grafana/grafana:12.2
     ports:
       - "3000:3000"
     volumes:
@@ -51,7 +51,7 @@ services:
       retries: 10
 
   prometheus:
-    image: prom/prometheus:latest
+    image: prom/prometheus:v3.7.3
     ports:
       - "9090:9090"
     volumes:
@@ -72,7 +72,7 @@ services:
       retries: 10
       
   minio:
-    image: minio/minio:latest
+    image: minio/minio:RELEASE.2025-09-07T16-13-09Z
     ports:
       - "9002:9000"  # API port (mapped to 9002 to avoid conflict with ClickHouse)
       - "9001:9001"  # Console port
@@ -89,11 +89,98 @@ services:
       timeout: 20s
       retries: 10
 
+  superset_postgres:
+    image: pgautoupgrade/pgautoupgrade:17-alpine
+    ports:
+      - "5432:5432"
+    volumes:
+      - superset_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${SUPERSET_POSTGRES_USER:-superset}"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  superset_redis:
+    image: redis:8-alpine
+    ports:
+      - "6379:6379"
+    volumes:
+      - superset_redis_data:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    restart: unless-stopped
+
+  superset:
+    build:
+      context: ../superset
+      dockerfile: Dockerfile
+    platform: linux/amd64
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset_data:/app/superset_home
+      - ../superset/provision:/usr/local/bin/provision
+      - ../superset/docker-entrypoint-wrapper.sh:/app/docker-entrypoint-wrapper.sh
+      - ../superset/superset_config.py:/app/superset_config.py
+    command: ["/app/docker-entrypoint-wrapper.sh"]
+    environment:
+      SUPERSET_ENV: development
+      SUPERSET_LOG_LEVEL: INFO
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      SUPERSET_CONFIG_PATH: /app/superset_config.py
+      SUPERSET_POSTGRES_HOST: superset_postgres
+      SUPERSET_POSTGRES_PORT: 5432
+      SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_ADMIN_USER: ${SUPERSET_ADMIN_USER:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+      SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL:-admin@example.com}
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
+      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_REDIS_HOST: superset_redis
+      SUPERSET_REDIS_PORT: 6379
+      SUPERSET_REDIS_CELERY_DB: ${SUPERSET_REDIS_CELERY_DB:-0}
+      SUPERSET_REDIS_RESULTS_DB: ${SUPERSET_REDIS_RESULTS_DB:-1}
+    depends_on:
+      superset_postgres:
+        condition: service_healthy
+      superset_redis:
+        condition: service_healthy
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/health || exit 1"]
+      interval: 1s
+      timeout: 10s
+      retries: 20
+
+
 volumes:
   clickhouse_data:
   prometheus_data:
   grafana_data:
   minio_data:
+  superset_postgres_data:
+  superset_data:
+  superset_redis_data:
+
 
 networks:
   default:

@@ -158,11 +158,134 @@ services:
         - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
         - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
+  superset_postgres:
+    image: pgautoupgrade/pgautoupgrade:17-alpine
+    volumes:
+      - superset_postgres_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+        reservations:
+          cpus: "0.5"
+          memory: 1G
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "traefik.enable=false"
+
+  redis:
+    image: redis:8-alpine
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "0.5"
+          memory: 1G
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+      restart_policy:
+        condition: on-failure
+        delay: 5s
+        max_attempts: 3
+      labels:
+        - "traefik.enable=false"
+
+  superset:
+    build:
+      context: ../superset
+      dockerfile: Dockerfile
+    ports:
+      - "8088:8088"
+    volumes:
+      - superset_data:/app/superset_home
+      - ../superset/provision:/usr/local/bin/provision
+      - ../superset/docker-entrypoint-wrapper.sh:/app/docker-entrypoint-wrapper.sh
+      - ../superset/superset_config.py:/app/superset_config.py
+    command: ["/app/docker-entrypoint-wrapper.sh"]
+    environment:
+      SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      DATABASE_DIALECT: postgresql
+      DATABASE_HOST: superset_postgres
+      DATABASE_PORT: 5432
+      DATABASE_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      DATABASE_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      DATABASE_DB: ${POSTGRES_DB:-superset}
+      SUPERSET_ADMIN_USER: ${SUPERSET_ADMIN_USER:-admin}
+      SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
+      SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL:-admin@example.com}
+      CLICKHOUSE_HOST: clickhouse
+      CLICKHOUSE_PORT: 8123
+      CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
+      CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
+      POSTGRES_USER: ${POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_REDIS_HOST: redis
+      SUPERSET_REDIS_PORT: 6379
+      SUPERSET_REDIS_CELERY_DB: ${SUPERSET_REDIS_CELERY_DB:-0}
+      SUPERSET_REDIS_RESULTS_DB: ${SUPERSET_REDIS_RESULTS_DB:-1}
+    depends_on:
+      superset_postgres:
+        condition: service_healthy
+      redis:
+        condition: service_started
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8088/health || exit 1"]
+      interval: 1s
+      timeout: 10s
+      retries: 20
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.superset.rule=Host(`superset.${TRAEFIK_DOMAIN}`)"
+      - "traefik.http.routers.superset.entrypoints=websecure"
+      - "traefik.http.routers.superset.tls.certresolver=letsencrypt"
+      - "traefik.http.services.superset.loadbalancer.server.port=8088"
+    networks:
+      - databarn_network
+    deploy:
+      replicas: 1
+      placement:
+        constraints:
+          - node.role == manager
+      resources:
+        limits:
+          cpus: "1"
+          memory: 2G
+
 volumes:
   clickhouse_data:
   prometheus_data:
   grafana_data:
   minio_data:
+  superset_postgres_data:
+  superset_data:
+  redis_data:
   traefik_certs:
 
 networks:

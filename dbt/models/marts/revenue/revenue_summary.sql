@@ -14,7 +14,7 @@ SELECT
   event_date,
   currency,
   COUNT(*) AS event_count,
-  SUM(revenue_amount) AS total_revenue,
+  SUM(revenue_amount) AS sum_revenue,
   AVG(revenue_amount) AS avg_revenue_per_event,
   MIN(revenue_amount) AS min_revenue,
   MAX(revenue_amount) AS max_revenue,

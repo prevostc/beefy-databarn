@@ -6,6 +6,7 @@ Full stack data platform for federating multiple external data sources with Clic
 
 - **ClickHouse**: Target database with federation capabilities
 - **dbt**: Data modeling with staging → intermediate → marts layers
+- **Superset**: BI/analytics platform with ClickHouse support for querying and visualization
 - **Traefik**: Routing, HTTPS termination, blue-green deployment
 - **Prometheus + Grafana**: Metrics collection, monitoring, and alerting
 - **MinIO**: S3-compatible blob storage
@@ -41,7 +42,7 @@ make dbt run        # Run dbt models
 
 2. Start infrastructure services:
    ```bash
-   make infra start      # Start ClickHouse, Grafana, Prometheus, MinIO
+   make infra start      # Start ClickHouse, Superset, Grafana, Prometheus, MinIO
    ```
 
 3. Initialize ClickHouse:
@@ -57,6 +58,7 @@ make dbt run        # Run dbt models
 
 5. Access services:
    - ClickHouse: http://localhost:8123
+   - Superset: http://localhost:8088
    - Grafana: http://localhost:3000 (admin/changeme by default)
    - Prometheus: http://localhost:9090
    - MinIO Console: http://localhost:9001 (admin/changeme by default)
@@ -94,7 +96,7 @@ make infra stop       # Stop all services
 
 ## Project Structure
 
-- `infra/`: Infrastructure configurations (dev/prod stacks, ClickHouse, Traefik, monitoring)
+- `infra/`: Infrastructure configurations (dev/prod stacks, ClickHouse, Superset, Traefik, monitoring)
 - `dbt/`: dbt project with staging, intermediate, and marts models
 - `scripts/`: Deployment and setup scripts
 - `dlt/`: Future data ingestion pipelines
@@ -163,11 +165,14 @@ The platform supports both development and production environments:
 
 Services can be moved between nodes using Docker Swarm labels.
 
-## Monitoring
+## Monitoring & BI
 
+- Superset: http://localhost:8088 (local dev) or https://redash.${TRAEFIK_DOMAIN} (production)
 - Grafana: http://localhost:3000 (default)
 - Prometheus: http://localhost:9090
 - ClickHouse: http://localhost:8123
+
+**Note**: Superset supports ClickHouse as a native data source. After initial setup, you can configure ClickHouse connections through the Superset UI to query your dbt models and data.
 
 ## Security
 

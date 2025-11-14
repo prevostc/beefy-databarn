@@ -8,7 +8,8 @@ help: ## Show this help message
 	@echo "Usage: make <command> [subcommand]"
 	@echo ""
 	@echo "Infrastructure:"
-	@echo "  make infra start       Start infrastructure services"
+	@echo "  make infra start       Start infrastructure services (rebuilds if needed)"
+	@echo "  make infra build       Rebuild infrastructure images"
 	@echo "  make infra stop        Stop infrastructure services"
 	@echo "  make infra restart     Restart infrastructure services"
 	@echo "  make infra logs        View infrastructure logs"
@@ -35,6 +36,8 @@ help: ## Show this help message
 infra:
 	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "start" ]; then \
 		$(MAKE) -s _infra-start; \
+	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "build" ]; then \
+		$(MAKE) -s _infra-build; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "stop" ]; then \
 		$(MAKE) -s _infra-stop; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
@@ -44,14 +47,21 @@ infra:
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "ps" ]; then \
 		$(MAKE) -s _infra-ps; \
 	else \
-		echo "Usage: make infra [start|stop|restart|logs|ps]"; \
+		echo "Usage: make infra [start|build|stop|restart|logs|ps]"; \
 		exit 1; \
 	fi
 
 # Internal targets
 _infra-start:
-	@echo "Starting infrastructure services..."
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml up -d
+	@echo "Starting infrastructure services (rebuilding images if needed)..."
+	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml up -d --build
+	@echo "✓ Infrastructure services started"
+	@$(MAKE) -s _print-urls
+
+_infra-build:
+	@echo "Rebuilding infrastructure images..."
+	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml build
+	@echo "✓ Infrastructure images rebuilt"
 
 _infra-stop:
 	@echo "Stopping infrastructure services..."
@@ -69,7 +79,7 @@ _infra-restart:
 	@echo "✓ Infrastructure services restarted"
 
 # Catch subcommands (prevents "No rule to make target" errors)
-start stop logs ps:
+start build stop logs ps:
 	@:
 
 # dbt commands - using subcommands
@@ -166,10 +176,16 @@ dev: ## Full development workflow (setup, start, run dbt)
 	@$(MAKE) -s _dbt-run
 	@echo ""
 	@echo "✓ Development environment ready!"
+	@$(MAKE) -s _print-urls
+
+# Shared utility targets
+_print-urls:
 	@echo ""
 	@echo "Access services:"
-	@echo "  - ClickHouse: http://localhost:8123"
-	@echo "  - Grafana: http://localhost:3000"
-	@echo "  - Prometheus: http://localhost:9090"
-	@echo "  - MinIO: http://localhost:9001"
+	@set -a && [ -f .env ] && . ./.env && set +a && \
+	echo "  - Superset: http://localhost:8088" && \
+	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
+	echo "  - Grafana: http://localhost:3000 ($${GRAFANA_ADMIN_USER:-admin}/$${GRAFANA_ADMIN_PASSWORD:-admin})" && \
+	echo "  - Prometheus: http://localhost:9090 (no auth)" && \
+	echo "  - MinIO: http://localhost:9001 ($${MINIO_ROOT_USER:-admin}/$${MINIO_ROOT_PASSWORD:-admin})"
 
