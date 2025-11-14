@@ -14,6 +14,7 @@ WITH cleaned_yield AS (
     -- Create composite key for unique identification
     {{ dbt_utils.generate_surrogate_key(['h.chain_id', 'h.block_number', 'h.txn_idx', 'h.event_idx']) }} as id,
     h.chain_id as dim_chain_id,
+    dc.chain_name as dim_chain_name,
     dp.dim_product_id,
     h.block_number,
     -- Standardize timestamp (handle timezone issues if any)
@@ -39,6 +40,11 @@ WITH cleaned_yield AS (
     AND h.txn_timestamp IS NOT NULL
     AND h.harvest_amount > 0
     AND h.want_price > 0
+    -- price is off for some harvests in the feed
+    -- biggest real harvest we saw was this ($9M)
+    -- https://etherscan.io/tx/0x31b8083e467ed217523655f9b26b71f154fd1358e633b275011123c268a88901
+    -- next biggest harvest is bugged and shows as $32M
+    AND toDecimal256(h.harvest_amount * h.want_price, 20) < 30_000_000.00
 )
 
 -- Output: Clean yield events ready for aggregation
@@ -48,6 +54,7 @@ SELECT
   id,
   dim_time,
   dim_chain_id,
+  dim_chain_name,
   dim_product_id,
   block_number,
   txn_idx,
