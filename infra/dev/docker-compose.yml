@@ -35,13 +35,27 @@ services:
       - grafana_data:/var/lib/grafana
       - ../grafana/provisioning:/etc/grafana/provisioning
       - ../grafana/dashboards:/etc/grafana/dashboards
+      - ../grafana/custom-dev.ini:/etc/grafana/grafana.ini
     environment:
+      GRAFANA_SECRET_KEY: ${GRAFANA_SECRET_KEY}
+      GRAFANA_HTTP_PORT: ${GRAFANA_HTTP_PORT:-3000}
       GRAFANA_CLICKHOUSE_USER: ${GRAFANA_CLICKHOUSE_USER:-grafana}
       GRAFANA_CLICKHOUSE_PASSWORD: ${GRAFANA_CLICKHOUSE_PASSWORD}
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_INSTALL_PLUGINS: grafana-clickhouse-datasource
+      GRAFANA_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GRAFANA_ADMIN_EMAIL: ${GRAFANA_ADMIN_EMAIL:-admin@localhost}
+      GRAFANA_POSTGRES_HOST: ${GRAFANA_POSTGRES_HOST:-postgres}
+      GRAFANA_POSTGRES_PORT: ${GRAFANA_POSTGRES_PORT:-5432}
+      GRAFANA_POSTGRES_USER: ${GRAFANA_POSTGRES_USER:-grafana}
+      GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_POSTGRES_PASSWORD}
+      GRAFANA_POSTGRES_DB: ${GRAFANA_POSTGRES_DB:-grafana}
+      GRAFANA_REDIS_CONNSTR: ${GRAFANA_REDIS_CONNSTR:-addr=redis:6379,pool_size=100,db=2,ssl=false}
+      GRAFANA_REDIS_PREFIX: ${GRAFANA_REDIS_PREFIX:-grafana:}
     depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
       clickhouse:
         condition: service_healthy
     healthcheck:
@@ -89,29 +103,36 @@ services:
       timeout: 20s
       retries: 10
 
-  superset_postgres:
+  postgres:
     image: pgautoupgrade/pgautoupgrade:17-alpine
     ports:
       - "5432:5432"
     volumes:
-      - superset_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ../postgres/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
     environment:
-      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
-      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
-      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_ADMIN_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-postgres}
+      SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      GRAFANA_POSTGRES_DB: ${GRAFANA_POSTGRES_DB:-grafana}
+      GRAFANA_POSTGRES_USER: ${GRAFANA_POSTGRES_USER:-grafana}
+      GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_POSTGRES_PASSWORD}
     restart: unless-stopped
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${SUPERSET_POSTGRES_USER:-superset}"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-postgres}"]
       interval: 5s
       timeout: 5s
       retries: 5
 
-  superset_redis:
+  redis:
     image: redis:8-alpine
     ports:
       - "6379:6379"
     volumes:
-      - superset_redis_data:/data
+      - redis_data:/data
     command: redis-server --appendonly yes
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
@@ -139,7 +160,10 @@ services:
       SUPERSET_LOG_LEVEL: ${SUPERSET_LOG_LEVEL:-INFO}
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SUPERSET_CONFIG_PATH: /app/superset_config.py
-      SUPERSET_POSTGRES_HOST: superset_postgres
+      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_POSTGRES_HOST: postgres
       SUPERSET_POSTGRES_PORT: 5432
       SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
       SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
@@ -152,10 +176,7 @@ services:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
-      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
-      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
-      SUPERSET_REDIS_HOST: superset_redis
+      SUPERSET_REDIS_HOST: redis
       SUPERSET_REDIS_PORT: 6379
       SUPERSET_REDIS_CELERY_DB: ${SUPERSET_REDIS_CELERY_DB:-0}
       SUPERSET_REDIS_RESULTS_DB: ${SUPERSET_REDIS_RESULTS_DB:-1}
@@ -165,9 +186,9 @@ services:
       GITHUB_ALLOWED_ORG: ${GITHUB_ALLOWED_ORG:-}
       AUTH_USER_REGISTRATION_ROLE: ${AUTH_USER_REGISTRATION_ROLE:-Gamma}
     depends_on:
-      superset_postgres:
+      postgres:
         condition: service_healthy
-      superset_redis:
+      redis:
         condition: service_healthy
       clickhouse:
         condition: service_healthy
@@ -183,9 +204,9 @@ volumes:
   prometheus_data:
   grafana_data:
   minio_data:
-  superset_postgres_data:
+  postgres_data:
   superset_data:
-  superset_redis_data:
+  redis_data:
 
 
 networks:

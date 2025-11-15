@@ -107,13 +107,22 @@ services:
       - grafana_data:/var/lib/grafana
       - ../grafana/provisioning:/etc/grafana/provisioning
       - ../grafana/dashboards:/etc/grafana/dashboards
+      - ../grafana/custom.ini:/etc/grafana/grafana.ini
     environment:
+      GRAFANA_SECRET_KEY: ${GRAFANA_SECRET_KEY}
+      GRAFANA_HTTP_PORT: ${GRAFANA_HTTP_PORT:-3000}
       GRAFANA_CLICKHOUSE_USER: ${GRAFANA_CLICKHOUSE_USER:-grafana}
       GRAFANA_CLICKHOUSE_PASSWORD: ${GRAFANA_CLICKHOUSE_PASSWORD}
-      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
-      GF_INSTALL_PLUGINS: vertamedia-clickhouse-datasource
-      GF_SERVER_ROOT_URL: https://grafana.${TRAEFIK_DOMAIN}
+      GRAFANA_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GRAFANA_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GRAFANA_ADMIN_EMAIL: ${GRAFANA_ADMIN_EMAIL:-admin@localhost}
+      GRAFANA_POSTGRES_HOST: ${GRAFANA_POSTGRES_HOST:-postgres}
+      GRAFANA_POSTGRES_PORT: ${GRAFANA_POSTGRES_PORT:-5432}
+      GRAFANA_POSTGRES_USER: ${GRAFANA_POSTGRES_USER:-grafana}
+      GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_POSTGRES_PASSWORD}
+      GRAFANA_POSTGRES_DB: ${GRAFANA_POSTGRES_DB:-grafana}
+      GRAFANA_REDIS_CONNSTR: ${GRAFANA_REDIS_CONNSTR:-addr=redis:6379,pool_size=100,db=2,ssl=false}
+      GRAFANA_REDIS_PREFIX: ${GRAFANA_REDIS_PREFIX:-grafana:}
     networks:
       - databarn_network
     deploy:
@@ -158,14 +167,21 @@ services:
         - "traefik.http.routers.minio.tls.certresolver=letsencrypt"
         - "traefik.http.services.minio.loadbalancer.server.port=9000"
 
-  superset_postgres:
+  postgres:
     image: pgautoupgrade/pgautoupgrade:17-alpine
     volumes:
-      - superset_postgres_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
+      - ../postgres/init-postgres.sh:/docker-entrypoint-initdb.d/init-postgres.sh
     environment:
-      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
-      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
-      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_ADMIN_DB:-postgres}
+      POSTGRES_USER: ${POSTGRES_ADMIN_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_ADMIN_PASSWORD:-postgres}
+      SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      GRAFANA_POSTGRES_DB: ${GRAFANA_POSTGRES_DB:-grafana}
+      GRAFANA_POSTGRES_USER: ${GRAFANA_POSTGRES_USER:-grafana}
+      GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_POSTGRES_PASSWORD}
     networks:
       - databarn_network
     deploy:
@@ -186,6 +202,11 @@ services:
         max_attempts: 3
       labels:
         - "traefik.enable=false"
+      healthcheck:
+        test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_ADMIN_USER:-postgres}"]
+        interval: 5s
+        timeout: 5s
+        retries: 5
 
   redis:
     image: redis:8-alpine
@@ -228,12 +249,20 @@ services:
     command: ["/app/docker-entrypoint-wrapper.sh"]
     environment:
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
+      POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
+      SUPERSET_POSTGRES_HOST: postgres
+      SUPERSET_POSTGRES_PORT: 5432
+      SUPERSET_POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}
+      SUPERSET_POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
+      SUPERSET_POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
       DATABASE_DIALECT: postgresql
-      DATABASE_HOST: superset_postgres
+      DATABASE_HOST: postgres
       DATABASE_PORT: 5432
       DATABASE_USER: ${SUPERSET_POSTGRES_USER:-superset}
       DATABASE_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
-      DATABASE_DB: ${POSTGRES_DB:-superset}
+      DATABASE_DB: ${SUPERSET_POSTGRES_DB:-superset}
       SUPERSET_ADMIN_USER: ${SUPERSET_ADMIN_USER:-admin}
       SUPERSET_ADMIN_PASSWORD: ${SUPERSET_ADMIN_PASSWORD}
       SUPERSET_ADMIN_EMAIL: ${SUPERSET_ADMIN_EMAIL:-admin@example.com}
@@ -242,9 +271,6 @@ services:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
-      POSTGRES_USER: ${POSTGRES_USER:-superset}
-      POSTGRES_PASSWORD: ${SUPERSET_POSTGRES_PASSWORD}
-      POSTGRES_DB: ${SUPERSET_POSTGRES_DB:-superset}
       SUPERSET_REDIS_HOST: redis
       SUPERSET_REDIS_PORT: 6379
       SUPERSET_REDIS_CELERY_DB: ${SUPERSET_REDIS_CELERY_DB:-0}
@@ -255,7 +281,7 @@ services:
       GITHUB_ALLOWED_ORG: ${GITHUB_ALLOWED_ORG:-}
       AUTH_USER_REGISTRATION_ROLE: ${AUTH_USER_REGISTRATION_ROLE:-Gamma}
     depends_on:
-      superset_postgres:
+      postgres:
         condition: service_healthy
       redis:
         condition: service_started
@@ -289,7 +315,7 @@ volumes:
   prometheus_data:
   grafana_data:
   minio_data:
-  superset_postgres_data:
+  postgres_data:
   superset_data:
   redis_data:
   traefik_certs:
