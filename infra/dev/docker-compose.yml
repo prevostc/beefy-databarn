@@ -132,10 +132,11 @@ services:
       - ../superset/provision:/usr/local/bin/provision
       - ../superset/docker-entrypoint-wrapper.sh:/app/docker-entrypoint-wrapper.sh
       - ../superset/superset_config.py:/app/superset_config.py
+      - ../superset/github_security_manager.py:/app/github_security_manager.py
     command: ["/app/docker-entrypoint-wrapper.sh"]
     environment:
-      SUPERSET_ENV: development
-      SUPERSET_LOG_LEVEL: INFO
+      SUPERSET_ENV: ${SUPERSET_ENV:-development}
+      SUPERSET_LOG_LEVEL: ${SUPERSET_LOG_LEVEL:-INFO}
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       SUPERSET_CONFIG_PATH: /app/superset_config.py
       SUPERSET_POSTGRES_HOST: superset_postgres
@@ -158,6 +159,11 @@ services:
       SUPERSET_REDIS_PORT: 6379
       SUPERSET_REDIS_CELERY_DB: ${SUPERSET_REDIS_CELERY_DB:-0}
       SUPERSET_REDIS_RESULTS_DB: ${SUPERSET_REDIS_RESULTS_DB:-1}
+      # GitHub OAuth Configuration
+      GITHUB_CLIENT_ID: ${GITHUB_CLIENT_ID:-}
+      GITHUB_CLIENT_SECRET: ${GITHUB_CLIENT_SECRET:-}
+      GITHUB_ALLOWED_ORG: ${GITHUB_ALLOWED_ORG:-}
+      AUTH_USER_REGISTRATION_ROLE: ${AUTH_USER_REGISTRATION_ROLE:-Gamma}
     depends_on:
       superset_postgres:
         condition: service_healthy

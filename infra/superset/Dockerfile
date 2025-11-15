@@ -4,6 +4,7 @@ FROM apache/superset:5.0.0
 USER root
 
 COPY requirements.txt /app/requirements.txt
+COPY github_security_manager.py /app/github_security_manager.py
 
 WORKDIR /app
 

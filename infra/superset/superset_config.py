@@ -3,20 +3,13 @@ import logging
 import sys
 from flask_caching.backends.rediscache import RedisCache
 from celery.schedules import crontab
+from flask_appbuilder.security.manager import AUTH_DB, AUTH_OAUTH
 
 SUPERSET_ENV = os.getenv("SUPERSET_ENV", "development")
 APP_ROOT = os.getenv("SUPERSET_APP_ROOT", "/")
 BASEPATH = os.getenv("BASEPATH", "/")
 LOG_LEVEL = getattr(logging, os.getenv("SUPERSET_LOG_LEVEL", "INFO").upper(), logging.INFO)
-SUPERSET_POSTGRES_USER = os.getenv("SUPERSET_POSTGRES_USER") or "superset"
-SUPERSET_POSTGRES_PASSWORD = os.getenv("SUPERSET_POSTGRES_PASSWORD") or "superset"
-SUPERSET_POSTGRES_HOST = os.getenv("SUPERSET_POSTGRES_HOST") or "superset_postgres"
-SUPERSET_POSTGRES_PORT = os.getenv("SUPERSET_POSTGRES_PORT") or "5432"
-SUPERSET_POSTGRES_DB = os.getenv("SUPERSET_POSTGRES_DB") or "superset"
-REDIS_HOST = os.getenv("SUPERSET_REDIS_HOST", "redis")
-REDIS_PORT = os.getenv("SUPERSET_REDIS_PORT", "6379")
-REDIS_CELERY_DB = os.getenv("SUPERSET_REDIS_CELERY_DB", "0")
-REDIS_RESULTS_DB = os.getenv("SUPERSET_REDIS_RESULTS_DB", "1")
+SECRET_KEY = os.getenv("SUPERSET_SECRET_KEY") or "YOUR_OWN_RANDOM_GENERATED_SECRET_KEY"
 
 # FAB Rate limiting: this is a security feature for preventing DDOS attacks. The
 # feature is on by default to make Superset secure by default, but you should
@@ -27,33 +20,31 @@ RATELIMIT_APPLICATION = "50 per second"
 AUTH_RATE_LIMITED = SUPERSET_ENV == "production"
 AUTH_RATE_LIMIT = "5 per second"
 
-# # Import all settings from the main config first
-# from flask_caching.backends.filesystemcache import FileSystemCache
-# from superset_config import *  # noqa: F403
+
+WEBDRIVER_BASEURL = f"http://superset_app{APP_ROOT}/"   # When using docker compose baseurl should be http://superset_nginx{ENV{BASEPATH}}/  # noqa: E501
+WEBDRIVER_BASEURL_USER_FRIENDLY = f"http://localhost:8888/{BASEPATH}/" # The base URL for the email report hyperlinks.
 
 # Superset specific config
-ROW_LIMIT = 5000
+ROW_LIMIT = 50000
 
-# # Override caching to use simple in-memory cache instead of Redis
-# RESULTS_BACKEND = FileSystemCache("/app/superset_home/sqllab")
-
-# On Redis
+# Results backend configuration (for caching query results, etc.)
+REDIS_HOST = os.getenv("SUPERSET_REDIS_HOST", "redis")
+REDIS_PORT = os.getenv("SUPERSET_REDIS_PORT", "6379")
+REDIS_CELERY_DB = os.getenv("SUPERSET_REDIS_CELERY_DB", "0")
+REDIS_RESULTS_DB = os.getenv("SUPERSET_REDIS_RESULTS_DB", "1")
 RESULTS_BACKEND = RedisCache(host=REDIS_HOST, port=REDIS_PORT, db=REDIS_RESULTS_DB, key_prefix='superset_results_')
 
-# Flask-WTF flag for CSRF
-WTF_CSRF_ENABLED = True
-# Add endpoints that need to be exempt from CSRF protection
-WTF_CSRF_EXEMPT_LIST = []
-# A CSRF token that expires in 1 year
-WTF_CSRF_TIME_LIMIT = 60 * 60 * 24 * 365
+# Flask-WTF configuration (for CSRF protection)
+WTF_CSRF_ENABLED = True # Flask-WTF flag for CSRF
+WTF_CSRF_EXEMPT_LIST = [] # Add endpoints that need to be exempt from CSRF protection
+WTF_CSRF_TIME_LIMIT = 60 * 60 * 24 * 365 # A CSRF token that expires in 1 year
 
-# The SQLAlchemy connection string to your database backend
-# This connection defines the path to the database that stores your
-# superset metadata (slices, connections, tables, dashboards, ...).
-# Note that the connection information to connect to the datasources
-# you want to explore are managed directly in the web UI
-# The check_same_thread=false property ensures the sqlite client does not attempt
-# to enforce single-threaded access, which may be problematic in some edge cases
+# Medadata database connection string (holds dashboard, queries, etc.)
+SUPERSET_POSTGRES_USER = os.getenv("SUPERSET_POSTGRES_USER") or "superset"
+SUPERSET_POSTGRES_PASSWORD = os.getenv("SUPERSET_POSTGRES_PASSWORD") or "superset"
+SUPERSET_POSTGRES_HOST = os.getenv("SUPERSET_POSTGRES_HOST") or "superset_postgres"
+SUPERSET_POSTGRES_PORT = os.getenv("SUPERSET_POSTGRES_PORT") or "5432"
+SUPERSET_POSTGRES_DB = os.getenv("SUPERSET_POSTGRES_DB") or "superset"
 SQLALCHEMY_DATABASE_URI = (
     f"postgresql://"
     f"{SUPERSET_POSTGRES_USER}:{SUPERSET_POSTGRES_PASSWORD}@"
@@ -61,6 +52,7 @@ SQLALCHEMY_DATABASE_URI = (
 )
 SQLALCHEMY_EXAMPLES_URI = None
 
+# Redis cache configuration (for caching query results, etc.)
 CACHE_CONFIG = {
     "CACHE_TYPE": "RedisCache",
     "CACHE_DEFAULT_TIMEOUT": 300,
@@ -72,7 +64,7 @@ CACHE_CONFIG = {
 DATA_CACHE_CONFIG = CACHE_CONFIG
 THUMBNAIL_CACHE_CONFIG = CACHE_CONFIG
 
-
+# Celery configuration (for background queries execution, scheduled reports, etc.)
 class CeleryConfig:
     broker_url = f"redis://{REDIS_HOST}:{REDIS_PORT}/{REDIS_CELERY_DB}"
     imports = (
@@ -95,23 +87,59 @@ class CeleryConfig:
         },
     }
 
-
 CELERY_CONFIG = CeleryConfig
 
+# Feature flags (for enabling/disabling features)
 FEATURE_FLAGS = {"ALERT_REPORTS": True}
 ALERT_REPORTS_NOTIFICATION_DRY_RUN = True
-# When using docker compose baseurl should be http://superset_nginx{ENV{BASEPATH}}/  # noqa: E501
-WEBDRIVER_BASEURL = f"http://superset_app{APP_ROOT}/"  
-# The base URL for the email report hyperlinks.
-WEBDRIVER_BASEURL_USER_FRIENDLY = f"http://localhost:8888/{BASEPATH}/"
-SQLLAB_CTAS_NO_LIMIT = True
+SQLLAB_CTAS_NO_LIMIT = False
 
-
-# Flask App Builder configuration
-# Your App secret key will be used for securely signing the session cookie
-# and encrypting sensitive information on the database
-# Make sure you are changing this key for your deployment with a strong key.
-# Alternatively you can set it with `SUPERSET_SECRET_KEY` environment variable.
-# You MUST set this for production environments or the server will refuse
-# to start and you will see an error in the logs accordingly.
-SECRET_KEY = os.getenv("SUPERSET_SECRET_KEY") or "YOUR_OWN_RANDOM_GENERATED_SECRET_KEY"
+# Authentication Configuration
+if SUPERSET_ENV == "production":
+    # Production: GitHub OAuth authentication
+    AUTH_TYPE = AUTH_OAUTH
+    
+    # Import custom security manager for GitHub OAuth
+    try:
+        from github_security_manager import CustomSecurityManager
+        CUSTOM_SECURITY_MANAGER = CustomSecurityManager
+    except ImportError:
+        CUSTOM_SECURITY_MANAGER = None
+    
+    # Enable automatic user registration on first OAuth login
+    AUTH_USER_REGISTRATION = True
+    
+    # Default role assigned to newly registered users
+    AUTH_USER_REGISTRATION_ROLE = os.getenv("AUTH_USER_REGISTRATION_ROLE", "Gamma")
+    
+    # GitHub OAuth Configuration
+    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
+    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
+    GITHUB_API_BASE_URL = os.getenv("GITHUB_API_BASE_URL", "https://api.github.com/")
+    GITHUB_ACCESS_TOKEN_URL = os.getenv("GITHUB_ACCESS_TOKEN_URL", "https://github.com/login/oauth/access_token")
+    GITHUB_AUTHORIZE_URL = os.getenv("GITHUB_AUTHORIZE_URL", "https://github.com/login/oauth/authorize")
+    GITHUB_ALLOWED_ORG = os.getenv("GITHUB_ALLOWED_ORG", "")
+    
+    # OAuth Providers Configuration
+    OAUTH_PROVIDERS = [
+        {
+            "name": "github",
+            "icon": "fa-github",
+            "token_key": "access_token",
+            "remote_app": {
+                "client_id": GITHUB_CLIENT_ID,
+                "client_secret": GITHUB_CLIENT_SECRET,
+                "api_base_url": GITHUB_API_BASE_URL,
+                "client_kwargs": {
+                    "scope": "read:org",
+                },
+                "authorize_url": GITHUB_AUTHORIZE_URL,
+                "access_token_url": GITHUB_ACCESS_TOKEN_URL,
+                "request_token_url": None,
+            },
+        }
+    ]
+else:
+    # Development: Database (password) authentication
+    AUTH_TYPE = AUTH_DB
+    AUTH_USER_REGISTRATION = False
