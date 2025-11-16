@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs up deploy
+.PHONY: help build ps logs up deploy ensure-dirs
 
 # Load .env file from project root if it exists
 ifneq (,$(wildcard ../../.env))
@@ -10,7 +10,16 @@ ifneq (,$(wildcard ../../.env))
     export
 endif
 
-
+# Directories that need to exist for bind mounts
+DATA_DIRS := /mnt/data/clickhouse \
+             /mnt/data/prometheus \
+             /mnt/data/grafana \
+             /mnt/data/minio \
+             /mnt/data/postgres \
+             /mnt/data/superset \
+             /mnt/data/redis \
+             /mnt/data/traefik_certs \
+             /mnt/data/dbt
 
 # Default target
 .DEFAULT_GOAL := help
@@ -25,6 +34,7 @@ help:
 	@echo "  make logs              Show logs from all services"
 	@echo "  make up                Rolling update (deploy with no-downtime)"
 	@echo "  make deploy            Build and deploy"
+	@echo "  make ensure-dirs       Create required data directories"
 	@echo ""
 
 # Build images: make build [dbt|superset] or make build (all)
@@ -53,8 +63,22 @@ ps:
 logs:
 	docker compose -f docker-compose.yml logs -f
 
+# Ensure required directories exist for bind mounts
+ensure-dirs:
+	@echo "Creating required data directories..."
+	@for dir in $(DATA_DIRS); do \
+		if [ ! -d "$$dir" ]; then \
+			echo "Creating $$dir..."; \
+			sudo mkdir -p "$$dir"; \
+			sudo chmod 755 "$$dir"; \
+		else \
+			echo "Directory $$dir already exists"; \
+		fi; \
+	done
+	@echo "✓ All required directories created"
+
 # up (and build)
-up:
+up: ensure-dirs
 	docker compose -f docker-compose.yml up -d --build
 
 # down
