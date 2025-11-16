@@ -3,6 +3,14 @@
 
 .PHONY: help build ps logs up deploy
 
+# Load .env file from project root if it exists
+ifneq (,$(wildcard ../../.env))
+    include ../../.env
+    export
+endif
+
+
+
 # Default target
 .DEFAULT_GOAL := help
 

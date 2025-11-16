@@ -1,6 +1,18 @@
 .PHONY: help setup start dev
 .PHONY: infra dbt grafana deps-check
 
+# Load .env file if it exists
+ifneq (,$(wildcard ./.env))
+    include ./.env
+    export
+endif
+
+# Prevent execution in production (user "databarn")
+CURRENT_USER := $(shell whoami 2>/dev/null)
+ifeq ($(CURRENT_USER),databarn)
+    $(error This Makefile should not be run in production. Use infra/prod/Makefile instead.)
+endif
+
 # Main help
 help: ## Show this help message
 	@echo "Beefy Databarn - Available commands:"
@@ -56,28 +68,28 @@ infra:
 # Internal targets
 _infra-start:
 	@echo "Starting infrastructure services (rebuilding images if needed)..."
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml up -d --build
+	@docker-compose -f infra/dev/docker-compose.yml up -d --build
 	@echo "✓ Infrastructure services started"
 	@$(MAKE) -s _print-urls
 
 _infra-build:
 	@echo "Rebuilding infrastructure images..."
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml build
+	@docker-compose -f infra/dev/docker-compose.yml build
 	@echo "✓ Infrastructure images rebuilt"
 
 _infra-stop:
 	@echo "Stopping infrastructure services..."
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml down
+	@docker-compose -f infra/dev/docker-compose.yml down
 
 _infra-logs:
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml logs -f
+	@docker-compose -f infra/dev/docker-compose.yml logs -f
 
 _infra-ps:
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml ps
+	@docker-compose -f infra/dev/docker-compose.yml ps
 
 _infra-restart:
 	@echo "Restarting infrastructure services..."
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml restart
+	@docker-compose -f infra/dev/docker-compose.yml restart
 	@echo "✓ Infrastructure services restarted"
 
 # Catch subcommands (prevents "No rule to make target" errors)
@@ -109,23 +121,23 @@ dbt:
 _dbt-run:
 	@if [ -n "$(MODEL)" ]; then \
 		echo "Running dbt model: $(MODEL)..."; \
-		set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt run --select $(MODEL) --show-all-deprecations; \
+		cd dbt && uv run dbt run --select $(MODEL) --show-all-deprecations; \
 	else \
 		echo "Running dbt models..."; \
-		set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt run --show-all-deprecations; \
+		cd dbt && uv run dbt run --show-all-deprecations; \
 	fi
 
 _dbt-test:
 	@echo "Running dbt tests..."
-	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt test
+	@cd dbt && uv run dbt test
 
 _dbt-compile:
 	@echo "Compiling dbt models..."
-	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt compile
+	@cd dbt && uv run dbt compile
 
 _dbt-sql:
 	@echo "Compiling and showing SQL (no queries executed)..."
-	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && \
+	@cd dbt && \
 	if [ -n "$(MODEL)" ]; then \
 		uv run dbt compile --select $(MODEL) > /dev/null 2>&1 && \
 		COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$(MODEL).sql" -type f | head -1) && \
@@ -144,7 +156,7 @@ _dbt-sql:
 
 _dbt-docs:
 	@echo "Generating dbt documentation..."
-	@set -a && [ -f .env ] && . ./.env && set +a && cd dbt && uv run dbt docs generate && dbt docs serve
+	@cd dbt && uv run dbt docs generate && dbt docs serve
 
 # Catch subcommands
 run test compile sql docs:
@@ -166,7 +178,7 @@ grafana:
 # Internal targets
 _grafana-restart:
 	@echo "Re-restarting Grafana (restarting service to reload configs)..."
-	@set -a && [ -f .env ] && . ./.env && set +a && docker-compose -f infra/dev/docker-compose.yml restart grafana
+	@docker-compose -f infra/dev/docker-compose.yml restart grafana
 	@echo "✓ Grafana re-restarted"
 
 # Catch subcommands
@@ -218,8 +230,7 @@ dev: ## Full development workflow (setup, start, run dbt)
 _print-urls:
 	@echo ""
 	@echo "Access services:"
-	@set -a && [ -f .env ] && . ./.env && set +a && \
-	echo "  - Superset: http://localhost:8088" && \
+	@echo "  - Superset: http://localhost:8088" && \
 	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
 	echo "  - Grafana: http://localhost:3000 ($${GRAFANA_ADMIN_USER:-admin}/$${GRAFANA_ADMIN_PASSWORD:-admin})" && \
 	echo "  - Prometheus: http://localhost:9090 (no auth)" && \
