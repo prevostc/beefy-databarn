@@ -68,28 +68,28 @@ infra:
 # Internal targets
 _infra-start:
 	@echo "Starting infrastructure services (rebuilding images if needed)..."
-	@docker compose -f infra/dev/docker compose.yml up -d --build
+	@docker compose -f infra/dev/docker-compose.yml up -d --build
 	@echo "✓ Infrastructure services started"
 	@$(MAKE) -s _print-urls
 
 _infra-build:
 	@echo "Rebuilding infrastructure images..."
-	@docker compose -f infra/dev/docker compose.yml build
+	@docker compose -f infra/dev/docker-compose.yml build
 	@echo "✓ Infrastructure images rebuilt"
 
 _infra-stop:
 	@echo "Stopping infrastructure services..."
-	@docker compose -f infra/dev/docker compose.yml down
+	@docker compose -f infra/dev/docker-compose.yml down
 
 _infra-logs:
-	@docker compose -f infra/dev/docker compose.yml logs -f
+	@docker compose -f infra/dev/docker-compose.yml logs -f
 
 _infra-ps:
-	@docker compose -f infra/dev/docker compose.yml ps
+	@docker compose -f infra/dev/docker-compose.yml ps
 
 _infra-restart:
 	@echo "Restarting infrastructure services..."
-	@docker compose -f infra/dev/docker compose.yml restart
+	@docker compose -f infra/dev/docker-compose.yml restart
 	@echo "✓ Infrastructure services restarted"
 
 # Catch subcommands (prevents "No rule to make target" errors)
@@ -178,7 +178,7 @@ grafana:
 # Internal targets
 _grafana-restart:
 	@echo "Re-restarting Grafana (restarting service to reload configs)..."
-	@docker compose -f infra/dev/docker compose.yml restart grafana
+	@docker compose -f infra/dev/docker-compose.yml restart grafana
 	@echo "✓ Grafana re-restarted"
 
 # Catch subcommands
