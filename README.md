@@ -349,8 +349,8 @@ Services can be moved between nodes using Docker Swarm labels.
 
 ## Monitoring & BI
 
-- Superset: http://localhost:8088 (local dev) or https://redash.${TRAEFIK_DOMAIN} (production)
-- Grafana: http://localhost:3000 (default)
+- Superset: http://localhost:8088
+- Grafana: http://localhost:3000
 - Prometheus: http://localhost:9090
 - ClickHouse: http://localhost:8123
 

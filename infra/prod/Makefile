@@ -32,11 +32,11 @@ build:
 	@if [ -n "$(filter dbt superset,$(MAKECMDGOALS))" ]; then \
 		SERVICE=$(filter dbt superset,$(MAKECMDGOALS)); \
 		echo "Building $$SERVICE image..."; \
-		docker-compose -f docker-compose.build.yml build $$SERVICE; \
+		docker compose -f docker compose.build.yml build $$SERVICE; \
 		echo "$$SERVICE image built successfully"; \
 	else \
 		echo "Building all images..."; \
-		docker-compose -f docker-compose.build.yml build; \
+		docker compose -f docker compose.build.yml build; \
 		echo "All images built successfully"; \
 	fi
 
