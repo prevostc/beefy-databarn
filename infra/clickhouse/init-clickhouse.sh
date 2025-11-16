@@ -4,6 +4,8 @@ set -e
 # Remove empty cert files to prevent permission errors
 rm -rf /root/.postgresql/postgresql.crt
 rm -rf /root/.postgresql/postgresql.key
+# Create directory for PostgreSQL CA certificate if it doesn't exist
+mkdir -p /etc/postgres-ca
 wget -O /etc/postgres-ca/root.crt https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
 
 # Initialize ClickHouse schemas and prepare for external table definitions
