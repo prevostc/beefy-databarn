@@ -47,15 +47,20 @@ build:
 
 # Show running services
 ps:
-	docker compose ps
+	docker compose -f docker-compose.yml ps
 
 # Show logs from all services
 logs:
-	docker compose logs -f
+	docker compose -f docker-compose.yml logs -f
 
-# Rolling update (deploy with no-downtime using docker rollout plugin)
+# up (and build)
 up:
-	docker rollout up -f docker-compose.yml --build
+	docker compose -f docker-compose.yml up -d --build
+
+# down
+down:
+	docker compose -f docker-compose.yml down
+
 
 # Build and deploy
 deploy: build
