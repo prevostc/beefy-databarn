@@ -2,7 +2,8 @@
 <clickhouse>
     <profiles>
         <default>
-            <max_memory_usage>10000000000</max_memory_usage>
+            <max_memory_usage from_env="CLICKHOUSE_MAX_MEMORY_USAGE">10000000000</max_memory_usage>
+            <max_execution_time>300</max_execution_time>
             <use_uncompressed_cache>0</use_uncompressed_cache>
             <load_balancing>random</load_balancing>
         </default>
@@ -24,7 +25,7 @@
 
     <users>
         <default>
-            <password>changeme</password>
+            <password from_env="CLICKHOUSE_PASSWORD">changeme</password>
             <networks>
                 <ip>::/0</ip>
             </networks>
@@ -34,7 +35,7 @@
         </default>
 
         <grafana>
-            <password>changeme</password>
+            <password from_env="GRAFANA_CLICKHOUSE_PASSWORD">changeme</password>
             <networks>
                 <ip>::/0</ip>
             </networks>

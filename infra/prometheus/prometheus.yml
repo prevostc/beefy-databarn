@@ -3,7 +3,7 @@ global:
   evaluation_interval: 15s
   external_labels:
     cluster: "databarn"
-    environment: "${ENVIRONMENT}"
+    environment: "${PROMETHEUS_ENVIRONMENT}"
 
 rule_files:
   - alerts.yml

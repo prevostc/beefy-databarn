@@ -19,6 +19,7 @@ services:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
+      CLICKHOUSE_MAX_MEMORY_USAGE: ${CLICKHOUSE_MAX_MEMORY_USAGE:-10000000000}
       PGSSLMODE: require
       PGSSLCERT: /etc/postgres-ca/root.crt
     healthcheck:
