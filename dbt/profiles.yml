@@ -14,7 +14,7 @@ beefy_databarn:
       type: clickhouse
       schema: "{{ env_var('CLICKHOUSE_DB', 'analytics') }}"
       host: "{{ env_var('CLICKHOUSE_HOST', 'clickhouse') }}"
-      port: "{{ env_var('CLICKHOUSE_PORT', '8123') }}"
+      port: 8123
       user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
       password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
       secure: false
