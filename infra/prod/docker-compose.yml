@@ -45,8 +45,6 @@ services:
       CLICKHOUSE_MAX_MEMORY_USAGE: ${CLICKHOUSE_MAX_MEMORY_USAGE:-32212254720}
       PGSSLMODE: require
       PGSSLCERT: /etc/postgres-ca/root.crt
-    networks:
-      - backend_network
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -73,8 +71,6 @@ services:
       - "--storage.tsdb.retention.time=30d"
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
-    networks:
-      - backend_network
     labels:
       - "traefik.enable=false"
     healthcheck:
@@ -121,7 +117,6 @@ services:
       GRAFANA_GITHUB_ALLOWED_ORG: ${GRAFANA_GITHUB_ALLOWED_ORG}
     networks:
       - frontend_network
-      - backend_network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`${GRAFANA_WEBAPP_DOMAIN_NAME}`)"
@@ -165,8 +160,6 @@ services:
       MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
       MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD}
       MINIO_PROMETHEUS_AUTH_TYPE: public
-    networks:
-      - backend_network
     labels:
       - "traefik.enable=false"
     healthcheck:
@@ -196,8 +189,6 @@ services:
       GRAFANA_POSTGRES_DB: ${GRAFANA_POSTGRES_DB:-grafana}
       GRAFANA_POSTGRES_USER: ${GRAFANA_POSTGRES_USER:-grafana}
       GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_POSTGRES_PASSWORD}
-    networks:
-      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -217,8 +208,6 @@ services:
     volumes:
       - redis_data:/data
     command: redis-server --appendonly yes
-    networks:
-      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -237,8 +226,6 @@ services:
     image: oliver006/redis_exporter:latest
     environment:
       REDIS_ADDR: redis:6379
-    networks:
-      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -255,8 +242,6 @@ services:
     image: prometheuscommunity/postgres-exporter:v0.18.1
     environment:
       DATA_SOURCE_NAME: postgresql://${POSTGRES_ADMIN_USER:-postgres}:${POSTGRES_ADMIN_PASSWORD:-postgres}@postgres:5432/${POSTGRES_ADMIN_DB:-postgres}?sslmode=disable
-    networks:
-      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -344,7 +329,6 @@ services:
       - "traefik.http.routers.superset.service=superset"
     networks:
       - frontend_network
-      - backend_network
     logging:
       driver: "local"
       options:
@@ -371,8 +355,6 @@ services:
       BEEFY_DB_NAME: ${BEEFY_DB_NAME}
       BEEFY_DB_USER: ${BEEFY_DB_USER}
       BEEFY_DB_PASSWORD: ${BEEFY_DB_PASSWORD}
-    networks:
-      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -452,6 +434,4 @@ networks:
   frontend_network:
     driver: bridge
     name: beefy-databarn_frontend_network
-  backend_network:
-    driver: bridge
 
