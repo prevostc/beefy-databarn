@@ -103,11 +103,8 @@ if SUPERSET_ENV == "production":
     AUTH_TYPE = AUTH_OAUTH
     
     # Import custom security manager for GitHub OAuth
-    try:
-        from github_security_manager import CustomSecurityManager
-        CUSTOM_SECURITY_MANAGER = CustomSecurityManager
-    except ImportError:
-        CUSTOM_SECURITY_MANAGER = None
+    from github_security_manager import CustomSecurityManager
+    CUSTOM_SECURITY_MANAGER = CustomSecurityManager
     
     # Enable automatic user registration on first OAuth login
     AUTH_USER_REGISTRATION = True
