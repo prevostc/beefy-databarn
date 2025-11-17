@@ -4,12 +4,12 @@ datasources:
   - name: ClickHouse
     type: grafana-clickhouse-datasource
     access: proxy
-    url: http://clickhouse:8123
+    url: http://$GRAFANA_CLICKHOUSE_HOST:$GRAFANA_CLICKHOUSE_PORT
     isDefault: true
     jsonData:
-      database: analytics
-      defaultDatabase: analytics
-      host: clickhouse
+      database: $GRAFANA_CLICKHOUSE_DB
+      defaultDatabase: $GRAFANA_CLICKHOUSE_DB
+      host: $GRAFANA_CLICKHOUSE_HOST
       port: 9000
       username: $GRAFANA_CLICKHOUSE_USER
       secure: false

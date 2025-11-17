@@ -7,15 +7,15 @@ beefy_databarn:
       host: localhost
       port: 8123
       user: default
-      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      password: "{{ env_var('DBT_CLICKHOUSE_PASSWORD') }}"
       secure: false
       verify: false
     prod:
       type: clickhouse
-      schema: "{{ env_var('CLICKHOUSE_DB', 'analytics') }}"
-      host: "{{ env_var('CLICKHOUSE_HOST', 'clickhouse') }}"
+      schema: "{{ env_var('DBT_CLICKHOUSE_DB', 'analytics') }}"
+      host: "{{ env_var('DBT_CLICKHOUSE_HOST', 'clickhouse') }}"
       port: 8123
-      user: "{{ env_var('CLICKHOUSE_USER', 'default') }}"
-      password: "{{ env_var('CLICKHOUSE_PASSWORD') }}"
+      user: "{{ env_var('DBT_CLICKHOUSE_USER', 'default') }}"
+      password: "{{ env_var('DBT_CLICKHOUSE_PASSWORD') }}"
       secure: false
       verify: false

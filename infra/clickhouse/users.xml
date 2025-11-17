@@ -17,6 +17,9 @@
                 </max_execution_time>
             </constraints>
         </readonly>
+        <dbt>
+            <max_execution_time>3000</max_execution_time>
+        </dbt>
     </profiles>
 
     <access_control_improvements>
@@ -34,6 +37,15 @@
             <access_management>1</access_management>
         </default>
 
+        <dbt>
+            <password from_env="DBT_CLICKHOUSE_PASSWORD" replace="1">changeme</password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>readonly</profile>
+            <quota>default</quota>
+        </dbt>
+
         <grafana>
             <password from_env="GRAFANA_CLICKHOUSE_PASSWORD" replace="1">changeme</password>
             <networks>
@@ -42,6 +54,15 @@
             <profile>readonly</profile>
             <quota>default</quota>
         </grafana>
+
+        <superset>
+            <password from_env="SUPERSET_CLICKHOUSE_PASSWORD" replace="1">changeme</password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>readonly</profile>
+            <quota>default</quota>
+        </superset>
     </users>
 
     <quotas>

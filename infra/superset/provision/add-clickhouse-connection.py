@@ -11,11 +11,11 @@ import time
 sys.path.insert(0, '/app')
 
 # Get connection details from environment
-clickhouse_host = os.getenv('CLICKHOUSE_HOST', '') or 'clickhouse'
-clickhouse_port = os.getenv('CLICKHOUSE_PORT', '') or '8123'
-clickhouse_user = os.getenv('CLICKHOUSE_USER', '') or 'default'
-clickhouse_password = os.getenv('CLICKHOUSE_PASSWORD', '') or ''
-clickhouse_db = os.getenv('CLICKHOUSE_DB', '') or 'analytics'
+clickhouse_host = os.getenv('SUPERSET_CLICKHOUSE_HOST', '') or 'clickhouse'
+clickhouse_port = os.getenv('SUPERSET_CLICKHOUSE_PORT', '') or '8123'
+clickhouse_user = os.getenv('SUPERSET_CLICKHOUSE_USER', '') or 'default'
+clickhouse_password = os.getenv('SUPERSET_CLICKHOUSE_PASSWORD', '') or ''
+clickhouse_db = os.getenv('SUPERSET_CLICKHOUSE_DB', '') or 'analytics'
 sqlalchemy_uri = f"clickhousedb://{clickhouse_user}:{clickhouse_password}@{clickhouse_host}:{clickhouse_port}/{clickhouse_db}"
 
 # Wait for Superset app to be initialized
