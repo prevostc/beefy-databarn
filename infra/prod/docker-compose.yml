@@ -286,7 +286,6 @@ services:
       - ../superset/docker-entrypoint-wrapper.sh:/app/docker-entrypoint-wrapper.sh
       - ../superset/superset_config.py:/app/superset_config.py
       - ../superset/github_security_manager.py:/app/pythonpath/github_security_manager.py
-
     command: ["/app/docker-entrypoint-wrapper.sh"]
     environment:
       SUPERSET_WEBAPP_DOMAIN_NAME: ${SUPERSET_WEBAPP_DOMAIN_NAME}

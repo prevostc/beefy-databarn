@@ -17,7 +17,6 @@ clickhouse_user = os.getenv('CLICKHOUSE_USER', '') or 'default'
 clickhouse_password = os.getenv('CLICKHOUSE_PASSWORD', '') or ''
 clickhouse_db = os.getenv('CLICKHOUSE_DB', '') or 'analytics'
 sqlalchemy_uri = f"clickhousedb://{clickhouse_user}:{clickhouse_password}@{clickhouse_host}:{clickhouse_port}/{clickhouse_db}"
-print(sqlalchemy_uri)
 
 # Wait for Superset app to be initialized
 max_retries = 1
@@ -27,14 +26,15 @@ while retry_count < max_retries:
     # try:
     # Import after path is set and within retry loop to handle import errors
     from superset.app import create_app
-    from superset.extensions import db
-    from superset.models.core import Database
-    from sqlalchemy.exc import IntegrityError
     
     # Create the app instance
     app = create_app()
     
     with app.app_context():
+        from superset.extensions import db
+        from superset.models.core import Database
+        from sqlalchemy.exc import IntegrityError
+
         # Check if database connection already exists
         existing_db = db.session.query(Database).filter_by(database_name='ClickHouse').first()
         
