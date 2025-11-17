@@ -38,6 +38,9 @@ certificatesResolvers:
         entryPoint: web
       storage: /letsencrypt/acme.json
 
+log:
+  level: DEBUG
+
 accessLog: {}
 
 metrics:
