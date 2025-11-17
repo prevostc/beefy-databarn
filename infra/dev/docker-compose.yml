@@ -23,7 +23,7 @@ services:
       PGSSLMODE: require
       PGSSLCERT: /etc/postgres-ca/root.crt
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      test: wget --no-verbose --tries=1 http://127.0.0.1:8123/ping || exit 1
       interval: 1s
       timeout: 20s
       retries: 10
