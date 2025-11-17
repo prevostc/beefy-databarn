@@ -25,7 +25,7 @@ EOSQL
     fi
 }
 
-# Create/update a user and grant all privileges on a database
+# Create/update a user and set as owner of a database
 create_user_and_grant_permissions() {
     local db_name=$1
     local user_name=$2
@@ -43,7 +43,7 @@ create_user_and_grant_permissions() {
             END IF;
         END
         \$\$;
-        GRANT ALL PRIVILEGES ON DATABASE $db_name TO $user_name;
+        ALTER DATABASE $db_name OWNER TO $user_name;
 EOSQL
 }
 
