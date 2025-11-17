@@ -37,6 +37,8 @@ services:
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
       CLICKHOUSE_MAX_MEMORY_USAGE: ${CLICKHOUSE_MAX_MEMORY_USAGE:-32212254720}
+      PGSSLMODE: require
+      PGSSLCERT: /etc/postgres-ca/root.crt
     networks:
       - backend_network
       - database_network
@@ -229,11 +231,6 @@ services:
     restart: on-failure
     labels:
       - "traefik.enable=false"
-    healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:9121/metrics"]
-      interval: 10s
-      timeout: 5s
-      retries: 3
     depends_on:
       redis:
         condition: service_healthy

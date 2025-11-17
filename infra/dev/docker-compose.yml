@@ -64,6 +64,11 @@ services:
       interval: 1s
       timeout: 20s
       retries: 10
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
 
   prometheus:
     image: prom/prometheus:v3.7.3
@@ -85,6 +90,11 @@ services:
       interval: 1s
       timeout: 20s
       retries: 10
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
       
   minio:
     image: minio/minio:RELEASE.2025-09-07T16-13-09Z
@@ -103,6 +113,11 @@ services:
       interval: 1s
       timeout: 20s
       retries: 10
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
 
   postgres:
     image: pgautoupgrade/pgautoupgrade:17-alpine
@@ -127,6 +142,12 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
+        
 
   redis:
     image: redis:8-alpine
@@ -141,6 +162,12 @@ services:
       timeout: 3s
       retries: 5
     restart: unless-stopped
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
+        
 
   superset:
     build:
@@ -198,6 +225,12 @@ services:
       interval: 1s
       timeout: 10s
       retries: 20
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
+        
 
 
 volumes:
