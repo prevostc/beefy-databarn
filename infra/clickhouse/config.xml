@@ -37,13 +37,13 @@
 
     <mlock_executable>true</mlock_executable>
 
-    <remote_servers>
-        <!-- Cluster configuration for future multi-node setup -->
-    </remote_servers>
+    <!-- Cluster configuration for future multi-node setup -->
+    <!-- <remote_servers>
+    </remote_servers> -->
 
-    <zookeeper>
-        <!-- Zookeeper configuration for replication (future) -->
-    </zookeeper>
+    <!-- Zookeeper configuration for replication (future) -->
+    <!-- <zookeeper>
+    </zookeeper> -->
 
     <macros>
         <!-- Cluster macros (future) -->
