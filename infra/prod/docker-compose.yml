@@ -451,8 +451,8 @@ volumes:
 
 networks:
   frontend_network:
-    driver: overlay
+    driver: bridge
     name: frontend_network
   backend_network:
-    driver: overlay
+    driver: bridge
 
