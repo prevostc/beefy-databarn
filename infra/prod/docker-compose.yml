@@ -4,8 +4,9 @@ services:
   traefik:
     image: traefik:v3.6
     command:
+      - "--log.level=${TRAEFIK_LOG_LEVEL}"
       - '--configfile=/traefik.yml'
-      - '--providers.docker.network=frontend_network'
+      - '--providers.docker.network=${TRAEFIK_DOCKER_NETWORK}'
       - '--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_EMAIL}'
     ports:
       - "80:80"
@@ -16,12 +17,15 @@ services:
       - traefik_certs:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
+      TRAEFIK_DOCKER_NETWORK: ${TRAEFIK_DOCKER_NETWORK:-beefy-databarn_frontend_network}
       TRAEFIK_LOG_LEVEL: ${TRAEFIK_LOG_LEVEL:-INFO}
       TRAEFIK_EMAIL: ${TRAEFIK_EMAIL}
     networks:
       - frontend_network
     labels:
       - "traefik.enable=false"
+    healthcheck:
+      test: ['CMD', 'traefik', 'healthcheck', '--ping']
     logging:
       driver: "local"
       options:
