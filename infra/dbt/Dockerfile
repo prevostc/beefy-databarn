@@ -8,6 +8,7 @@ RUN apt-get update && apt-get install -y \
     curl \
     git \
     cron \
+    procps \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first (for better layer caching)
