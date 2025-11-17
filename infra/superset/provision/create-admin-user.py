@@ -26,11 +26,11 @@ while retry_count < max_retries:
         
         with app.app_context():
             # Get admin user details from environment
-            admin_username = os.getenv('SUPERSET_ADMIN_USER', 'admin')
-            admin_password = os.getenv('SUPERSET_ADMIN_PASSWORD', 'admin')
-            admin_email = os.getenv('SUPERSET_ADMIN_EMAIL', 'admin@example.com')
-            admin_firstname = os.getenv('SUPERSET_ADMIN_FIRSTNAME', 'Admin')
-            admin_lastname = os.getenv('SUPERSET_ADMIN_LASTNAME', 'User')
+            admin_username = os.getenv('SUPERSET_ADMIN_USER', '') or 'admin'
+            admin_password = os.getenv('SUPERSET_ADMIN_PASSWORD', '') or 'admin'
+            admin_email = os.getenv('SUPERSET_ADMIN_EMAIL', '') or 'admin@example.com'
+            admin_firstname = os.getenv('SUPERSET_ADMIN_FIRSTNAME', '') or 'Admin'
+            admin_lastname = os.getenv('SUPERSET_ADMIN_LASTNAME', '') or 'User'
             
             # Check if admin user already exists
             existing_user = db.session.query(User).filter_by(username=admin_username).first()
