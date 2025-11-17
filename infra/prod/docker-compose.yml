@@ -129,7 +129,6 @@ services:
       - "traefik.http.services.grafana.loadbalancer.healthcheck.path=/api/health"
       - "traefik.http.services.grafana.loadbalancer.healthcheck.interval=10s"
       - "traefik.http.services.grafana.loadbalancer.healthcheck.timeout=5s"
-      - "traefik.http.services.grafana.loadbalancer.healthcheck.retries=3"
       - "traefik.http.routers.grafana.service=grafana"
     healthcheck:
       test:
@@ -339,7 +338,6 @@ services:
       - "traefik.http.services.superset.loadbalancer.healthcheck.path=/health"
       - "traefik.http.services.superset.loadbalancer.healthcheck.interval=10s"
       - "traefik.http.services.superset.loadbalancer.healthcheck.timeout=5s"
-      - "traefik.http.services.superset.loadbalancer.healthcheck.retries=3"
       - "traefik.http.routers.superset.service=superset"
     networks:
       - frontend_network
