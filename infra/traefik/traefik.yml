@@ -26,7 +26,8 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      tlsChallenge: {}
+      httpChallenge:
+        entryPoint: web
       storage: /letsencrypt/acme.json
 
 log:
