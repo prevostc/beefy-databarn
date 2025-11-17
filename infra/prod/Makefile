@@ -74,7 +74,7 @@ restart:
 		exit 1; \
 	fi; \
 	echo "Restarting $$SERVICE..."; \
-	docker compose -f docker-compose.yml restart $$SERVICE; \
+	docker compose -f docker-compose.yml restart $$SERVICE --force-recreate --build; \
 	echo "$$SERVICE restarted successfully"
 
 # Ensure required directories exist for bind mounts
