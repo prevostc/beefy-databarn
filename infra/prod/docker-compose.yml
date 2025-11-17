@@ -17,6 +17,7 @@ services:
       - traefik_certs:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
+      - TRAEFIK_LOG_LEVEL=${TRAEFIK_LOG_LEVEL:-INFO}
       - TRAEFIK_EMAIL=${TRAEFIK_EMAIL}
     networks:
       - frontend_network
