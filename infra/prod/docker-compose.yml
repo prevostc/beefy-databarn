@@ -46,7 +46,7 @@ services:
     labels:
       - "traefik.enable=false"
     healthcheck:
-      test: ["CMD", "wget", "--spider", "-q", "http://localhost:8123/ping"]
+      test: ["CMD", "clickhouse-client", "--query", "'SELECT 1'"]
       interval: 1s
       timeout: 20s
       retries: 10
