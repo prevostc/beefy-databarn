@@ -22,9 +22,16 @@ class CustomSecurityManager(SupersetSecurityManager):
 
             remote_app = self.appbuilder.sm.oauth_remotes[provider]
 
+            # 1) Fetch /user
             me = remote_app.get("user")
-            if me.status != 200:
-                logging.error("GitHub /user request failed with status %s", me.status)
+            logging.info("GitHub /user HTTP %s", me.status_code)
+
+            if me.status_code != 200:
+                logging.error(
+                    "GitHub /user request failed: status=%s body=%s",
+                    me.status_code,
+                    me.text,
+                )
                 return None
 
             data = me.json()
@@ -40,12 +47,16 @@ class CustomSecurityManager(SupersetSecurityManager):
                     "SUPERSET_GITHUB_ALLOWED_ORG environment variable is required but not set."
                 )
 
+            # 2) Fetch /user/orgs
             orgs_response = remote_app.get("user/orgs")
-            if orgs_response.status != 200:
+            logging.info("GitHub /user/orgs HTTP %s", orgs_response.status_code)
+
+            if orgs_response.status_code != 200:
                 logging.error(
-                    "Failed to fetch organizations for user %s: HTTP %s",
+                    "Failed to fetch organizations for user %s: HTTP %s body=%s",
                     username,
-                    orgs_response.status,
+                    orgs_response.status_code,
+                    orgs_response.text,
                 )
                 return None
 
@@ -66,6 +77,7 @@ class CustomSecurityManager(SupersetSecurityManager):
                 github_allowed_org,
             )
 
+            # Anonymized identity for Superset
             return {
                 "username": username,
                 "email": f"github-{username}@anonymous.local",
@@ -74,6 +86,5 @@ class CustomSecurityManager(SupersetSecurityManager):
             }
 
         except Exception:
-            # This will log full stacktrace to the superset logs
             logging.exception("Error in CustomSecurityManager.oauth_user_info")
             return None
