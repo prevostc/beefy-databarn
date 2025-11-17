@@ -13,11 +13,20 @@ entryPoints:
           permanent: true
   websecure:
     address: ":443"
+    http:
+      transport:
+        respondingTimeouts:
+          readTimeout: 60s
+          writeTimeout: 60s
+          idleTimeout: 90s
 
 providers:
   docker:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
+    watch: true
+  file:
+    directory: /dynamic
     watch: true
 
 certificatesResolvers:

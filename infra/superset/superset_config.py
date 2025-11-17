@@ -39,6 +39,9 @@ WTF_CSRF_ENABLED = True # Flask-WTF flag for CSRF
 WTF_CSRF_EXEMPT_LIST = [] # Add endpoints that need to be exempt from CSRF protection
 WTF_CSRF_TIME_LIMIT = 60 * 60 * 24 * 365 # A CSRF token that expires in 1 year
 
+# Reverse proxy configuration
+ENABLE_PROXY_FIX = True
+
 # Medadata database connection string (holds dashboard, queries, etc.)
 SUPERSET_POSTGRES_USER = os.getenv("SUPERSET_POSTGRES_USER") or "superset"
 SUPERSET_POSTGRES_PASSWORD = os.getenv("SUPERSET_POSTGRES_PASSWORD") or "superset"
