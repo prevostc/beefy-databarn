@@ -231,6 +231,7 @@ _print-urls:
 	@echo ""
 	@echo "Access services:"
 	@echo "  - Superset: http://localhost:8088" && \
+	echo "  - Traefik Dashboard: http://localhost:8080" && \
 	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
 	echo "  - Grafana: http://localhost:3000 ($${GRAFANA_ADMIN_USER:-admin}/$${GRAFANA_ADMIN_PASSWORD:-admin})" && \
 	echo "  - Prometheus: http://localhost:9090 (no auth)" && \
