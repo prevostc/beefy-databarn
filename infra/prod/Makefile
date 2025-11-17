@@ -67,7 +67,7 @@ logs:
 # Restart services: make restart <service_name>
 # Usage: make restart <service_name>
 restart:
-	@SERVICE=$$(filter-out restart,$(MAKECMDGOALS)); \
+	@SERVICE=$(filter-out restart,$(MAKECMDGOALS)); \
 	if [ -z "$$SERVICE" ]; then \
 		echo "Error: Service name is required"; \
 		echo "Usage: make restart <service_name>"; \
