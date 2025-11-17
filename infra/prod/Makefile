@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs up deploy ensure-dirs
+.PHONY: help build ps logs up deploy ensure-dirs restart
 
 # Load .env file from project root if it exists
 ifneq (,$(wildcard ../../.env))
@@ -34,6 +34,7 @@ help:
 	@echo "  make logs              Show logs from all services"
 	@echo "  make up                Rolling update (deploy with no-downtime)"
 	@echo "  make deploy            Build and deploy"
+	@echo "  make restart <service> Restart a specific service (service name required)"
 	@echo "  make ensure-dirs       Create required data directories"
 	@echo ""
 
@@ -62,6 +63,19 @@ ps:
 # Show logs from all services
 logs:
 	docker compose -f docker-compose.yml logs -f
+
+# Restart services: make restart <service_name>
+# Usage: make restart <service_name>
+restart:
+	@SERVICE=$$(filter-out restart,$(MAKECMDGOALS)); \
+	if [ -z "$$SERVICE" ]; then \
+		echo "Error: Service name is required"; \
+		echo "Usage: make restart <service_name>"; \
+		exit 1; \
+	fi; \
+	echo "Restarting $$SERVICE..."; \
+	docker compose -f docker-compose.yml restart $$SERVICE; \
+	echo "$$SERVICE restarted successfully"
 
 # Ensure required directories exist for bind mounts
 ensure-dirs:

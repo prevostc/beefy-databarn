@@ -19,9 +19,6 @@ providers:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     watch: true
-  file:
-    directory: /dynamic
-    watch: true
 
 certificatesResolvers:
   letsencrypt:
