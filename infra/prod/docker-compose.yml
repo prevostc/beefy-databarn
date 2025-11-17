@@ -6,7 +6,6 @@ services:
     command:
       - '--providers.docker.network=frontend_network'
       - '--certificatesresolvers.letsencrypt.acme.email=${TRAEFIK_EMAIL}'
-      - '--certificatesresolvers.letsencrypt.acme.storage=/letsencrypt/acme.json'
       - '--configfile=/traefik.yml'
     ports:
       - "80:80"

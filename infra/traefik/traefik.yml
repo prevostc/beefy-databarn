@@ -13,6 +13,9 @@ entryPoints:
           permanent: true
   websecure:
     address: ":443"
+    http:
+      tls:
+        certResolver: letsencrypt
 
 providers:
   docker:
@@ -23,8 +26,8 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
-      httpChallenge:
-        entryPoint: web
+      tlsChallenge: {}
+      storage: /letsencrypt/acme.json
 
 log:
   level: INFO
