@@ -291,6 +291,7 @@ services:
       - ../superset/github_security_manager.py:/app/github_security_manager.py
     command: ["/app/docker-entrypoint-wrapper.sh"]
     environment:
+      SUPERSET_WEBAPP_DOMAIN_NAME: ${SUPERSET_WEBAPP_DOMAIN_NAME}
       SUPERSET_ENV: ${SUPERSET_ENV:-production}
       SUPERSET_SECRET_KEY: ${SUPERSET_SECRET_KEY}
       POSTGRES_USER: ${SUPERSET_POSTGRES_USER:-superset}

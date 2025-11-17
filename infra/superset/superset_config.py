@@ -6,6 +6,7 @@ from celery.schedules import crontab
 from flask_appbuilder.security.manager import AUTH_DB, AUTH_OAUTH
 
 SUPERSET_ENV = os.getenv("SUPERSET_ENV", "development")
+SUPERSET_WEBAPP_DOMAIN_NAME = os.getenv("SUPERSET_WEBAPP_DOMAIN_NAME", "localhost")
 APP_ROOT = os.getenv("SUPERSET_APP_ROOT", "/")
 BASEPATH = os.getenv("BASEPATH", "/")
 LOG_LEVEL = getattr(logging, os.getenv("SUPERSET_LOG_LEVEL", "INFO").upper(), logging.INFO)
@@ -21,8 +22,8 @@ AUTH_RATE_LIMITED = SUPERSET_ENV == "production"
 AUTH_RATE_LIMIT = "5 per second"
 
 
-WEBDRIVER_BASEURL = f"http://superset_app{APP_ROOT}/"   # When using docker compose baseurl should be http://superset_nginx{ENV{BASEPATH}}/  # noqa: E501
-WEBDRIVER_BASEURL_USER_FRIENDLY = f"http://localhost:8888/{BASEPATH}/" # The base URL for the email report hyperlinks.
+WEBDRIVER_BASEURL = f"https://{SUPERSET_WEBAPP_DOMAIN_NAME}{APP_ROOT}/"   # When using docker compose baseurl should be http://superset_nginx{ENV{BASEPATH}}/  # noqa: E501
+WEBDRIVER_BASEURL_USER_FRIENDLY = f"https://{SUPERSET_WEBAPP_DOMAIN_NAME}{BASEPATH}/" # The base URL for the email report hyperlinks.
 
 # Superset specific config
 ROW_LIMIT = 50000
