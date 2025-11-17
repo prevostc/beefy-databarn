@@ -101,6 +101,7 @@ services:
       - ../grafana/custom.ini:/etc/grafana/grafana.ini
     environment:
       GRAFANA_ROOT_URL: ${GRAFANA_ROOT_URL}
+      GF_SERVER_ROOT_URL: ${GRAFANA_ROOT_URL}
       GRAFANA_WEBAPP_DOMAIN_NAME: ${GRAFANA_WEBAPP_DOMAIN_NAME}
       GRAFANA_SECRET_KEY: ${GRAFANA_SECRET_KEY}
       GRAFANA_HTTP_ADDR: ${GRAFANA_HTTP_ADDR:-0.0.0.0}
