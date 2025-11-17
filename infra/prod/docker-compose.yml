@@ -362,6 +362,7 @@ services:
       - dbt_data:/app/dbt/target
       - ../../dbt:/app/dbt
     environment:
+      DBT_TARGET: prod
       CLICKHOUSE_HOST: clickhouse
       CLICKHOUSE_PORT: 8123
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
