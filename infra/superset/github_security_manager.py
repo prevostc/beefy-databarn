@@ -22,11 +22,11 @@ class CustomSecurityManager(SupersetSecurityManager):
             data = me.json()
             username = data.get("login")
             
-            github_allowed_org = os.getenv("GITHUB_ALLOWED_ORG", "").strip()
+            github_allowed_org = os.getenv("SUPERSET_GITHUB_ALLOWED_ORG", "").strip()
             if not github_allowed_org:
-                logging.error("GITHUB_ALLOWED_ORG is not configured. Authentication disabled.")
+                logging.error("SUPERSET_GITHUB_ALLOWED_ORG is not configured. Authentication disabled.")
                 raise ValueError(
-                    "GITHUB_ALLOWED_ORG environment variable is required but not set. "
+                    "SUPERSET_GITHUB_ALLOWED_ORG environment variable is required but not set. "
                     "Please configure it to restrict access to a specific GitHub organization."
                 )
             

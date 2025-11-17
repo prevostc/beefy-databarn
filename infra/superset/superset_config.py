@@ -110,15 +110,15 @@ if SUPERSET_ENV == "production":
     AUTH_USER_REGISTRATION = True
     
     # Default role assigned to newly registered users
-    AUTH_USER_REGISTRATION_ROLE = os.getenv("AUTH_USER_REGISTRATION_ROLE", "Gamma")
+    AUTH_USER_REGISTRATION_ROLE = os.getenv("SUPERSET_AUTH_USER_REGISTRATION_ROLE", "Gamma")
     
     # GitHub OAuth Configuration
-    GITHUB_CLIENT_ID = os.getenv("GITHUB_CLIENT_ID", "")
-    GITHUB_CLIENT_SECRET = os.getenv("GITHUB_CLIENT_SECRET", "")
-    GITHUB_API_BASE_URL = os.getenv("GITHUB_API_BASE_URL", "https://api.github.com/")
-    GITHUB_ACCESS_TOKEN_URL = os.getenv("GITHUB_ACCESS_TOKEN_URL", "https://github.com/login/oauth/access_token")
-    GITHUB_AUTHORIZE_URL = os.getenv("GITHUB_AUTHORIZE_URL", "https://github.com/login/oauth/authorize")
-    GITHUB_ALLOWED_ORG = os.getenv("GITHUB_ALLOWED_ORG", "")
+    GITHUB_CLIENT_ID = os.getenv("SUPERSET_GITHUB_CLIENT_ID", "")
+    GITHUB_CLIENT_SECRET = os.getenv("SUPERSET_GITHUB_CLIENT_SECRET", "")
+    GITHUB_API_BASE_URL = os.getenv("SUPERSET_GITHUB_API_BASE_URL", "https://api.github.com/")
+    GITHUB_ACCESS_TOKEN_URL = os.getenv("SUPERSET_GITHUB_ACCESS_TOKEN_URL", "https://github.com/login/oauth/access_token")
+    GITHUB_AUTHORIZE_URL = os.getenv("SUPERSET_GITHUB_AUTHORIZE_URL", "https://github.com/login/oauth/authorize")
+    GITHUB_ALLOWED_ORG = os.getenv("SUPERSET_GITHUB_ALLOWED_ORG", "")
     
     # OAuth Providers Configuration
     OAUTH_PROVIDERS = [
