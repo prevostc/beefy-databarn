@@ -11,15 +11,17 @@ ifneq (,$(wildcard ../../.env))
 endif
 
 # Directories that need to exist for bind mounts
-DATA_DIRS := /mnt/data/clickhouse \
-             /mnt/data/prometheus \
-             /mnt/data/grafana \
-             /mnt/data/minio \
-             /mnt/data/postgres \
-             /mnt/data/superset \
-             /mnt/data/redis \
-             /mnt/data/traefik_certs \
-             /mnt/data/dbt
+# Use ?= to allow .env file to override, otherwise default to /mnt/data
+STORAGE_DIR ?= /mnt/data
+DATA_DIRS := $(STORAGE_DIR)/clickhouse \
+             $(STORAGE_DIR)/prometheus \
+             $(STORAGE_DIR)/grafana \
+             $(STORAGE_DIR)/minio \
+             $(STORAGE_DIR)/postgres \
+             $(STORAGE_DIR)/superset \
+             $(STORAGE_DIR)/redis \
+             $(STORAGE_DIR)/traefik_certs \
+             $(STORAGE_DIR)/dbt
 
 # Default target
 .DEFAULT_GOAL := help

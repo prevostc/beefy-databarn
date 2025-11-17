@@ -250,7 +250,6 @@ volumes:
   superset_data:
   redis_data:
 
-
 networks:
   default:
     name: databarn_network

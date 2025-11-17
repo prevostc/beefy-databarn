@@ -399,55 +399,55 @@ volumes:
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/clickhouse
+      device: ${STORAGE_DIR}/clickhouse
   prometheus_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/prometheus
+      device: ${STORAGE_DIR}/prometheus
   grafana_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/grafana
+      device: ${STORAGE_DIR}/grafana
   minio_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/minio
+      device: ${STORAGE_DIR}/minio
   postgres_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/postgres
+      device: ${STORAGE_DIR}/postgres
   superset_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/superset
+      device: ${STORAGE_DIR}/superset
   redis_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/redis
+      device: ${STORAGE_DIR}/redis
   traefik_certs:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/traefik_certs
+      device: ${STORAGE_DIR}/traefik_certs
   dbt_data:
     driver: local
     driver_opts:
       type: none
       o: bind
-      device: /mnt/data/dbt
+      device: ${STORAGE_DIR}/dbt
 
 networks:
   frontend_network:
