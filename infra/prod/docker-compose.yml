@@ -44,7 +44,6 @@ services:
       PGSSLCERT: /etc/postgres-ca/root.crt
     networks:
       - backend_network
-      - database_network
     restart: unless-stopped
     labels:
       - "traefik.enable=false"
@@ -72,9 +71,7 @@ services:
       - "--web.console.libraries=/usr/share/prometheus/console_libraries"
       - "--web.console.templates=/usr/share/prometheus/consoles"
     networks:
-      - monitoring_network
       - backend_network
-      - database_network
     labels:
       - "traefik.enable=false"
     healthcheck:
@@ -122,7 +119,6 @@ services:
     networks:
       - frontend_network
       - backend_network
-      - monitoring_network
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.grafana.rule=Host(`${GRAFANA_WEBAPP_DOMAIN_NAME}`)"
@@ -130,6 +126,10 @@ services:
       - "traefik.http.routers.grafana.tls.certresolver=letsencrypt"
       - "traefik.http.services.grafana.loadbalancer.server.port=${GRAFANA_HTTP_PORT:-3000}"
       - "traefik.http.services.grafana.loadbalancer.server.scheme=http"
+      - "traefik.http.services.grafana.loadbalancer.healthcheck.path=/api/health"
+      - "traefik.http.services.grafana.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.grafana.loadbalancer.healthcheck.timeout=5s"
+      - "traefik.http.services.grafana.loadbalancer.healthcheck.retries=3"
       - "traefik.http.routers.grafana.service=grafana"
     healthcheck:
       test:
@@ -195,7 +195,7 @@ services:
       GRAFANA_POSTGRES_USER: ${GRAFANA_POSTGRES_USER:-grafana}
       GRAFANA_POSTGRES_PASSWORD: ${GRAFANA_POSTGRES_PASSWORD}
     networks:
-      - database_network
+      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -216,7 +216,7 @@ services:
       - redis_data:/data
     command: redis-server --appendonly yes
     networks:
-      - database_network
+      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -236,8 +236,7 @@ services:
     environment:
       REDIS_ADDR: redis:6379
     networks:
-      - monitoring_network
-      - database_network
+      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -255,8 +254,7 @@ services:
     environment:
       DATA_SOURCE_NAME: postgresql://${POSTGRES_ADMIN_USER:-postgres}:${POSTGRES_ADMIN_PASSWORD:-postgres}@postgres:5432/${POSTGRES_ADMIN_DB:-postgres}?sslmode=disable
     networks:
-      - monitoring_network
-      - database_network
+      - backend_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -338,11 +336,14 @@ services:
       - "traefik.http.routers.superset.tls.certresolver=letsencrypt"
       - "traefik.http.services.superset.loadbalancer.server.port=8088"
       - "traefik.http.services.superset.loadbalancer.server.scheme=http"
+      - "traefik.http.services.superset.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.superset.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.superset.loadbalancer.healthcheck.timeout=5s"
+      - "traefik.http.services.superset.loadbalancer.healthcheck.retries=3"
       - "traefik.http.routers.superset.service=superset"
     networks:
       - frontend_network
       - backend_network
-      - database_network
     logging:
       driver: "local"
       options:
@@ -371,7 +372,6 @@ services:
       BEEFY_DB_PASSWORD: ${BEEFY_DB_PASSWORD}
     networks:
       - backend_network
-      - database_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -452,9 +452,5 @@ networks:
     driver: bridge
     name: frontend_network
   backend_network:
-    driver: bridge
-  database_network:
-    driver: bridge
-  monitoring_network:
     driver: bridge
 
