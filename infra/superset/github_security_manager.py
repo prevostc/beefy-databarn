@@ -1,8 +1,13 @@
 """ Custom Security Manager for GitHub OAuth authentication.
-Does not store real names or emails - only GitHub username for identification. """
+
+Does not store real names or emails - only GitHub username for identification.
+Ensures that every OAuth user gets at least one Superset role.
+"""
 
 import os
 import logging
+
+from flask_appbuilder.security.sqla.models import Role
 from superset.security import SupersetSecurityManager
 
 
@@ -20,7 +25,7 @@ class CustomSecurityManager(SupersetSecurityManager):
                 )
                 return super().oauth_user_info(provider, response)
 
-            remote_app = self.appbuilder.sm.oauth_remotes[provider]
+            remote_app = self.oauth_remotes[provider]
 
             # 1) Fetch /user
             me = remote_app.get("user")
@@ -88,3 +93,42 @@ class CustomSecurityManager(SupersetSecurityManager):
         except Exception:
             logging.exception("Error in CustomSecurityManager.oauth_user_info")
             return None
+
+    # 🔑 NEW: force a default role if the user has none
+    def auth_user_oauth(self, userinfo):
+        """
+        Wrap the default OAuth handler to ensure the user always has at least one role.
+
+        This avoids 'User object does not have roles' errors on /superset/welcome.
+        """
+        user = super().auth_user_oauth(userinfo)
+
+        if not user:
+            # login failed / not allowed
+            return None
+
+        try:
+            roles = getattr(user, "roles", None)
+            if not roles:
+                # No roles assigned → attach the default registration role
+                default_role_name = self.auth_user_registration_role or "Gamma"
+                default_role: Role | None = self.find_role(default_role_name)
+
+                if default_role:
+                    logging.info(
+                        "Assigning default role '%s' to user '%s' (had no roles)",
+                        default_role_name,
+                        user.username,
+                    )
+                    user.roles = [default_role]
+                    self.update_user(user)
+                else:
+                    logging.error(
+                        "Default role '%s' not found in DB for user '%s'",
+                        default_role_name,
+                        user.username,
+                    )
+        except Exception:
+            logging.exception("Failed to ensure roles for user %s", getattr(user, "username", "N/A"))
+
+        return user
