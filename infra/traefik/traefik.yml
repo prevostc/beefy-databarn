@@ -11,11 +11,19 @@ entryPoints:
           to: websecure
           scheme: https
           permanent: true
+    observability:
+      accessLogs: false
+      metrics: false
+      tracing: false
   websecure:
     address: ":443"
     http:
       tls:
         certResolver: letsencrypt
+    observability:
+      accessLogs: false
+      metrics: false
+      tracing: false
 
 providers:
   docker:
