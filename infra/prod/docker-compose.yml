@@ -451,7 +451,7 @@ volumes:
 networks:
   frontend_network:
     driver: bridge
-    name: frontend_network
+    name: beefy-databarn_frontend_network
   backend_network:
     driver: bridge
 
