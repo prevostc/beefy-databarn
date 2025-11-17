@@ -30,6 +30,7 @@ providers:
     endpoint: "unix:///var/run/docker.sock"
     exposedByDefault: false
     watch: true
+    network: beefy-databarn_frontend_network
 
 certificatesResolvers:
   letsencrypt:
