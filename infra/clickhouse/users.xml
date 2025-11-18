@@ -18,7 +18,7 @@
             </constraints>
         </readonly>
         <dbt>
-            <max_execution_time>3000</max_execution_time>
+            <max_execution_time>3600</max_execution_time>
         </dbt>
     </profiles>
 
