@@ -19,9 +19,41 @@
         </readonly>
         <dbt>
             <max_execution_time>3000</max_execution_time>
-            <mutations_sync>1</mutations_sync>
         </dbt>
     </profiles>
+
+    <quotas>
+        <default>
+            <interval>
+                <duration>3600</duration>
+                <queries>0</queries>
+                <errors>0</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>0</execution_time>
+            </interval>
+        </default>
+        <dbt>
+            <interval>
+                <duration>3600</duration>
+                <queries>0</queries>
+                <errors>0</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>0</execution_time>
+            </interval>
+        </dbt>
+        <readonly>
+            <interval>
+                <duration>3600</duration>
+                <queries>0</queries>
+                <errors>0</errors>
+                <result_rows>0</result_rows>
+                <read_rows>0</read_rows>
+                <execution_time>0</execution_time>
+            </interval>
+        </readonly>
+    </quotas>
 
     <access_control_improvements>
         <settings_constraints_replace_previous>true</settings_constraints_replace_previous>
@@ -43,8 +75,8 @@
             <networks>
                 <ip>::/0</ip>
             </networks>
-            <profile>readonly</profile>
-            <quota>default</quota>
+            <profile>dbt</profile>
+            <quota>dbt</quota>
         </dbt>
 
         <grafana>
@@ -53,7 +85,7 @@
                 <ip>::/0</ip>
             </networks>
             <profile>readonly</profile>
-            <quota>default</quota>
+            <quota>readonly</quota>
         </grafana>
 
         <superset>
@@ -62,21 +94,9 @@
                 <ip>::/0</ip>
             </networks>
             <profile>readonly</profile>
-            <quota>default</quota>
+            <quota>readonly</quota>
         </superset>
     </users>
 
-    <quotas>
-        <default>
-            <interval>
-                <duration>3600</duration>
-                <queries>0</queries>
-                <errors>0</errors>
-                <result_rows>0</result_rows>
-                <read_rows>0</read_rows>
-                <execution_time>0</execution_time>
-            </interval>
-        </default>
-    </quotas>
 </clickhouse>
 
