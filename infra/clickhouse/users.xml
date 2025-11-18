@@ -19,6 +19,7 @@
         </readonly>
         <dbt>
             <max_execution_time>3000</max_execution_time>
+            <mutations_sync>1</mutations_sync>
         </dbt>
     </profiles>
 
