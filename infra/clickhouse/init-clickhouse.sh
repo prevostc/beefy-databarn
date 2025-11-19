@@ -1,26 +1,9 @@
 #!/bin/bash
-set -e
+set -euo pipefail
 
-# Remove empty cert files to prevent permission errors
-rm -rf /root/.postgresql/postgresql.crt
-rm -rf /root/.postgresql/postgresql.key
-# Create directory for PostgreSQL CA certificate if it doesn't exist
-mkdir -p /etc/postgres-ca
-wget -O /etc/postgres-ca/root.crt https://truststore.pki.rds.amazonaws.com/global/global-bundle.pem
+echo "Initializing ClickHouse databases..."
 
-# Initialize ClickHouse schemas and prepare for external table definitions
-# This script is automatically executed on first startup via /docker-entrypoint-initdb.d/
+clickhouse-client --user="$CLICKHOUSE_USER" --password="$CLICKHOUSE_PASSWORD" --query="CREATE DATABASE IF NOT EXISTS analytics"
+clickhouse-client --user="$CLICKHOUSE_USER" --password="$CLICKHOUSE_PASSWORD" --query="CREATE DATABASE IF NOT EXISTS dlt"
 
-echo "Initializing ClickHouse database..."
-
-# Create analytics database
-clickhouse-client --password="$CLICKHOUSE_PASSWORD" --query="CREATE DATABASE IF NOT EXISTS analytics"
-
-echo "✓ Created analytics database"
-
-# Note: External tables will be created by dbt staging models
-# This script just prepares the schema structure
-
-echo "✓ ClickHouse initialization complete"
-echo "  Next: Run 'dbt run' to create external tables and models"
-
+echo "✓ Databases analytics & dlt created"

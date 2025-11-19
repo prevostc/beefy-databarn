@@ -10,7 +10,7 @@
 -- Small reference table, materialized as table for performance
 
 SELECT
-  chain_id as dim_chain_id,
+  chain_id as chain_id,
   chain_id as network_id,
   name as chain_name,
   beefy_name as beefy_key,

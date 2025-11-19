@@ -12,7 +12,7 @@
 SELECT
   DISTINCT
   -- TODO: use a better id?
-  vault_id as dim_product_id,
+  vault_id as product_id,
   vault_id as beefy_id,
   vault_id as name
 FROM {{ ref('stg_beefy_db__vault_ids') }}

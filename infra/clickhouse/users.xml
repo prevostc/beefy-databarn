@@ -7,19 +7,35 @@
             <use_uncompressed_cache>0</use_uncompressed_cache>
             <load_balancing>random</load_balancing>
         </default>
-        <readonly>
+        <web>
             <readonly>1</readonly>
+            <max_execution_time from_env="CLICKHOUSE_WEB_MAX_EXECUTION_TIME" replace="1">180</max_execution_time>
+            <max_memory_usage from_env="CLICKHOUSE_WEB_MAX_MEMORY_USAGE" replace="1">6000000000</max_memory_usage>
+            <max_result_rows from_env="CLICKHOUSE_WEB_MAX_RESULT_ROWS" replace="1">100000</max_result_rows>
+            <max_rows_to_read from_env="CLICKHOUSE_WEB_MAX_ROWS_TO_READ" replace="1">1000000</max_rows_to_read>
+            <use_uncompressed_cache>0</use_uncompressed_cache>
+            <load_balancing>random</load_balancing>
             <constraints>
                 <max_execution_time>
                     <changeable_in_readonly/>
                     <min>0</min>
                     <max>180</max>
                 </max_execution_time>
+                <max_memory_usage>
+                    <changeable_in_readonly/>
+                    <min>0</min>
+                    <max>10000000000</max>
+                </max_memory_usage>
             </constraints>
-        </readonly>
+        </web>
         <dbt>
             <max_execution_time>3600</max_execution_time>
+            <max_memory_usage from_env="CLICKHOUSE_MAX_MEMORY_USAGE" replace="1">10000000000</max_memory_usage>
         </dbt>
+        <dlt>
+            <max_execution_time>3600</max_execution_time>
+            <max_memory_usage from_env="CLICKHOUSE_MAX_MEMORY_USAGE" replace="1">10000000000</max_memory_usage>
+        </dlt>
     </profiles>
 
     <quotas>
@@ -33,30 +49,24 @@
                 <execution_time>0</execution_time>
             </interval>
         </default>
-        <dbt>
+        <web>
             <interval>
                 <duration>3600</duration>
-                <queries>0</queries>
-                <errors>0</errors>
-                <result_rows>0</result_rows>
-                <read_rows>0</read_rows>
-                <execution_time>0</execution_time>
+                <queries>5000</queries>
+                <query_selects>5000</query_selects>
+                <errors>1000</errors>
+                <result_rows>10000000000</result_rows>
+                <result_bytes>10000000000000</result_bytes>
+                <read_rows>100000000000</read_rows>
+                <read_bytes>100000000000000</read_bytes>
+                <execution_time>7200</execution_time>
             </interval>
-        </dbt>
-        <readonly>
-            <interval>
-                <duration>3600</duration>
-                <queries>0</queries>
-                <errors>0</errors>
-                <result_rows>0</result_rows>
-                <read_rows>0</read_rows>
-                <execution_time>0</execution_time>
-            </interval>
-        </readonly>
+        </web>
     </quotas>
 
     <access_control_improvements>
         <settings_constraints_replace_previous>true</settings_constraints_replace_previous>
+        <table_engines_require_grant>true</table_engines_require_grant>
     </access_control_improvements>
 
     <users>
@@ -76,16 +86,36 @@
                 <ip>::/0</ip>
             </networks>
             <profile>dbt</profile>
-            <quota>dbt</quota>
+            <quota>default</quota>
+            <databases>
+                <analytics/>
+                <dlt/>
+            </databases>
         </dbt>
+
+        <dlt>
+            <password from_env="DLT_CLICKHOUSE_PASSWORD" replace="1">changeme</password>
+            <networks>
+                <ip>::/0</ip>
+            </networks>
+            <profile>dlt</profile>
+            <quota>default</quota>
+            <databases>
+                <dlt/>
+            </databases>
+        </dlt>
 
         <grafana>
             <password from_env="GRAFANA_CLICKHOUSE_PASSWORD" replace="1">changeme</password>
             <networks>
                 <ip>::/0</ip>
             </networks>
-            <profile>readonly</profile>
-            <quota>readonly</quota>
+            <profile>web</profile>
+            <quota>web</quota>
+            <databases>
+                <analytics/>
+                <dlt/>
+            </databases>
         </grafana>
 
         <superset>
@@ -93,8 +123,12 @@
             <networks>
                 <ip>::/0</ip>
             </networks>
-            <profile>readonly</profile>
-            <quota>readonly</quota>
+            <profile>web</profile>
+            <quota>web</quota>
+            <databases>
+                <analytics/>
+                <dlt/>
+            </databases>
         </superset>
     </users>
 

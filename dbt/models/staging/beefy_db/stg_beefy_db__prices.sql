@@ -12,7 +12,7 @@
     unique_key=['oracle_id', 't'],
     incremental_strategy='delete+insert',
     on_schema_change='sync_all_columns',
-    order_by=['oracle_id', 't']
+    order_by=['oracle_id', 't'],
   )
 }}
 

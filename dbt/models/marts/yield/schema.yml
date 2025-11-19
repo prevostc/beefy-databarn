@@ -27,18 +27,18 @@ models:
             severity: error
     columns:
       - name: id
-        description: "Unique identifier for the harvest event (surrogate key from dim_chain_id, block_number, tx_idx, event_idx)"
+        description: "Unique identifier for the harvest event (surrogate key from chain_id, block_number, tx_idx, event_idx)"
         tests:
           - not_null
           - unique
-      - name: dim_chain_id
-        description: "Chain ID where the harvest occurred (foreign key to chain.dim_chain_id)"
+      - name: chain_id
+        description: "Chain ID where the harvest occurred (foreign key to chain.chain_id)"
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('chain')
-                field: dim_chain_id
+                field: chain_id
       - name: block_number
         description: "Block number where the harvest event occurred"
         tests:
@@ -59,14 +59,14 @@ models:
         description: "Transaction hash of the harvest"
         tests:
           - not_null
-      - name: dim_product_id
-        description: "Product identifier (foreign key to product.dim_product_id)"
+      - name: product_id
+        description: "Product identifier (foreign key to product.product_id)"
         tests:
           - not_null
           - relationships:
               arguments:
                 to: ref('product')
-                field: dim_product_id
+                field: product_id
       - name: underlying_amount_compounded
         description: "Amount harvested"
         tests:

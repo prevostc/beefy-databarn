@@ -1,5 +1,5 @@
 .PHONY: help setup start dev
-.PHONY: infra dbt grafana deps-check
+.PHONY: infra dbt dlt grafana clickhouse deps-check
 
 # Load .env file if it exists
 ifneq (,$(wildcard ./.env))
@@ -19,32 +19,38 @@ help: ## Show this help message
 	@echo ""
 	@echo "Usage: make <command> [subcommand]"
 	@echo ""
+	@echo "dlt:"
+	@echo "  make dlt run             Run the Beefy API dlt pipeline"
+	@echo ""
 	@echo "Infrastructure:"
-	@echo "  make infra start       Start infrastructure services (rebuilds if needed)"
-	@echo "  make infra build       Rebuild infrastructure images"
-	@echo "  make infra stop        Stop infrastructure services"
-	@echo "  make infra restart     Restart infrastructure services"
-	@echo "  make infra logs        View infrastructure logs"
-	@echo "  make infra ps          Show service status"
+	@echo "  make infra start         Start infrastructure services (rebuilds if needed)"
+	@echo "  make infra build         Rebuild infrastructure images"
+	@echo "  make infra stop          Stop infrastructure services"
+	@echo "  make infra restart       Restart infrastructure services"
+	@echo "  make infra logs          View infrastructure logs"
+	@echo "  make infra ps            Show service status"
 	@echo ""
 	@echo "dbt:"
-	@echo "  make dbt run           Run dbt models"
-	@echo "  make dbt run <model>   Run a specific dbt model"
-	@echo "  make dbt test          Run dbt tests"
-	@echo "  make dbt compile       Compile dbt models"
-	@echo "  make dbt sql [<model>]  Show compiled SQL (optionally for specific model)"
-	@echo "  make dbt docs          Generate and serve documentation"
+	@echo "  make dbt run             Run dbt models"
+	@echo "  make dbt run <model>     Run a specific dbt model"
+	@echo "  make dbt test            Run dbt tests"
+	@echo "  make dbt compile         Compile dbt models"
+	@echo "  make dbt sql [<model>]   Show compiled SQL (optionally for specific model)"
+	@echo "  make dbt docs            Generate and serve documentation"
 	@echo ""
 	@echo "Grafana:"
-	@echo "  make grafana restart Re-restart Grafana (reload configs)"
+	@echo "  make grafana restart     Re-restart Grafana (reload configs)"
+	@echo ""
+	@echo "ClickHouse:"
+	@echo "  make clickhouse restart  Re-restart ClickHouse (reload configs)"
 	@echo ""
 	@echo "Dependencies:"
-	@echo "  make deps-check        Check for outdated dependencies"
+	@echo "  make deps-check          Check for outdated dependencies"
 	@echo ""
 	@echo "Workflows:"
-	@echo "  make setup             Initial setup (copy .env, install deps)"
-	@echo "  make start             Start infrastructure and initialize"
-	@echo "  make dev               Full development workflow"
+	@echo "  make setup               Initial setup (copy .env, install deps)"
+	@echo "  make start               Start infrastructure and initialize"
+	@echo "  make dev                 Full development workflow"
 
 # Infrastructure commands - using subcommands
 infra:
@@ -121,25 +127,25 @@ dbt:
 _dbt-run:
 	@if [ -n "$(MODEL)" ]; then \
 		echo "Running dbt model: $(MODEL)..."; \
-		cd dbt && uv run dbt run --select $(MODEL) --show-all-deprecations; \
+		cd dbt && uv run --env-file ../.env dbt run --select $(MODEL) --show-all-deprecations; \
 	else \
 		echo "Running dbt models..."; \
-		cd dbt && uv run dbt run --show-all-deprecations; \
+		cd dbt && uv run --env-file ../.env dbt run --show-all-deprecations; \
 	fi
 
 _dbt-test:
 	@echo "Running dbt tests..."
-	@cd dbt && uv run dbt test
+	@cd dbt && uv run --env-file ../.env dbt test
 
 _dbt-compile:
 	@echo "Compiling dbt models..."
-	@cd dbt && uv run dbt compile
+	@cd dbt && uv run --env-file ../.env dbt compile
 
 _dbt-sql:
 	@echo "Compiling and showing SQL (no queries executed)..."
 	@cd dbt && \
 	if [ -n "$(MODEL)" ]; then \
-		uv run dbt compile --select $(MODEL) > /dev/null 2>&1 && \
+		uv run --env-file ../.env dbt compile --select $(MODEL) > /dev/null 2>&1 && \
 		COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$(MODEL).sql" -type f | head -1) && \
 		if [ -n "$$COMPILED_FILE" ]; then \
 			echo "=== Compiled SQL for $(MODEL) ===" && \
@@ -149,18 +155,31 @@ _dbt-sql:
 			exit 1; \
 		fi; \
 	else \
-		uv run dbt compile > /dev/null 2>&1 && \
+		uv run --env-file ../.env dbt compile > /dev/null 2>&1 && \
 		echo "Compiled SQL files are in target/compiled/beefy_databarn/models/"; \
 		find target/compiled/beefy_databarn/models -name "*.sql" -type f | head -10; \
 	fi
 
 _dbt-docs:
 	@echo "Generating dbt documentation..."
-	@cd dbt && uv run dbt docs generate && dbt docs serve
+	@cd dbt && uv run --env-file ../.env dbt docs generate && uv run --env-file ../.env dbt docs serve
 
 # Catch subcommands
 run test compile sql docs:
 	@:
+
+# dlt commands - using subcommands
+dlt:
+	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "run" ]; then \
+		$(MAKE) -s _dlt-run; \
+	else \
+		echo "Usage: make dlt [run]"; \
+		exit 1; \
+	fi
+
+_dlt-run:
+	@echo "Running Beefy API dlt pipeline..."
+	@cd dlt && uv run --env-file ../.env ./run.py
 
 # Catch model names passed to dbt sql (prevents "No rule to make target" errors)
 %:
@@ -180,6 +199,19 @@ _grafana-restart:
 	@echo "Re-restarting Grafana (restarting service to reload configs)..."
 	@docker compose -f infra/dev/docker-compose.yml restart grafana
 	@echo "✓ Grafana re-restarted"
+
+clickhouse:
+	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
+		$(MAKE) -s _clickhouse-restart; \
+	else \
+		echo "Usage: make clickhouse [restart]"; \
+		exit 1; \
+	fi
+
+_clickhouse-restart:
+	@echo "Restarting ClickHouse..."
+	@docker compose -f infra/dev/docker-compose.yml restart clickhouse
+	@echo "✓ ClickHouse restarted"
 
 # Catch subcommands
 restart:
