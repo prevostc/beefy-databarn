@@ -89,6 +89,7 @@
             <quota>default</quota>
             <databases>
                 <analytics/>
+                <connectors/>
                 <dlt/>
             </databases>
         </dbt>
@@ -114,6 +115,7 @@
             <quota>web</quota>
             <databases>
                 <analytics/>
+                <connectors/>
                 <dlt/>
             </databases>
         </grafana>
@@ -127,6 +129,7 @@
             <quota>web</quota>
             <databases>
                 <analytics/>
+                <connectors/>
                 <dlt/>
             </databases>
         </superset>

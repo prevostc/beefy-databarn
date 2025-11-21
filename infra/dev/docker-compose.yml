@@ -125,11 +125,15 @@ services:
       - "9001:9001"  # Console port
     volumes:
       - minio_data:/data
+      - ../minio/entrypoint.sh:/entrypoint.sh
     environment:
-      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-admin}
-      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:-admin}
+      MINIO_BROWSER: on
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_DLT_STAGING_BUCKET: ${MINIO_DLT_STAGING_BUCKET:-dlt_staging}
       MINIO_PROMETHEUS_AUTH_TYPE: public
     command: server /data --console-address ":9001"
+    entrypoint: ["/entrypoint.sh"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
       interval: 1s

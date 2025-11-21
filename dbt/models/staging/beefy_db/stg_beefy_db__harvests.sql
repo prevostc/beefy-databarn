@@ -1,8 +1,8 @@
 {{
   config(
     pre_hook=[
-      "DROP TABLE IF EXISTS con_beefy_db__harvests",
-      "CREATE OR REPLACE TABLE con_beefy_db__harvests (
+      "DROP TABLE IF EXISTS connectors.con_beefy_db__harvests",
+      "CREATE OR REPLACE TABLE connectors.con_beefy_db__harvests (
         chain_id Int64,
         block_number Int32,
         txn_idx Int16,
@@ -28,6 +28,9 @@
     order_by=['txn_timestamp', 'chain_id', 'block_number', 'txn_idx', 'event_idx']
   )
 }}
+
+-- Note: This model uses a direct PostgreSQL connection via ClickHouse table engine
+-- The source is defined in sources.yml for documentation purposes
 
 {% if is_incremental() %}
   {%- set max_timestamp_query -%}
@@ -61,7 +64,7 @@ SELECT
   want_price,
   is_cowllector,
   strategist_address
-FROM con_beefy_db__harvests h
+FROM connectors.con_beefy_db__harvests h
 {% if is_incremental() and max_timestamp %}
-WHERE txn_timestamp >= '{{ max_timestamp }}' - INTERVAL 30 DAY
+WHERE txn_timestamp >= '{{ max_timestamp }}' - INTERVAL 10 DAY
 {% endif %}

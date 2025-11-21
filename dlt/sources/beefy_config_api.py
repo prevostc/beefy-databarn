@@ -7,21 +7,18 @@ from lib.fetch import fetch_url_json_dict, fetch_url_json_list
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
-@dlt.source(name="beefy_config_api")
-def beefy_config_api() -> Any:
+@dlt.source(
+    name="beefy_config_api", 
+    max_table_nesting=0, 
+    parallelized=True
+)
+async def beefy_config_api() -> Any:
     """Expose Beefy Config API resources for use by dlt pipelines."""
 
     @dlt.resource(
         name="vaults",
         primary_key="id",
         write_disposition={"disposition": "merge", "strategy": "delete-insert"},
-        columns={
-            "assets": {"data_type": "json"},
-            "risks": {"data_type": "json"},
-            "migration_ids": {"data_type": "json"},
-            "point_structure_ids": {"data_type": "json"},
-            "zaps": {"data_type": "json"},
-        },
     )
     async def beefy_vaults() -> AsyncIterator[Dict[str, Any]]:
         async for item in fetch_url_json_list("https://api.beefy.finance/vaults"):
@@ -35,17 +32,6 @@ def beefy_config_api() -> Any:
         name="gov_vaults",
         primary_key="id",
         write_disposition={"disposition": "merge", "strategy": "delete-insert"},
-        columns={
-            "assets": {"data_type": "json"},
-            "risks": {"data_type": "json"},
-            "migration_ids": {"data_type": "json"},
-            "point_structure_ids": {"data_type": "json"},
-            "earned_oracle_ids": {"data_type": "json"},
-            "earned_tokens": {"data_type": "json"},
-            "earned_token_addresses": {"data_type": "json"},
-            "earned_token_decimals": {"data_type": "json"},
-            "zaps": {"data_type": "json"},
-        },
     )
     async def beefy_gov_vaults() -> AsyncIterator[Dict[str, Any]]:
         async for item in fetch_url_json_list("https://api.beefy.finance/gov-vaults"):
@@ -59,11 +45,6 @@ def beefy_config_api() -> Any:
         name="boosts",
         primary_key="id",
         write_disposition={"disposition": "merge", "strategy": "delete-insert"},
-        columns={
-            "assets": {"data_type": "json"},
-            "partners": {"data_type": "json"},
-            "periodFinishes": {"data_type": "json"},
-        },
     )
     async def beefy_boosts() -> AsyncIterator[Dict[str, Any]]:
         async for item in fetch_url_json_list("https://api.beefy.finance/boosts"):
@@ -75,14 +56,7 @@ def beefy_config_api() -> Any:
         primary_key="id",
         write_disposition={"disposition": "merge", "strategy": "delete-insert"},
         columns={
-            "assets": {"data_type": "json"},
             "feeTier": {"data_type": "text"},
-            "risks": {"data_type": "json"},
-            "migration_ids": {"data_type": "json"},
-            "point_structure_ids": {"data_type": "json"},
-            "zaps": {"data_type": "json"},
-            "vault": {"data_type": "json"},
-            "pool": {"data_type": "json"},
         },
     )
     async def beefy_clm_vaults() -> AsyncIterator[Dict[str, Any]]:
@@ -104,13 +78,6 @@ def beefy_config_api() -> Any:
         name="cow_vaults",
         primary_key="id",
         write_disposition={"disposition": "merge", "strategy": "delete-insert"},
-        columns={
-            "assets": {"data_type": "json"},
-            "risks": {"data_type": "json"},
-            "migration_ids": {"data_type": "json"},
-            "point_structure_ids": {"data_type": "json"},
-            "zaps": {"data_type": "json"},
-        },
     )
     async def beefy_cow_vaults() -> AsyncIterator[Dict[str, Any]]:
         async for item in fetch_url_json_list("https://api.beefy.finance/cow-vaults"):

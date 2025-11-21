@@ -181,9 +181,15 @@ _dlt-run:
 	@echo "Running Beefy API dlt pipeline..."
 	@cd dlt && uv run --env-file ../.env ./run.py
 
-# Catch model names passed to dbt sql (prevents "No rule to make target" errors)
+# Catch unknown commands - show help and exit with error
+# Only show error if this is the first goal (not a model name or subcommand argument)
 %:
-	@:
+	@if [ "$@" = "$(firstword $(MAKECMDGOALS))" ]; then \
+		echo "Error: Unknown command '$@'" >&2; \
+		echo "" >&2; \
+		$(MAKE) -s help >&2; \
+		exit 1; \
+	fi
 
 # Grafana commands - using subcommands
 grafana:
@@ -267,5 +273,5 @@ _print-urls:
 	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
 	echo "  - Grafana: http://localhost:3000 ($${GRAFANA_ADMIN_USER:-admin}/$${GRAFANA_ADMIN_PASSWORD:-admin})" && \
 	echo "  - Prometheus: http://localhost:9090 (no auth)" && \
-	echo "  - MinIO: http://localhost:9001 ($${MINIO_ROOT_USER:-admin}/$${MINIO_ROOT_PASSWORD:-admin})"
+	echo "  - MinIO: http://localhost:9001 ($${MINIO_ACCESS_KEY:-admin}/$${MINIO_SECRET_KEY:-admin})"
 

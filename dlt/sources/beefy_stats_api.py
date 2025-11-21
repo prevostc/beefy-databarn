@@ -9,8 +9,8 @@ from lib.convert import get_int_like
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
-@dlt.source(name="beefy_stats_api")
-def beefy_stats_api() -> Any:
+@dlt.source(name="beefy_stats_api", max_table_nesting=0, parallelized=True)
+async def beefy_stats_api() -> Any:
     """Expose Beefy Stats API resources for use by dlt pipelines."""
 
     @dlt.resource(
@@ -79,11 +79,8 @@ def beefy_stats_api() -> Any:
         write_disposition={"disposition": "merge", "strategy": "delete-insert"},
         columns={
             "price": {"data_type": "double"},
-            "tokens": {"data_type": "json"},
-            "balances": {"data_type": "json"},
             "total_supply": {"data_type": "decimal"},
             "underlying_liquidity": {"data_type": "decimal"},
-            "underlying_balances": {"data_type": "json"},
             "underlying_price": {"data_type": "decimal"},
         },
     )

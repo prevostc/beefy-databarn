@@ -1,0 +1,47 @@
+{{
+  config(
+    materialized='view',
+  )
+}}
+
+SELECT
+  assets,
+  risks,
+  migration_ids,
+  point_structure_ids,
+  earned_oracle_ids,
+  earned_tokens,
+  earned_token_addresses,
+  earned_token_decimals,
+  zaps,
+  id,
+  name,
+  type,
+  version,
+  token,
+  token_address,
+  token_decimals,
+  token_provider_id,
+  earn_contract_address,
+  earned_token,
+  oracle,
+  oracle_id,
+  status,
+  created_at,
+  platform_id,
+  strategy_type_id,
+  network,
+  is_gov_vault,
+  chain,
+  total_supply,
+  last_harvest,
+  earned_token_decimals__v_bigint,
+  retired_at,
+  retire_reason,
+  earned_token_address,
+  excluded,
+  buy_token_url,
+  updated_at,
+  earning_points
+FROM dlt.beefy_api___gov_vaults
+

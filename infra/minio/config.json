@@ -1,8 +1,8 @@
 {
   "version": "10",
   "credential": {
-    "accessKey": "${MINIO_ROOT_USER}",
-    "secretKey": "${MINIO_ROOT_PASSWORD}"
+    "accessKey": "${MINIO_ACCESS_KEY}",
+    "secretKey": "${MINIO_SECRET_KEY}"
   },
   "region": "us-east-1",
   "browser": "on",
@@ -17,4 +17,3 @@
   },
   "notify": {}
 }
-
