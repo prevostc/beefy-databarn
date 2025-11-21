@@ -1,0 +1,49 @@
+version: 2
+
+models:
+  - name: stg_beefy_api__boosts
+    description: "Staging model for boosts from dlt beefy_api dataset"
+    columns:
+      - name: id
+        description: "Boost identifier (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: assets
+        description: "Array of asset information (JSON string)"
+      - name: partners
+        description: "Partners information (JSON string)"
+      - name: period_finishes
+        description: "Period finish dates (JSON string)"
+      - name: name
+        description: "Boost name"
+      - name: chain
+        description: "Chain information"
+      - name: pool_id
+        description: "Pool ID"
+      - name: version
+        description: "Version"
+      - name: status
+        description: "Status"
+      - name: earn_contract_address
+        description: "Earn contract address"
+      - name: token_address
+        description: "Token address"
+      - name: earned_token
+        description: "Earned token"
+      - name: earned_token_decimals
+        description: "Earned token decimals"
+      - name: earned_token_address
+        description: "Earned token address"
+      - name: earned_oracle
+        description: "Earned oracle"
+      - name: earned_oracle_id
+        description: "Earned oracle ID"
+      - name: partnership
+        description: "Partnership status"
+      - name: is_moo_staked
+        description: "Whether moo token is staked"
+      - name: period_finish
+        description: "Period finish timestamp"
+      - name: campaign
+        description: "Campaign information"

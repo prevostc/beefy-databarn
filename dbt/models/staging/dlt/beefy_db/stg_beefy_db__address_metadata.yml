@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: stg_beefy_db__address_metadata
+    description: "Staging model for address metadata from dlt beefy_db dataset"
+    columns:
+      - name: chain_id
+        description: "Chain ID (references chain.chain_id)"
+        tests:
+          - not_null
+      - name: address
+        description: "Address (42 character hex string)"
+        tests:
+          - not_null
+      - name: is_contract
+        description: "Whether the address is a contract"
+      - name: label
+        description: "Label for the address"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - chain_id
+            - address

@@ -8,7 +8,7 @@ logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 @dlt.source(name="beefy_config_api")
-def beefy_config_api() -> Any:
+async def beefy_config_api() -> Any:
     """Expose Beefy Config API resources for use by dlt pipelines."""
 
     @dlt.resource(
@@ -80,6 +80,7 @@ def beefy_config_api() -> Any:
             "risks": {"data_type": "json"},
             "migration_ids": {"data_type": "json"},
             "point_structure_ids": {"data_type": "json"},
+            "deposit_token_addresses": {"data_type": "json"},
             "zaps": {"data_type": "json"},
             "vault": {"data_type": "json"},
             "pool": {"data_type": "json"},
@@ -109,6 +110,7 @@ def beefy_config_api() -> Any:
             "risks": {"data_type": "json"},
             "migration_ids": {"data_type": "json"},
             "point_structure_ids": {"data_type": "json"},
+            "deposit_token_addresses": {"data_type": "json"},
             "zaps": {"data_type": "json"},
         },
     )

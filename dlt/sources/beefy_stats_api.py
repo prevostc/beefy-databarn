@@ -10,7 +10,7 @@ logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 @dlt.source(name="beefy_stats_api")
-def beefy_stats_api() -> Any:
+async def beefy_stats_api() -> Any:
     """Expose Beefy Stats API resources for use by dlt pipelines."""
 
     @dlt.resource(

@@ -1,0 +1,44 @@
+version: 2
+
+models:
+  - name: stg_beefy_db__vault_strategies
+    description: "Staging model for vault strategies from dlt beefy_db dataset"
+    columns:
+      - name: id
+        description: "Unique identifier for the vault strategy record"
+        tests:
+          - not_null
+          - unique
+      - name: chain_id
+        description: "Chain ID where the vault strategy is deployed (references chain.chain_id)"
+        data_type: Int32
+        codec: Delta, LZ4
+        tests:
+          - not_null
+      - name: block_number
+        description: "Block number when the vault strategy was recorded"
+        data_type: Int32
+        codec: Delta, LZ4
+        tests:
+          - not_null
+      - name: txn_hash
+        description: "Transaction hash"
+        data_type: String
+        codec: LZ4
+      - name: vault_id
+        description: "Vault identifier"
+        data_type: String
+        codec: LZ4
+        tests:
+          - not_null
+      - name: vault_address
+        description: "Vault contract address"
+        data_type: String
+        codec: LZ4
+        tests:
+          - not_null
+      - name: strategy_address
+        description: "Strategy contract address"
+        data_type: String
+        codec: LZ4
+

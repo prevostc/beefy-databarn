@@ -1,31 +1,56 @@
-import os
 import dlt
+import clickhouse_connect
 
-def configure_clickhouse_destination() -> None:
-    """Configure dlt from environment variables."""
-    # Set runtime configuration via environment variables
-    if "RUNTIME__LOG_LEVEL" in os.environ:
-        dlt.config["runtime.log_level"] = os.environ["RUNTIME__LOG_LEVEL"]
+# Cache for the ClickHouse async client
+_client_cache: clickhouse_connect.driver.asyncclient.AsyncClient | None = None
+
+async def get_clickhouse_client() -> clickhouse_connect.driver.asyncclient.AsyncClient:
+    """Create and return a cached ClickHouse async client from dlt credentials."""
+    global _client_cache
     
-    # Configure ClickHouse destination credentials from environment variables
-    clickhouse_host = os.environ.get("DLT_CLICKHOUSE_HOST")
-    clickhouse_user = os.environ.get("DLT_CLICKHOUSE_USER")
-    clickhouse_password = os.environ.get("DLT_CLICKHOUSE_PASSWORD")
-    clickhouse_database = os.environ.get("DLT_CLICKHOUSE_DB")
-    clickhouse_port = int(os.environ.get("DLT_CLICKHOUSE_PORT", "9000"))
-    clickhouse_http_port = int(os.environ.get("DLT_CLICKHOUSE_HTTP_PORT", "8123"))
+    if _client_cache is None:
+        credentials = dlt.secrets["destination.clickhouse.credentials"]
+        _client_cache = await clickhouse_connect.get_async_client(
+            host=credentials["host"],
+            port=8123, # must use http port for http client
+            user=credentials["user"],
+            password=credentials["password"],
+            database=credentials["database"],
+            secure=credentials["secure"],
+        )
+    
+    return _client_cache
 
-    if clickhouse_user != "dlt":
-        raise ValueError("ClickHouse user must be 'dlt'")
 
-    if clickhouse_host:
-        dlt.secrets["destination.clickhouse.credentials"] = {
-            "host": clickhouse_host,
-            "port": clickhouse_port,
-            "user": clickhouse_user,
-            "password": clickhouse_password,
-            "database": clickhouse_database,
-            "http_port": clickhouse_http_port,
-            "secure": 0,
-        }
+def clickhouse_default_database() -> str:
+    """Get the default database from the ClickHouse credentials."""
+    credentials = dlt.secrets["destination.clickhouse.credentials"]
+    return credentials["database"]
 
+async def clickhouse_table_exists(table_name: str, database: str | None = None) -> bool:
+    """
+    Test if a table exists in ClickHouse.
+
+    Args:
+        table_name: Name of the table to check. Can be qualified with database (e.g. "mydb.mytable").
+        database: If provided, will check in this database (overrides default in credentials).
+
+    Returns:
+        True if the table exists, False otherwise.
+    """
+    client = await get_clickhouse_client()
+    # Determine where clause for database and table parsing
+    if "." in table_name:
+        db, tbl = table_name.split(".", 1)
+    else:
+        db = database or clickhouse_default_database()
+        tbl = table_name
+
+    query = """
+        SELECT count() 
+        FROM system.tables 
+        WHERE database = %(database)s AND name = %(table)s
+    """
+    result = await client.query(query, parameters={"database": db, "table": tbl})
+    count = result.result_rows[0][0] if result.result_rows else 0
+    return count > 0

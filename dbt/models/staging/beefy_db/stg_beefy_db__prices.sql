@@ -1,8 +1,8 @@
 {{
   config(
     pre_hook=[
-      "DROP TABLE IF EXISTS con_beefy_db__prices",
-      "CREATE OR REPLACE TABLE con_beefy_db__prices (
+      "DROP TABLE IF EXISTS connectors.con_beefy_db__prices",
+      "CREATE OR REPLACE TABLE connectors.con_beefy_db__prices (
         oracle_id Int32,
         t DateTime64(6, 'UTC'),
         val Float64
@@ -15,6 +15,9 @@
     order_by=['oracle_id', 't'],
   )
 }}
+
+-- Note: This model uses a direct PostgreSQL connection via ClickHouse table engine
+-- The source is defined in sources.yml for documentation purposes
 
 {% if is_incremental() %}
   {%- set max_timestamp_query -%}
@@ -35,8 +38,8 @@ SELECT
   oracle_id,
   t,
   val
-FROM con_beefy_db__prices
+FROM connectors.con_beefy_db__prices
 {% if is_incremental() and max_timestamp %}
-WHERE t >= '{{ max_timestamp }}' - INTERVAL 30 DAY
+WHERE t >= '{{ max_timestamp }}' - INTERVAL 10 DAY
 {% endif %}
 
