@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_beefy_db__prices
-    description: "Staging model for price data from beefy-db PostgreSQL database"
+    description: "Staging model for price data from dlt beefy_db dataset"
     columns:
       - name: oracle_id
         description: "Oracle identifier (references price_oracles.id)"
@@ -24,3 +24,4 @@ models:
               arguments:
                 min_value: 0
                 inclusive: true
+

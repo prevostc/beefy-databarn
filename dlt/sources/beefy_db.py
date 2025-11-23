@@ -91,6 +91,15 @@ async def beefy_db_incremental() -> Any:
         # and the dedup process is way too memory intensive to happen in-place anyway
         write_disposition="append",
     )
+    # force keys to be non-nullable
+    harvests.apply_hints(
+        columns=[
+            {"name": "chain_id", "nullable": False },
+            {"name": "block_number", "nullable": False },
+            {"name": "txn_idx", "nullable": False },
+            {"name": "event_idx", "nullable": False },
+        ]
+    )
 
 
     # # Prices table
@@ -137,7 +146,14 @@ async def beefy_db_incremental() -> Any:
         # and the dedup process is way too memory intensive to happen in-place anyway
         write_disposition="append", 
     )
-    
+    # force keys to be non-nullable
+    prices.apply_hints(
+        columns=[
+            {"name": "oracle_id", "nullable": False },
+            {"name": "t", "nullable": False },
+        ]
+    )
+
     return ( 
         harvests, 
         prices 

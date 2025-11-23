@@ -27,15 +27,7 @@ models:
     marts:
       +materialized: table
       +tags: ["marts"]
-
 # tests:
 #   beefy_databarn:
 #     revenue:
 #       +severity: error
-
-vars:
-  beefy_db_host: "{{ env_var('BEEFY_DB_HOST') }}"
-  beefy_db_port: "{{ env_var('BEEFY_DB_PORT', '5432') }}"
-  beefy_db_name: "{{ env_var('BEEFY_DB_NAME') }}"
-  beefy_db_user: "{{ env_var('BEEFY_DB_USER') }}"
-  beefy_db_password: "{{ env_var('BEEFY_DB_PASSWORD') }}"

@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: stg_beefy_db__harvests
-    description: "Staging model for harvest events from beefy-db PostgreSQL database"
+    description: "Staging model for harvest events from dlt beefy_db dataset"
     columns:
       - name: chain_id
         description: "Chain ID where the harvest occurred (references chain.chain_id)"
@@ -119,3 +119,4 @@ models:
         description: "Address of the strategist"
         data_type: String
         codec: LZ4
+

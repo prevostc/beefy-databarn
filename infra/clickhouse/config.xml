@@ -78,11 +78,6 @@
 
     <format_schema_path>/var/lib/clickhouse/format_schemas/</format_schema_path>
 
-    <!-- Enable PostgreSQL table engine for federation -->
-    <postgresql>
-        <port>5432</port>
-    </postgresql>
-
     <!-- Prometheus metrics endpoint -->
     <prometheus>
         <port>9363</port>
