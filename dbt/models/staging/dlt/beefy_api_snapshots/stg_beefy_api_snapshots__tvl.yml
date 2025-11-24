@@ -1,0 +1,37 @@
+version: 2
+
+models:
+  - name: stg_beefy_api_snapshots__tvl
+    description: "Staging model for TVL data from dlt beefy_api_snapshots dataset"
+    columns:
+      - name: etag
+        description: "ETag for this data snapshot (part of primary key)"
+        tests:
+          - not_null
+      - name: network_id
+        description: "Network identifier (part of primary key)"
+        tests:
+          - not_null
+      - name: vault_id
+        description: "Vault identifier (part of primary key)"
+        tests:
+          - not_null
+      - name: tvl
+        description: "Total value locked"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: date_time
+        description: "Timestamp when this data was captured"
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - etag
+            - network_id
+            - vault_id
+

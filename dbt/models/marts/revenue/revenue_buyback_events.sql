@@ -24,7 +24,7 @@ WITH cleaned_revenue AS (
     -- Ensure proper Decimal multiplication with explicit casting
     -- Multiply as Decimal128 to avoid precision/overflow issues
     bifi_amount * bifi_price as buyback_usd
-  FROM {{ ref('stg_beefy_db__bifi_buyback') }}
+  FROM {{ ref('stg_beefy_db_configs__bifi_buyback') }}
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
     buyback_total IS NOT NULL

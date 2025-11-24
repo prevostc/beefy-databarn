@@ -1,0 +1,27 @@
+version: 2
+
+models:
+  - name: stg_beefy_db_incremental__prices
+    description: "Staging model for price data from dlt beefy_db_incremental dataset"
+    columns:
+      - name: oracle_id
+        description: "Oracle identifier (references price_oracles.id)"
+        tests:
+          - not_null
+      - name: t
+        description: "Timestamp for the price data point"
+        data_type: DateTime64(6, 'UTC')
+        codec: DoubleDelta, LZ4
+        tests:
+          - not_null
+      - name: val
+        description: "Price value"
+        data_type: Float64
+        codec: Gorilla, LZ4
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+

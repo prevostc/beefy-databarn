@@ -1,0 +1,20 @@
+version: 2
+
+models:
+  - name: product
+    description: "Dimension table for product (vault) reference data. Provides product/vault metadata for joining with fact tables."
+    columns:
+      - name: product_id
+        description: "Unique identifier for the product (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: beefy_id
+        description: "Beefy-specific vault/product identifier"
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Product/vault name"
+        tests:
+          - not_null

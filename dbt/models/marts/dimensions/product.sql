@@ -15,5 +15,5 @@ SELECT
   vault_id as product_id,
   vault_id as beefy_id,
   vault_id as name
-FROM {{ ref('stg_beefy_db__vault_ids') }}
+FROM {{ ref('stg_beefy_db_configs__vault_ids') }}
 

@@ -28,7 +28,7 @@ WITH cleaned_yield AS (
     -- Ensure proper Decimal multiplication with explicit casting
     -- Cast result to Decimal256(20) to maintain full precision
     toDecimal256(h.harvest_amount * h.want_price, 20) as underlying_amount_compounded_usd
-  FROM {{ ref('stg_beefy_db__harvests') }} h
+  FROM {{ ref('stg_beefy_db_incremental__harvests') }} h
   INNER JOIN {{ ref('chain') }} dc
     ON h.chain_id = dc.chain_id
   INNER JOIN {{ ref('product') }} dp

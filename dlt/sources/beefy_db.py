@@ -7,15 +7,13 @@ import sqlalchemy as sa
 from sqlalchemy import text, MetaData
 from dlt.sources.sql_database import sql_table, sql_database
 from dlt.sources.sql_database.helpers import SelectClause, Table
+from dlt.destinations.impl.clickhouse.typing import TABLE_ENGINE_TYPE_TO_CLICKHOUSE_ATTR
 from lib.config import BATCH_SIZE
 import os
 
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
-DATASET_NAME = "beefy_db"
-
-LAG_BUFFER_IN_DAYS = 7
 DATE_RANGE_SIZE_IN_DAYS = 120
 
 
@@ -39,6 +37,7 @@ def _fetch_cluster_keys() -> tuple[list[int], list[int]]:
         conn.close()
 
 
+
 @dlt.source(name="beefy_db_incremental", parallelized=True)
 async def beefy_db_incremental() -> Any:
     """Expose Beefy DB resources for use by dlt pipelines."""
@@ -52,7 +51,6 @@ async def beefy_db_incremental() -> Any:
         if start_value is None:
             start_value = datetime(2022, 1, 13, 0, 0, 0, tzinfo=timezone.utc) #  2022-01-13 08:32:56+00
 
-        start_value = start_value - timedelta(days=LAG_BUFFER_IN_DAYS)
         end_value = start_value + timedelta(days=DATE_RANGE_SIZE_IN_DAYS)
 
         logger.info(f"harvests_query_adapter_callback: {start_value} {end_value}")
@@ -62,7 +60,7 @@ async def beefy_db_incremental() -> Any:
             f"   *"
             f" FROM {table.fullname} "
             f" WHERE chain_id = ANY(:chain_ids) "
-            f" AND txn_timestamp >= :start_value "
+            f" AND txn_timestamp > :start_value "
             f" AND txn_timestamp <= :end_value "
         ).bindparams(**{
             "start_value": start_value,
@@ -79,6 +77,7 @@ async def beefy_db_incremental() -> Any:
         reflection_level="full_with_precision",
         query_adapter_callback=harvests_query_adapter_callback,
         primary_key=["chain_id", "block_number", "txn_idx", "event_idx"],
+        write_disposition="append",
         incremental=dlt.sources.incremental(
             "txn_timestamp", 
             initial_value=None,
@@ -86,18 +85,22 @@ async def beefy_db_incremental() -> Any:
             last_value_func=max,
             row_order="asc" 
         ),
-        # clickhouse will dedup on primary key, so we can just append
-        # merge won't work because it's not supporting composite primary keys
-        # and the dedup process is way too memory intensive to happen in-place anyway
-        write_disposition="append",
     )
-    # force keys to be non-nullable
     harvests.apply_hints(
         columns=[
+            # force keys to be non-nullable
             {"name": "chain_id", "nullable": False },
             {"name": "block_number", "nullable": False },
             {"name": "txn_idx", "nullable": False },
             {"name": "event_idx", "nullable": False },
+            # make sure metrics have enough precision, Decimal256(20) -> Decimal(76, 20)
+            {"name": "call_fee", "data_type": "decimal" },
+            {"name": "gas_fee", "data_type": "decimal" },
+            {"name": "platform_fee", "data_type": "decimal" },
+            {"name": "strategist_fee", "data_type": "decimal" },
+            {"name": "harvest_amount", "data_type": "decimal" },
+            {"name": "native_price", "data_type": "decimal" },
+            {"name": "want_price", "data_type": "decimal" },
         ]
     )
 
@@ -108,7 +111,6 @@ async def beefy_db_incremental() -> Any:
         if start_value is None:
             start_value = datetime(2021, 7, 31, 0, 0, 0, tzinfo=timezone.utc) #  2021-07-31 19:30:00+00
 
-        start_value = start_value - timedelta(days=LAG_BUFFER_IN_DAYS)
         end_value = start_value + timedelta(days=DATE_RANGE_SIZE_IN_DAYS)
 
         logger.info(f"prices_query_adapter_callback: {start_value} {end_value}")
@@ -117,7 +119,7 @@ async def beefy_db_incremental() -> Any:
             f"SELECT * "
             f" FROM {table.fullname} "
             f" WHERE oracle_id = ANY(:oracle_ids) "
-            f" AND t >= :start_value "
+            f" AND t > :start_value "
             f" AND t <= :end_value "
         ).bindparams(**{
             "start_value": start_value,
@@ -134,6 +136,7 @@ async def beefy_db_incremental() -> Any:
         reflection_level="full_with_precision",
         query_adapter_callback=prices_query_adapter_callback,
         primary_key=["oracle_id", "t"],
+        write_disposition="append", 
         incremental=dlt.sources.incremental(
             "t", 
             initial_value=None,
@@ -141,16 +144,15 @@ async def beefy_db_incremental() -> Any:
             last_value_func=max,
             row_order="asc" 
         ),
-        # clickhouse will dedup on primary key, so we can just append
-        # merge won't work because it's not supporting composite primary keys
-        # and the dedup process is way too memory intensive to happen in-place anyway
-        write_disposition="append", 
     )
-    # force keys to be non-nullable
     prices.apply_hints(
         columns=[
+            # force keys to be non-nullable
             {"name": "oracle_id", "nullable": False },
             {"name": "t", "nullable": False },
+
+            # make sure metrics have enough precision, Decimal256(20) -> Decimal(76, 20)
+            {"name": "val", "data_type": "decimal" },
         ]
     )
 
@@ -161,25 +163,48 @@ async def beefy_db_incremental() -> Any:
 
 
 
-@dlt.source(name="beefy_db_configs")
+@dlt.source(name="beefy_db_configs", parallelized=True)
 async def beefy_db_configs() -> Any:
     """Expose Beefy DB resources for use by dlt pipelines."""
 
-    tables = [
-        "address_metadata",
-        "bifi_buyback",
-        "chains",
-        "price_oracles",
-        "vault_ids",
-        "vault_strategies",
-    ]
+    db_url = dlt.secrets["source.beefy_db.credentials"]["url"]
 
-    source = sql_database(
-        dlt.secrets["source.beefy_db.credentials"]["url"],
-        backend="pyarrow",
-        chunk_size=BATCH_SIZE,
-        backend_kwargs={"tz": "UTC"},
-        reflection_level="full_with_precision",
-    ).with_resources(*tables).parallelize()
+    tables = {
+        "address_metadata": [
+            {"name": "chain_id", "primary_key": True },
+            {"name": "address", "primary_key": True },
+        ],
+        "bifi_buyback": [
+            {"name": "id", "primary_key": True },
+            {"name": "bifi_amount", "data_type": "decimal" },
+            {"name": "bifi_price", "data_type": "decimal" },
+            {"name": "buyback_total", "data_type": "decimal" },
+        ],
+        "chains": [
+            {"name": "chain_id", "primary_key": True },
+        ],
+        "price_oracles": [{"name": "id", "primary_key": True }],
+        "vault_ids": [{"name": "id", "primary_key": True }],
+        "vault_strategies": [
+            {"name": "id", "primary_key": True },
+        ],
+    }
 
-    return source
+    resources = []
+
+    for table_name, columns in tables.items():
+        primary_key_columns = [column["name"] for column in columns if "primary_key" in column and column["primary_key"]]
+        resource = sql_table(
+            credentials=db_url,
+            table=table_name,
+            backend="sqlalchemy",
+            chunk_size=BATCH_SIZE,
+            backend_kwargs={"tz": "UTC"},
+            reflection_level="full_with_precision",
+            primary_key=primary_key_columns,
+            write_disposition={"disposition": "merge", "strategy": "delete-insert"},
+        )
+        resource.apply_hints(columns=columns)
+        resources.append(resource)
+
+    return resources

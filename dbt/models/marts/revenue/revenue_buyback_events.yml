@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: revenue_buyback_events
+    description: "Transform BIFI buyback events into revenue structure. Maps buyback events to a revenue model, where buyback_total represents revenue."
+    columns:
+      - name: id
+        description: "Unique identifier for the buyback event"
+        tests:
+          - not_null
+          - unique
+      - name: block_number
+        description: "Block number where the buyback event occurred"
+        tests:
+          - not_null
+      - name: date_time
+        description: "Timestamp of the buyback event"
+        tests:
+          - not_null
+      - name: event_idx
+        description: "Index of the event within the transaction"
+      - name: tx_hash
+        description: "Transaction hash of the buyback"
+        tests:
+          - not_null
+      - name: token_symbol
+        description: "Token symbol (BIFI)"
+        tests:
+          - not_null
+          - accepted_values:
+              arguments:
+              values: ["BIFI"]
+      - name: token_price_usd
+        description: "Price of BIFI token at the time of buyback in USD"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              name: token_price_usd_range
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: buyback_amount
+        description: "Amount of BIFI tokens bought back"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              name: buyback_amount_range
+              arguments:
+                min_value: 0
+                inclusive: false
+      - name: buyback_usd
+        description: "Amount of BIFI tokens bought back in USD"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              name: buyback_usd_range
+              arguments:
+                min_value: 0
+                inclusive: false

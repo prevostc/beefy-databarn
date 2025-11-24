@@ -15,5 +15,5 @@ SELECT
   name as chain_name,
   beefy_name as beefy_key,
   enabled != 0 as beefy_enabled
-FROM {{ ref('stg_beefy_db__chains') }}
+FROM {{ ref('stg_beefy_db_configs__chains') }}
 

@@ -3,9 +3,9 @@ import logging
 import dlt
 from lib.config import configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination
 from lib.async_runner import AsyncPipelineRunner, PipelineTask
-from sources.beefy_config_api import beefy_config_api
-from sources.beefy_stats_api import beefy_stats_api
-from sources.beefy_db import beefy_db_configs, beefy_db_incremental, DATASET_NAME as DB_DATASET_NAME
+from sources.beefy_api_configs import beefy_api_configs
+from sources.beefy_api_snapshots import beefy_api_snapshots
+from sources.beefy_db import beefy_db_configs, beefy_db_incremental
 
 logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 
@@ -37,22 +37,22 @@ if __name__ == "__main__":
     runner = AsyncPipelineRunner()
     runner.run([
         PipelineTask(
-            pipeline=dlt.pipeline("beefy_config_api", dataset_name="beefy_api", **pipeline_args),
-            get_source=beefy_config_api,
+            pipeline=dlt.pipeline("beefy_api_configs", dataset_name="beefy_api_configs", **pipeline_args),
+            get_source=beefy_api_configs,
             run_mode="once",
         ),
         PipelineTask(
-            pipeline=dlt.pipeline("beefy_stats_api", dataset_name="beefy_api", **pipeline_args),
-            get_source=beefy_stats_api,
+            pipeline=dlt.pipeline("beefy_api_snapshots", dataset_name="beefy_api_snapshots", **pipeline_args),
+            get_source=beefy_api_snapshots,
             run_mode="once",
         ),
         PipelineTask(
-            pipeline=dlt.pipeline("beefy_db_configs", dataset_name=DB_DATASET_NAME, **pipeline_args),
+            pipeline=dlt.pipeline("beefy_db_configs", dataset_name="beefy_db_configs", **pipeline_args),
             get_source=beefy_db_configs,
             run_mode="once",
         ),
         PipelineTask(
-            pipeline=dlt.pipeline("beefy_db_incremental", dataset_name=DB_DATASET_NAME, **pipeline_args),
+            pipeline=dlt.pipeline("beefy_db_incremental", dataset_name="beefy_db_incremental", **pipeline_args),
             get_source=beefy_db_incremental,
             run_mode="loop",
         ),

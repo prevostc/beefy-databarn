@@ -27,7 +27,6 @@ models:
     marts:
       +materialized: table
       +tags: ["marts"]
-# tests:
-#   beefy_databarn:
-#     revenue:
-#       +severity: error
+
+data_tests:
+  +severity: error # all tests default to error
