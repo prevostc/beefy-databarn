@@ -14,7 +14,7 @@ SELECT
   assumeNotNull(name) as name,
   type,
   token,
-  assumeNotNull({{ evm_address('token_address') }}) as token_address,
+  {{ evm_address('token_address') }} as token_address,
   assumeNotNull(toInt32(token_decimals)) as token_decimals,
   token_provider_id,
   assumeNotNull({{ evm_address('earn_contract_address') }}) as earn_contract_address,
@@ -52,5 +52,4 @@ SELECT
   retired_reason,
   bridged
 FROM {{ source('dlt', 'beefy_api_configs___vaults') }}
-WHERE token_address IS NOT NULL
 

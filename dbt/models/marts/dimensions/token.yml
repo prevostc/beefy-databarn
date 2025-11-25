@@ -1,7 +1,7 @@
 version: 2
 
 models:
-  - name: token_erc20
+  - name: token
     description: "Dimension table for token reference data. Provides token metadata for joining with fact tables."
     config:
       contract:
@@ -13,7 +13,7 @@ models:
           arguments:
             combination_of_columns:
               - chain_id
-              - address
+              - representation_address
     columns:
       - name: chain_id
         description: "Chain ID where the token exists (foreign key to chain.chain_id)"
@@ -24,6 +24,23 @@ models:
               arguments:
                 to: ref('chain')
                 field: chain_id
+          - unique:
+              name: unique_native_tokens_per_chain
+              config:
+                where: "is_native"
+      - name: representation_address
+        description: "Representation token address (bytes), 0x0000000000000000000000000000000000000000 for native tokens"
+        data_type: String
+        tests:
+          - not_null
+      - name: erc20_address
+        description: "ERC20 token address (bytes), null for native tokens"
+        data_type: Nullable(String)
+      - name: is_native
+        description: "Whether token is native"
+        data_type: Bool
+        tests:
+          - not_null
       - name: symbol
         description: "Token symbol"
         data_type: String
@@ -34,14 +51,12 @@ models:
         data_type: String
         tests:
           - not_null
-      - name: address
-        description: "Token address (bytes)"
-        data_type: String
       - name: decimals
         description: "Number of decimals for the token"
         data_type: Int64
         tests:
           - not_null
+
       # - name: oracle
       #   description: "Oracle used for price data"
       # - name: oracle_id

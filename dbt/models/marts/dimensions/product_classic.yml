@@ -15,17 +15,18 @@ models:
               - chain_id
               - vault_address
       - relationships_multi_key:
-          name: relationships_vault_address_token_erc20
+          name: relationships_vault_address_token
           arguments:
-            to: ref('token_erc20')
+            to: ref('token')
             from_columns: ["chain_id", "vault_address"]
-            to_columns: ["chain_id", "address"]
+            to_columns: ["chain_id", "representation_address"]
       - relationships_multi_key:
-          name: relationships_underlying_token_address_token_erc20
+          name: relationships_underlying_token_representation_address_token
           arguments:
-            to: ref('token_erc20')
-            from_columns: ["chain_id", "underlying_token_address"]
-            to_columns: ["chain_id", "address"]
+            to: ref('token')
+            from_columns:
+              ["chain_id", "underlying_token_representation_address"]
+            to_columns: ["chain_id", "representation_address"]
 
     columns:
       - name: chain_id
@@ -60,7 +61,7 @@ models:
       - name: latest_strategy_address
         description: "Latest strategy contract address"
         data_type: Nullable(String)
-      - name: underlying_token_address
+      - name: underlying_token_representation_address
         description: "Underlying token contract address"
         data_type: String
         tests:

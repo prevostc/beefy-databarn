@@ -15,11 +15,11 @@ models:
               - chain_id
               - reward_pool_address
       - relationships_multi_key:
-          name: relationships_reward_pool_address_token_erc20
+          name: relationships_reward_pool_address_token
           arguments:
-            to: ref('token_erc20')
+            to: ref('token')
             from_columns: ["chain_id", "reward_pool_address"]
-            to_columns: ["chain_id", "address"]
+            to_columns: ["chain_id", "representation_address"]
       - relationships_multi_key:
           name: relationships_underlying_product_address_product
           arguments:

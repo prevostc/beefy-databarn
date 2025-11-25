@@ -24,7 +24,7 @@ models:
       - name: oracle_id
         description: "Oracle ID"
       - name: address
-        description: "Token address"
+        description: "Token address (converted to bytes from 0x-prefixed hex string in source)"
       - name: decimals
         description: "Token decimals"
       - name: bridge

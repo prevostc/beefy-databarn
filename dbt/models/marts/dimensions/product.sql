@@ -29,3 +29,13 @@ SELECT
     is_active
 FROM {{ ref('product_clm') }}
 
+UNION ALL
+
+SELECT
+    chain_id,
+    'reward_pool' as product_type,
+    reward_pool_address as product_address,
+    beefy_key,
+    display_name,
+    is_active
+FROM {{ ref('product_reward_pool') }}

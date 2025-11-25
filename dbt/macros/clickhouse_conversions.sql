@@ -1,9 +1,8 @@
 {% macro evm_address(hex_string) %}
-    {#- Converts a hex string (with or without 0x prefix) to bytes -#}
     UNHEX(REPLACE({{ hex_string }}, '0x', ''))
 {%- endmacro %}
+
 {% macro evm_transaction_hash(hex_string) %}
-    {#- Converts a hex string (with or without 0x prefix) to bytes -#}
     UNHEX(REPLACE({{ hex_string }}, '0x', ''))
 {%- endmacro %}
 
@@ -13,6 +12,19 @@
 
 {% macro normalize_network_beefy_key(network) %}
     assumeNotNull(replace(lower(trim({{ network }})), 'harmony', 'one'))
+{%- endmacro %}
+
+{% macro representation_native_evm_address() %}
+    assumeNotNull(unhex('0000000000000000000000000000000000000000'))
+{%- endmacro %}
+
+{% macro to_representation_evm_address(hex_string) %}
+    case 
+        when length({{ hex_string }}) = 20 then assumeNotNull({{ hex_string }})
+        when trim(lower({{ hex_string }})) = 'null' then {{ representation_native_evm_address() }} 
+        when {{ hex_string }} is null then {{ representation_native_evm_address() }}
+        else assumeNotNull({{ evm_address(hex_string) }})
+    end
 {%- endmacro %}
 
 -- {% macro normalize_hex_string(hex_string) %}

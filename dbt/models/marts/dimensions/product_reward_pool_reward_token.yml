@@ -1,20 +1,21 @@
 version: 2
 
 models:
-  - name: product_reward_pool_token_erc20
-    description: "Join table representing the relationship between product reward pools and their earned ERC20 tokens. Expands the earned_token_addresses array from stg_beefy_api_configs__gov_vaults and joins with token_erc20 on chain_id and token address."
+  - name: product_reward_pool_token
+    description: "Join table representing the relationship between product reward pools and their earned ERC20 tokens. Expands the earned_token_addresses array from stg_beefy_api_configs__gov_vaults and joins with token on chain_id and token address."
     config:
       contract:
         enforced: true
       meta:
-        primary_key: ["chain_id", "reward_pool_address", "token_address"]
+        primary_key:
+          ["chain_id", "reward_pool_address", "token_representation_address"]
     tests:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
               - chain_id
               - reward_pool_address
-              - token_address
+              - token_representation_address
       - relationships_multi_key:
           name: relationships_reward_pool_address_product_reward_pool
           arguments:
@@ -22,11 +23,11 @@ models:
             from_columns: ["chain_id", "reward_pool_address"]
             to_columns: ["chain_id", "reward_pool_address"]
       - relationships_multi_key:
-          name: relationships_token_address_token_erc20
+          name: relationships_token_address_token
           arguments:
-            to: ref('token_erc20')
-            from_columns: ["chain_id", "token_address"]
-            to_columns: ["chain_id", "address"]
+            to: ref('token')
+            from_columns: ["chain_id", "token_representation_address"]
+            to_columns: ["chain_id", "representation_address"]
     columns:
       - name: chain_id
         description: "Chain ID where the reward pool and token exist"
@@ -38,8 +39,8 @@ models:
         data_type: String
         tests:
           - not_null
-      - name: token_address
-        description: "Token contract address (foreign key to token_erc20.address)"
+      - name: token_representation_address
+        description: "Token contract address (foreign key to token.representation_address)"
         data_type: String
         tests:
           - not_null

@@ -18,9 +18,9 @@ SELECT
   vaults.name as display_name,
   toBool(assumeNotNull(vaults.status = 'active')) as is_active,
   vaults.strategy as latest_strategy_address,
-  vaults.token_address as lp_token_address,
-  {{ evm_address('vaults.deposit_token_addresses[1]') }} as underlying_token_0_address,
-  {{ evm_address('vaults.deposit_token_addresses[2]') }} as underlying_token_1_address
+  vaults.token_address as lp_token_representation_address,
+  {{ evm_address('vaults.deposit_token_addresses[1]') }} as underlying_token_0_representation_address,
+  {{ evm_address('vaults.deposit_token_addresses[2]') }} as underlying_token_1_representation_address
 FROM {{ ref('stg_beefy_api_configs__clm_vaults') }} vaults
 LEFT JOIN {{ ref('chain') }} chain_dim
   ON vaults.network = chain_dim.beefy_key

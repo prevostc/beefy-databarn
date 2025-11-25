@@ -2,7 +2,7 @@
   config(
     materialized='table',
     tags=['dimension', 'tokens'],
-    order_by=['chain_id', 'address'],
+    order_by=['chain_id', 'representation_address'],
   )
 }}
 
@@ -13,11 +13,19 @@
 
 SELECT
   chain_dim.chain_id as chain_id,
-  assumeNotNull(tokens.address) as address,
+
+  {{ to_representation_evm_address('tokens.address') }} as representation_address,
+
+  case 
+    when tokens.type = 'erc20' then assumeNotNull(tokens.address) 
+    else null 
+  end as erc20_address,
+  
+  assumeNotNull(toBool(tokens.type = 'native')) as is_native,
 
   tokens.symbol,
   tokens.name,
-  tokens.decimals,
+  tokens.decimals
   -- oracle,
   -- oracle_id,
   -- type,
@@ -26,4 +34,3 @@ SELECT
 FROM {{ ref('stg_beefy_api_configs__tokens') }} tokens
 LEFT JOIN {{ ref('chain') }} chain_dim
   ON tokens.chain_beefy_key = chain_dim.beefy_key
-WHERE tokens.address is not null
