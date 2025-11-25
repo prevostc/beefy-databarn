@@ -68,10 +68,10 @@ models:
         data_type: Nullable(String)
       - name: lp_token_address
         description: "LP token contract address emitted by the vault"
-        data_type: Nullable(String)
+        data_type: String
       - name: underlying_token_0_address
         description: "First underlying token contract address backing the CLM position"
-        data_type: Nullable(String)
+        data_type: String
       - name: underlying_token_1_address
         description: "Second underlying token contract address backing the CLM position"
-        data_type: Nullable(String)
+        data_type: String

@@ -3,18 +3,39 @@ version: 2
 models:
   - name: product
     description: "Dimension table for product (vault) reference data. Provides product/vault metadata for joining with fact tables."
+    config:
+      contract:
+        enforced: true
+      meta:
+        primary_key: ["chain_id", "product_address"]
     columns:
-      - name: product_id
-        description: "Unique identifier for the product (primary key)"
+      - name: chain_id
+        description: "Chain ID where the product exists"
+        data_type: Int64
         tests:
           - not_null
-          - unique
-      - name: beefy_id
+      - name: product_type
+        description: "Type of product (classic or clm)"
+        data_type: String
+        tests:
+          - not_null
+      - name: product_address
+        description: "Product contract address"
+        data_type: String
+        tests:
+          - not_null
+      - name: beefy_key
         description: "Beefy-specific vault/product identifier"
+        data_type: String
         tests:
           - not_null
-          - unique
-      - name: name
-        description: "Product/vault name"
+      - name: display_name
+        description: "Product/vault display name"
+        data_type: String
+        tests:
+          - not_null
+      - name: is_active
+        description: "Whether the vault is currently active"
+        data_type: Bool
         tests:
           - not_null

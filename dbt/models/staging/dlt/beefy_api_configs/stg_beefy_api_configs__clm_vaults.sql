@@ -14,7 +14,7 @@ SELECT
   vault,
   pool,
   assumeNotNull(id) as id,
-  name,
+  assumeNotNull(name) as name,
   token,
   assumeNotNull({{ evm_address('token_address') }}) as token_address,
   token_decimals,

@@ -4,11 +4,14 @@ models:
   - name: chain
     description: "Dimension table for chain reference data. Provides chain metadata for joining with fact tables."
     config:
+      contract:
+        enforced: true
       meta:
         primary_key: "chain_id"
     columns:
       - name: chain_id
         description: "Unique identifier for the chain (primary key)"
+        data_type: Int64
         tests:
           - not_null
           - unique
@@ -17,18 +20,22 @@ models:
                 value: 10
       - name: network_id
         description: "Network identifier"
+        data_type: Int64
         tests:
           - not_null
       - name: chain_name
         description: "Chain name"
+        data_type: String
         tests:
           - not_null
       - name: beefy_key
         description: "Beefy-specific chain name/key"
+        data_type: String
         tests:
           - not_null
       - name: beefy_enabled
         description: "Whether the chain is enabled in Beefy"
+        data_type: Bool
         tests:
           - not_null
           - accepted_values:

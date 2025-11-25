@@ -4,6 +4,8 @@ models:
   - name: token_erc20
     description: "Dimension table for token reference data. Provides token metadata for joining with fact tables."
     config:
+      contract:
+        enforced: true
       meta:
         primary_key: ["chain_id", "address"]
     tests:
@@ -15,7 +17,7 @@ models:
     columns:
       - name: chain_id
         description: "Chain ID where the token exists (foreign key to chain.chain_id)"
-        data_type: String
+        data_type: Int64
         tests:
           - not_null
           - relationships:

@@ -12,10 +12,9 @@
 WITH cleaned_yield AS (
   SELECT
     -- Create composite key for unique identification
-    {{ dbt_utils.generate_surrogate_key(['h.chain_id', 'h.block_number', 'h.txn_idx', 'h.event_idx']) }} as id,
     h.chain_id as chain_id,
     dc.chain_name as chain_name,
-    dp.product_id,
+    dp.product_address,
     h.block_number,
     -- Standardize timestamp (handle timezone issues if any)
     toDateTime(h.txn_timestamp) as date_time,
@@ -23,16 +22,16 @@ WITH cleaned_yield AS (
     h.event_idx,
     lower(h.txn_hash) as tx_hash,
     h.harvest_amount as underlying_amount_compounded,
-    h.want_price as underlying_token_price_usd,
+    toDecimal256(coalesce(h.want_price, 0), 20) as underlying_token_price_usd,
     -- Calculate yield: underlying_amount_compounded * underlying_token_price_usd
     -- Ensure proper Decimal multiplication with explicit casting
     -- Cast result to Decimal256(20) to maintain full precision
-    toDecimal256(h.harvest_amount * h.want_price, 20) as underlying_amount_compounded_usd
+    toDecimal256(coalesce(h.harvest_amount, 0) * coalesce(h.want_price, 0), 20) as underlying_amount_compounded_usd
   FROM {{ ref('stg_beefy_db_incremental__harvests') }} h
   INNER JOIN {{ ref('chain') }} dc
     ON h.chain_id = dc.chain_id
   INNER JOIN {{ ref('product') }} dp
-    ON h.vault_id = dp.beefy_id
+    ON h.vault_id = dp.beefy_key
   WHERE
     -- Filter out invalid records (ensure yield data quality)
     h.harvest_amount IS NOT NULL
@@ -72,11 +71,10 @@ WITH cleaned_yield AS (
 -- Each row represents a yield-generating harvest event
 
 SELECT
-  id,
   date_time,
   chain_id,
   chain_name,
-  product_id,
+  product_address,
   block_number,
   tx_idx,
   event_idx,

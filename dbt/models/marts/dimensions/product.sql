@@ -10,10 +10,22 @@
 -- Small reference table, materialized as table for performance
 
 SELECT
-  DISTINCT
-  -- TODO: use a better id?
-  vault_id as product_id,
-  vault_id as beefy_id,
-  vault_id as name
-FROM {{ ref('stg_beefy_db_configs__vault_ids') }}
+    chain_id,
+    'classic' as product_type,
+    vault_address as product_address,
+    beefy_key,
+    display_name,
+    is_active
+FROM {{ ref('product_classic') }}
+
+UNION ALL
+
+SELECT
+    chain_id,
+    'clm' as product_type,
+    vault_address as product_address,
+    beefy_key,
+    display_name,
+    is_active
+FROM {{ ref('product_clm') }}
 
