@@ -10,7 +10,7 @@ SELECT
   point_structure_ids,
   earned_oracle_ids,
   earned_tokens,
-  earned_token_addresses,
+  JSONExtract(coalesce(earned_token_addresses, '[]'), 'Array(String)') as earned_token_addresses,
   earned_token_decimals,
   zaps,
   assumeNotNull(id) as id,

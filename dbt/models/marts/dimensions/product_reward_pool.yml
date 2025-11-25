@@ -57,3 +57,8 @@ models:
         data_type: String
         tests:
           - not_null
+      - name: reward_token_representation_addresses
+        description: "Reward token contract addresses"
+        data_type: Array(String)
+        tests:
+          - not_null

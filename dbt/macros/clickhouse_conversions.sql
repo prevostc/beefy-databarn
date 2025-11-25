@@ -1,9 +1,9 @@
 {% macro evm_address(hex_string) %}
-    UNHEX(REPLACE({{ hex_string }}, '0x', ''))
+    lower({{ hex_string }})
 {%- endmacro %}
 
 {% macro evm_transaction_hash(hex_string) %}
-    UNHEX(REPLACE({{ hex_string }}, '0x', ''))
+    lower({{ hex_string }})
 {%- endmacro %}
 
 {% macro format_hex(hex_string) %}
@@ -15,14 +15,15 @@
 {%- endmacro %}
 
 {% macro representation_native_evm_address() %}
-    assumeNotNull(unhex('0000000000000000000000000000000000000000'))
+    assumeNotNull('0x0000000000000000000000000000000000000000')
 {%- endmacro %}
 
 {% macro to_representation_evm_address(hex_string) %}
     case 
-        when length({{ hex_string }}) = 20 then assumeNotNull({{ hex_string }})
-        when trim(lower({{ hex_string }})) = 'null' then {{ representation_native_evm_address() }} 
+        --when length({{ hex_string }}) = 20 then assumeNotNull({{ hex_string }})
         when {{ hex_string }} is null then {{ representation_native_evm_address() }}
+        when trim(lower({{ hex_string }})) = 'null' then {{ representation_native_evm_address() }} 
+        when trim(lower({{ hex_string }})) = '' then {{ representation_native_evm_address() }}
         else assumeNotNull({{ evm_address(hex_string) }})
     end
 {%- endmacro %}

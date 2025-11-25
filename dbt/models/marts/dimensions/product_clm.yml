@@ -20,20 +20,14 @@ models:
             to: ref('token')
             from_columns: ["chain_id", "lp_token_representation_address"]
             to_columns: ["chain_id", "representation_address"]
-      - relationships_multi_key:
-          name: relationships_underlying_token_0_representation_address_token
+      - relationships_array_multi_key:
+          name: relationships_underlying_token_representation_addresses_token
           arguments:
             to: ref('token')
-            from_columns:
-              ["chain_id", "underlying_token_0_representation_address"]
-            to_columns: ["chain_id", "representation_address"]
-      - relationships_multi_key:
-          name: relationships_underlying_token_1_representation_address_token
-          arguments:
-            to: ref('token')
-            from_columns:
-              ["chain_id", "underlying_token_1_representation_address"]
-            to_columns: ["chain_id", "representation_address"]
+            from_chain_column: chain_id
+            from_array_column: underlying_token_representation_addresses
+            to_chain_column: chain_id
+            to_address_column: representation_address
 
     columns:
       - name: chain_id
@@ -71,9 +65,14 @@ models:
       - name: lp_token_representation_address
         description: "LP token contract address emitted by the vault"
         data_type: String
-      - name: underlying_token_0_representation_address
-        description: "First underlying token contract address backing the CLM position"
-        data_type: String
-      - name: underlying_token_1_representation_address
-        description: "Second underlying token contract address backing the CLM position"
-        data_type: String
+        tests:
+          - not_null
+      - name: underlying_token_representation_addresses
+        description: "Underlying token contract addresses backing the CLM position"
+        data_type: Array(String)
+        tests:
+          - not_null
+          - expect_array_length_to_be_between:
+              arguments:
+                min_value: 2
+                max_value: 2

@@ -22,7 +22,7 @@ models:
       - name: earned_tokens
         description: "Earned tokens (JSON string)"
       - name: earned_token_addresses
-        description: "Earned token addresses (JSON string)"
+        description: "Earned token addresses (array)"
       - name: earned_token_decimals
         description: "Earned token decimals (JSON string)"
       - name: zaps
@@ -83,4 +83,3 @@ models:
         description: "Update timestamp"
       - name: earning_points
         description: "Whether earning points"
-

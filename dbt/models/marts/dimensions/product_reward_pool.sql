@@ -17,7 +17,8 @@ SELECT
   vaults.id as beefy_key,
   vaults.name as display_name,
   toBool(assumeNotNull(vaults.status = 'active')) as is_active,
-  vaults.token_address as underlying_product_address
+  vaults.token_address as underlying_product_address,
+  arrayMap(x -> {{ to_representation_evm_address('x') }}, vaults.earned_token_addresses) as reward_token_representation_addresses
 FROM {{ ref('stg_beefy_api_configs__gov_vaults') }} vaults
 LEFT JOIN {{ ref('chain') }} chain_dim
   ON vaults.network = chain_dim.beefy_key
