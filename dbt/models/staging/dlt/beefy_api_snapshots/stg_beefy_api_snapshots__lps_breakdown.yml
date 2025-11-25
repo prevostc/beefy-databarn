@@ -32,7 +32,8 @@ models:
         description: "Underlying price"
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - etag
-            - vault_id
+          arguments:
+            combination_of_columns:
+              - etag
+              - vault_id
 

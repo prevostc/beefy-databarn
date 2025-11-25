@@ -5,9 +5,9 @@
 }}
 
 SELECT
-  etag,
-  vault_id,
-  date_time,
+  assumeNotNull(etag) as etag,
+  assumeNotNull(vault_id) as vault_id,
+  assumeNotNull(date_time) as date_time,
   price,
   tokens,
   balances,
@@ -15,5 +15,5 @@ SELECT
   underlying_liquidity,
   underlying_balances,
   underlying_price
-FROM dlt.beefy_api_snapshots___lps_breakdown
+FROM {{ source('dlt', 'beefy_api_snapshots___lps_breakdown') }}
 

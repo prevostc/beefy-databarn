@@ -5,9 +5,9 @@
 }}
 
 SELECT
-  chain_id,
-  name,
-  beefy_name,
-  enabled
-FROM dlt.beefy_db_configs___chains
+  assumeNotNull(chain_id) as chain_id,
+  assumeNotNull(name) as name,
+  assumeNotNull(beefy_name) as beefy_name,
+  toBool(enabled) as enabled
+FROM {{ source('dlt', 'beefy_db_configs___chains') }}
 

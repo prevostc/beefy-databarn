@@ -5,15 +5,12 @@
 }}
 
 SELECT
-  id,
-  chain_id,
-  block_number,
-  {{ hex_to_bytes('txn_hash') }} as txn_hash,
-  {{ normalize_hex_string('txn_hash') }} as txn_hash_hex,
-  vault_id,
-  {{ hex_to_bytes('vault_address') }} as vault_address,
-  {{ normalize_hex_string('vault_address') }} as vault_address_hex,
-  {{ hex_to_bytes('strategy_address') }} as strategy_address,
-  {{ normalize_hex_string('strategy_address') }} as strategy_address_hex
-FROM dlt.beefy_db_configs___vault_strategies
+  assumeNotNull(id) as id,
+  assumeNotNull(chain_id) as chain_id,
+  assumeNotNull(block_number) as block_number,
+  {{ evm_transaction_hash('txn_hash') }} as txn_hash,
+  assumeNotNull(vault_id) as vault_id,
+  assumeNotNull({{ evm_address('vault_address') }}) as vault_address,
+  {{ evm_address('strategy_address') }} as strategy_address
+FROM {{ source('dlt', 'beefy_db_configs___vault_strategies') }}
 

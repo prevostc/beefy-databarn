@@ -6,13 +6,13 @@ models:
     columns:
       - name: chain_id
         description: "Chain ID where the harvest occurred (references chain.chain_id)"
-        data_type: Int64
+        data_type: String
         codec: Delta, LZ4
         tests:
           - not_null
       - name: block_number
         description: "Block number when the harvest transaction occurred"
-        data_type: Int32
+        data_type: Int64
         codec: Delta, LZ4
         tests:
           - not_null

@@ -5,10 +5,9 @@
 }}
 
 SELECT
-  chain_id,
-  {{ hex_to_bytes('address') }} as address,
-  {{ normalize_hex_string('address') }} as address_hex,
-  is_contract,
+  assumeNotNull(chain_id) as chain_id,
+  assumeNotNull({{ evm_address('address') }}) as address,
+  toBool(is_contract) as is_contract,
   label
-FROM dlt.beefy_db_configs___address_metadata
+FROM {{ source('dlt', 'beefy_db_configs___address_metadata') }}
 

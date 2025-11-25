@@ -13,7 +13,7 @@ SELECT
   chain_id as chain_id,
   chain_id as network_id,
   name as chain_name,
-  beefy_name as beefy_key,
+  {{ normalize_network_beefy_key('beefy_name') }} as beefy_key,
   enabled != 0 as beefy_enabled
 FROM {{ ref('stg_beefy_db_configs__chains') }}
 

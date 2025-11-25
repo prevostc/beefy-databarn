@@ -13,7 +13,7 @@ SELECT
   zaps,
   vault,
   pool,
-  id,
+  assumeNotNull(id) as id,
   name,
   token,
   token_address,
@@ -30,13 +30,13 @@ SELECT
   strategy_type_id,
   network,
   type,
-  is_gov_vault,
+  toBool(is_gov_vault) as is_gov_vault,
   chain,
   strategy,
   last_harvest,
   retire_reason,
   retired_at,
-  earning_points,
+  toBool(earning_points) as earning_points,
   updated_at
-FROM dlt.beefy_api_configs___clm_vaults
+FROM {{ source('dlt', 'beefy_api_configs___clm_vaults') }}
 

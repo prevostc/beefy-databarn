@@ -5,23 +5,21 @@
 }}
 
 SELECT
-  chain_id,
-  block_number,
-  txn_idx,
-  event_idx,
-  txn_timestamp,
-  {{ hex_to_bytes('txn_hash') }} as txn_hash,
-  {{ normalize_hex_string('txn_hash') }} as txn_hash_hex,
-  vault_id,
+  assumeNotNull(chain_id) as chain_id,
+  assumeNotNull(block_number) as block_number,
+  assumeNotNull(txn_idx) as txn_idx,
+  assumeNotNull(event_idx) as event_idx,
+  assumeNotNull(txn_timestamp) as txn_timestamp,
+  assumeNotNull({{ evm_transaction_hash('txn_hash') }}) as txn_hash,
+  assumeNotNull(vault_id) as vault_id,
   {{ to_decimal('call_fee') }} as call_fee,
   {{ to_decimal('gas_fee') }} as gas_fee,
   {{ to_decimal('platform_fee') }} as platform_fee,
   {{ to_decimal('strategist_fee') }} as strategist_fee,
-  {{ to_decimal('harvest_amount') }} as harvest_amount,
+  assumeNotNull({{ to_decimal('harvest_amount') }}) as harvest_amount,
   {{ to_decimal('native_price') }} as native_price,
   {{ to_decimal('want_price') }} as want_price,
-  is_cowllector,
-  {{ hex_to_bytes('strategist_address') }} as strategist_address,
-  {{ normalize_hex_string('strategist_address') }} as strategist_address_hex
-FROM dlt.beefy_db_incremental___harvests
+  toBool(is_cowllector) as is_cowllector,
+  {{ evm_address('strategist_address') }} as strategist_address
+FROM {{ source('dlt', 'beefy_db_incremental___harvests') }}
 

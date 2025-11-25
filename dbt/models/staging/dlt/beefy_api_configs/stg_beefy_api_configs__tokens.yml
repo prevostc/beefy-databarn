@@ -14,8 +14,9 @@ models:
         description: "Token symbol"
       - name: name
         description: "Token name"
-      - name: chain_id
+      - name: chain_beefy_key
         description: "Chain ID (part of primary key)"
+        data_type: String
         tests:
           - not_null
       - name: oracle
@@ -32,7 +33,15 @@ models:
         description: "Whether token is staked"
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - chain_id
-            - id
-
+          name: unique_combination_of_chain_beefy_key_oracle_id_name
+          arguments:
+            combination_of_columns:
+              - chain_beefy_key
+              - oracle_id
+              - id
+      - dbt_utils.unique_combination_of_columns:
+          name: unique_combination_of_chain_beefy_key_address
+          arguments:
+            combination_of_columns:
+              - chain_beefy_key
+              - address

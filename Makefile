@@ -43,6 +43,7 @@ help: ## Show this help message
 	@echo ""
 	@echo "ClickHouse:"
 	@echo "  make clickhouse restart  Re-restart ClickHouse (reload configs)"
+	@echo "  make clickhouse client   Open ClickHouse client shell"
 	@echo ""
 	@echo "Dependencies:"
 	@echo "  make deps-check          Check for outdated dependencies"
@@ -109,7 +110,9 @@ dbt:
 	elif [ "$(word 2,$(MAKECMDGOALS))" = "run" ]; then \
 		$(MAKE) -s _dbt-run MODEL="$(word 3,$(MAKECMDGOALS))"; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "test" ]; then \
-		$(MAKE) -s _dbt-test; \
+		$(MAKE) -s _dbt-test MODEL=""; \
+	elif [ "$(word 2,$(MAKECMDGOALS))" = "test" ]; then \
+		$(MAKE) -s _dbt-test MODEL="$(word 3,$(MAKECMDGOALS))"; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "compile" ]; then \
 		$(MAKE) -s _dbt-compile; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "sql" ]; then \
@@ -134,8 +137,13 @@ _dbt-run:
 	fi
 
 _dbt-test:
-	@echo "Running dbt tests..."
-	@cd dbt && uv run --env-file ../.env dbt test
+	@if [ -n "$(MODEL)" ]; then \
+		echo "Running dbt tests for model: $(MODEL)..."; \
+		cd dbt && uv run --env-file ../.env dbt test --select $(MODEL); \
+	else \
+		echo "Running dbt tests..."; \
+		cd dbt && uv run --env-file ../.env dbt test; \
+	fi
 
 _dbt-compile:
 	@echo "Compiling dbt models..."
@@ -209,8 +217,10 @@ _grafana-restart:
 clickhouse:
 	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
 		$(MAKE) -s _clickhouse-restart; \
+	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "client" ]; then \
+		$(MAKE) -s _clickhouse-client; \
 	else \
-		echo "Usage: make clickhouse [restart]"; \
+		echo "Usage: make clickhouse [restart|client]"; \
 		exit 1; \
 	fi
 
@@ -219,8 +229,12 @@ _clickhouse-restart:
 	@docker compose -f infra/dev/docker-compose.yml restart clickhouse
 	@echo "✓ ClickHouse restarted"
 
+_clickhouse-client:
+	@echo "Opening ClickHouse client shell..."
+	@docker compose -f infra/dev/docker-compose.yml exec clickhouse clickhouse-client
+
 # Catch subcommands
-restart:
+restart client:
 	@:
 
 # Dependencies

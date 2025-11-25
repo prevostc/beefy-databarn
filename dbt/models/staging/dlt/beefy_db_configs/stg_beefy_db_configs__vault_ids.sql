@@ -5,7 +5,7 @@
 }}
 
 SELECT
-  id,
-  vault_id
-FROM dlt.beefy_db_configs___vault_ids
+  assumeNotNull(id) as id,
+  assumeNotNull(vault_id) as vault_id
+FROM {{ source('dlt', 'beefy_db_configs___vault_ids') }}
 

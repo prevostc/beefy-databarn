@@ -13,7 +13,7 @@ SELECT
   earned_token_addresses,
   earned_token_decimals,
   zaps,
-  id,
+  assumeNotNull(id) as id,
   name,
   type,
   version,
@@ -30,7 +30,7 @@ SELECT
   platform_id,
   strategy_type_id,
   network,
-  is_gov_vault,
+  toBool(is_gov_vault) as is_gov_vault,
   chain,
   total_supply,
   last_harvest,
@@ -38,9 +38,9 @@ SELECT
   retired_at,
   retire_reason,
   earned_token_address,
-  excluded,
+  toBool(excluded) as excluded,
   buy_token_url,
   updated_at,
-  earning_points
-FROM dlt.beefy_api_configs___gov_vaults
+  toBool(earning_points) as earning_points
+FROM {{ source('dlt', 'beefy_api_configs___gov_vaults') }}
 

@@ -6,15 +6,15 @@
 
 SELECT
   type,
-  id,
+  assumeNotNull(id) as id,
   symbol,
   name,
-  chain_id,
+  {{ normalize_network_beefy_key('chain_id') }} as chain_beefy_key,
   oracle,
   oracle_id,
-  address,
-  decimals,
+  {{ evm_address('address') }} as address,
+  toInt64(decimals) as decimals,
   bridge,
-  staked
-FROM dlt.beefy_api_configs___tokens
+  toBool(staked) as staked
+FROM {{ source('dlt', 'beefy_api_configs___tokens') }}
 

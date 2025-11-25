@@ -40,9 +40,10 @@ models:
         description: "Oracle type"
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - etag
-            - mm_id
-            - exchange_name
-            - token_symbol
+          arguments:
+            combination_of_columns:
+              - etag
+              - mm_id
+              - exchange_name
+              - token_symbol
 

@@ -18,6 +18,7 @@ models:
         description: "Label for the address"
     tests:
       - dbt_utils.unique_combination_of_columns:
-          combination_of_columns:
-            - chain_id
-            - address
+          arguments:
+            combination_of_columns:
+              - chain_id
+              - address

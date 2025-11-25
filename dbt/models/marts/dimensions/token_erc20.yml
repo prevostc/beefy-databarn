@@ -1,0 +1,55 @@
+version: 2
+
+models:
+  - name: token_erc20
+    description: "Dimension table for token reference data. Provides token metadata for joining with fact tables."
+    columns:
+      - name: token_id
+        description: "Unique identifier for the token (surrogate key from chain_id and address)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: chain_id
+        description: "Chain ID where the token exists (foreign key to chain.chain_id)"
+        data_type: String
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
+      - name: symbol
+        description: "Token symbol"
+        data_type: String
+        tests:
+          - not_null
+      - name: name
+        description: "Token name"
+        data_type: String
+        tests:
+          - not_null
+      - name: address
+        description: "Token address (bytes)"
+        data_type: String
+      - name: decimals
+        description: "Number of decimals for the token"
+        data_type: Int64
+        tests:
+          - not_null
+      # - name: oracle
+      #   description: "Oracle used for price data"
+      # - name: oracle_id
+      #   description: "Oracle identifier"
+      # - name: type
+      #   description: "Token type"
+      # - name: bridge
+      #   description: "Bridge information"
+      # - name: staked
+      #   description: "Whether token is staked"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - chain_id
+              - address

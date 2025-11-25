@@ -10,7 +10,7 @@ SELECT
   point_structure_ids,
   deposit_token_addresses,
   zaps,
-  id,
+  assumeNotNull(id) as id,
   name,
   token,
   token_address,
@@ -28,13 +28,13 @@ SELECT
   network,
   type,
   fee_tier,
-  is_gov_vault,
+  toBool(is_gov_vault) as is_gov_vault,
   chain,
   strategy,
   last_harvest,
   retire_reason,
   retired_at,
-  earning_points,
+  toBool(earning_points) as earning_points,
   updated_at
-FROM dlt.beefy_api_configs___cow_vaults
+FROM {{ source('dlt', 'beefy_api_configs___cow_vaults') }}
 

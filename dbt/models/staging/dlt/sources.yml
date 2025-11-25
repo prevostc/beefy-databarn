@@ -1,0 +1,58 @@
+version: 2
+
+sources:
+  - name: dlt
+    description: "Source data from dlt database"
+    database: dlt
+    schema: dlt
+    tables:
+      # beefy_api_configs tables
+      - name: beefy_api_configs___vaults
+        description: "Vault configurations from Beefy API"
+      - name: beefy_api_configs___tokens
+        description: "Token configurations from Beefy API"
+      - name: beefy_api_configs___clm_vaults
+        description: "CLM vault configurations from Beefy API"
+      - name: beefy_api_configs___cow_vaults
+        description: "COW vault configurations from Beefy API"
+      - name: beefy_api_configs___gov_vaults
+        description: "Governance vault configurations from Beefy API"
+      - name: beefy_api_configs___boosts
+        description: "Boost configurations from Beefy API"
+      # beefy_db_configs tables
+      - name: beefy_db_configs___chains
+        description: "Chain reference data from Beefy database"
+      - name: beefy_db_configs___vault_strategies
+        description: "Vault strategy configurations from Beefy database"
+      - name: beefy_db_configs___address_metadata
+        description: "Address metadata from Beefy database"
+      - name: beefy_db_configs___bifi_buyback
+        description: "BIFI buyback events from Beefy database"
+      - name: beefy_db_configs___vault_ids
+        description: "Vault ID mappings from Beefy database"
+      - name: beefy_db_configs___price_oracles
+        description: "Price oracle configurations from Beefy database"
+      # beefy_api_snapshots tables
+      - name: beefy_api_snapshots___apy
+        description: "APY snapshots from Beefy API"
+      - name: beefy_api_snapshots___treasury
+        description: "Treasury snapshots from Beefy API"
+      - name: beefy_api_snapshots___treasury_mm
+        description: "Treasury money market snapshots from Beefy API"
+      - name: beefy_api_snapshots___tvl
+        description: "TVL snapshots from Beefy API"
+      - name: beefy_api_snapshots___prices
+        description: "Price snapshots from Beefy API"
+      - name: beefy_api_snapshots___lps
+        description: "LP snapshots from Beefy API"
+      - name: beefy_api_snapshots___lps_breakdown
+        description: "LP breakdown snapshots from Beefy API"
+      - name: beefy_api_snapshots___apy_breakdown
+        description: "APY breakdown snapshots from Beefy API"
+      - name: beefy_api_snapshots___mootokenprices
+        description: "MOO token price snapshots from Beefy API"
+      # beefy_db_incremental tables
+      - name: beefy_db_incremental___harvests
+        description: "Harvest events from Beefy database"
+      - name: beefy_db_incremental___prices
+        description: "Price data from Beefy database"

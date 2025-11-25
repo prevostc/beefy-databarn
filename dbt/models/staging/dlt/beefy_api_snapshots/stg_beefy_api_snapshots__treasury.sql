@@ -8,12 +8,12 @@ SELECT
   token_decimals,
   token_price,
   usd_value,
-  etag,
-  chain_id,
-  wallet_address,
+  assumeNotNull(etag) as etag,
+  assumeNotNull(chain_id) as chain_id,
+  assumeNotNull(wallet_address) as wallet_address,
   wallet_name,
-  token_address,
-  date_time,
+  assumeNotNull(token_address) as token_address,
+  assumeNotNull(date_time) as date_time,
   name,
   address,
   decimals,
@@ -24,12 +24,12 @@ SELECT
   price,
   balance,
   id,
-  staked,
+  toBool(staked) as staked,
   number_id,
   method,
   method_path,
   vault_id,
   price_per_full_share,
   helper
-FROM dlt.beefy_api_snapshots___treasury
+FROM {{ source('dlt', 'beefy_api_snapshots___treasury') }}
 
