@@ -27,7 +27,7 @@ SELECT
   oracle_id,
   status,
   created_at,
-  platform_id,
+  assumeNotNull(platform_id) as platform_id,
   strategy_type_id,
   {{ normalize_network_beefy_key('network') }} as network,
   assumeNotNull(toBool(is_gov_vault)) as is_gov_vault,

@@ -4,7 +4,6 @@ from typing import Any, AsyncIterator, Dict
 import dlt
 from lib.fetch import fetch_url_json_dict, fetch_url_json_list
 
-logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 @dlt.source(

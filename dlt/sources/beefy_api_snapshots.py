@@ -6,7 +6,6 @@ import dlt
 from lib.fetch import fetch_url_json_dict, fetch_url_json_list
 from lib.convert import get_int_like
 
-logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 @dlt.source(name="beefy_api_snapshots", max_table_nesting=0, parallelized=True)

@@ -56,3 +56,6 @@ sources:
         description: "Harvest events from Beefy database"
       - name: beefy_db_incremental___prices
         description: "Price data from Beefy database"
+      # github_files tables
+      - name: github_files___beefy_platforms
+        description: "Beefy platform configurations from GitHub files"

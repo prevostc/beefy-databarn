@@ -15,7 +15,8 @@ SELECT
     vault_address as product_address,
     beefy_key,
     display_name,
-    is_active
+    is_active,
+    platform_id
 FROM {{ ref('product_classic') }}
 
 UNION ALL
@@ -26,7 +27,8 @@ SELECT
     vault_address as product_address,
     beefy_key,
     display_name,
-    is_active
+    is_active,
+    platform_id
 FROM {{ ref('product_clm') }}
 
 UNION ALL
@@ -37,5 +39,6 @@ SELECT
     reward_pool_address as product_address,
     beefy_key,
     display_name,
-    is_active
+    is_active,
+    platform_id
 FROM {{ ref('product_reward_pool') }}

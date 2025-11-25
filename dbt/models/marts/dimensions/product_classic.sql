@@ -16,6 +16,7 @@ SELECT
   vaults.earn_contract_address as vault_address,
   vaults.id as beefy_key,
   vaults.name as display_name,
+  vaults.platform_id as platform_id,
   toBool(assumeNotNull(vaults.status = 'active')) as is_active,
   vaults.strategy as latest_strategy_address,
   {{ to_representation_evm_address('vaults.token_address') }} as underlying_token_representation_address

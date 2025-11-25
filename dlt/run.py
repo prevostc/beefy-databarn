@@ -3,11 +3,10 @@ import logging
 import dlt
 from lib.config import configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination
 from lib.async_runner import AsyncPipelineRunner, PipelineTask
+from sources.github_files import github_files
 from sources.beefy_api_configs import beefy_api_configs
 from sources.beefy_api_snapshots import beefy_api_snapshots
 from sources.beefy_db import beefy_db_configs, beefy_db_incremental
-
-logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 
 
 if __name__ == "__main__":
@@ -16,6 +15,7 @@ if __name__ == "__main__":
     configure_beefy_db_source()
     configure_clickhouse_destination()
     
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
     logging.basicConfig(level=logging.INFO)
     logger = logging.getLogger('dlt')
     logger.setLevel(logging.INFO)
@@ -36,6 +36,11 @@ if __name__ == "__main__":
     # Run all tasks
     runner = AsyncPipelineRunner()
     runner.run([
+        PipelineTask(
+            pipeline=dlt.pipeline("github_files", dataset_name="github_files", **pipeline_args),
+            get_source=github_files,
+            run_mode="once",
+        ),
         PipelineTask(
             pipeline=dlt.pipeline("beefy_api_configs", dataset_name="beefy_api_configs", **pipeline_args),
             get_source=beefy_api_configs,

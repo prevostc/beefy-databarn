@@ -39,3 +39,11 @@ models:
         data_type: Bool
         tests:
           - not_null
+      - name: platform_id
+        description: "Platform identifier"
+        data_type: String
+        tests:
+          - relationships:
+              arguments:
+                to: ref('platform')
+                field: platform_id

@@ -1,0 +1,25 @@
+version: 2
+
+models:
+  - name: stg_github_files___beefy_platforms
+    description: "Staging model for beefy platforms from dlt github_files dataset"
+    columns:
+      - name: id
+        description: "Platform identifier (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Platform name"
+      - name: website
+        description: "Platform website URL"
+      - name: twitter
+        description: "Platform Twitter handle or URL"
+      - name: documentation
+        description: "Platform documentation URL"
+      - name: description
+        description: "Platform description"
+      - name: type
+        description: "Platform type"
+      - name: risks
+        description: "Platform risks information (JSON string)"

@@ -11,7 +11,6 @@ from dlt.destinations.impl.clickhouse.typing import TABLE_ENGINE_TYPE_TO_CLICKHO
 from lib.config import BATCH_SIZE
 import os
 
-logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
 logger = logging.getLogger(__name__)
 
 DATE_RANGE_SIZE_IN_DAYS = 120

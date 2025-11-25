@@ -24,7 +24,7 @@ SELECT
   oracle_id,
   status,
   created_at,
-  platform_id,
+  assumeNotNull(platform_id) as platform_id,
   strategy_type_id,
   add_liquidity_url,
   remove_liquidity_url,
