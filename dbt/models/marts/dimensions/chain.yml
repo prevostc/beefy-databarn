@@ -3,6 +3,9 @@ version: 2
 models:
   - name: chain
     description: "Dimension table for chain reference data. Provides chain metadata for joining with fact tables."
+    config:
+      meta:
+        primary_key: "chain_id"
     columns:
       - name: chain_id
         description: "Unique identifier for the chain (primary key)"

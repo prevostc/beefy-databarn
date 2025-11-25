@@ -1,7 +1,8 @@
 {{
   config(
     materialized='table',
-    tags=['dimension', 'tokens']
+    tags=['dimension', 'tokens'],
+    order_by=['chain_id', 'address'],
   )
 }}
 
@@ -11,11 +12,11 @@
 
 
 SELECT
-  chain_dim.chain_id || ':' || {{ format_hex('tokens.address') }} as token_id,
   chain_dim.chain_id as chain_id,
+  assumeNotNull(tokens.address) as address,
+
   tokens.symbol,
   tokens.name,
-  tokens.address,
   tokens.decimals,
   -- oracle,
   -- oracle_id,

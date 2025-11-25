@@ -1,8 +1,8 @@
 version: 2
 
 models:
-  - name: product_classic
-    description: "Dimension table for classic product (vault) reference data. Provides product/vault metadata for joining with fact tables."
+  - name: product_clm
+    description: "Dimension table for the CLM product (vault) reference data. Provides product/vault metadata for joining with fact tables."
     config:
       contract:
         enforced: true
@@ -15,16 +15,22 @@ models:
               - chain_id
               - vault_address
       - relationships_multi_key:
-          name: relationships_vault_address_token_erc20
+          name: relationships_lp_token_address_token_erc20
           arguments:
             to: ref('token_erc20')
-            from_columns: ["chain_id", "vault_address"]
+            from_columns: ["chain_id", "lp_token_address"]
             to_columns: ["chain_id", "address"]
       - relationships_multi_key:
-          name: relationships_underlying_token_address_token_erc20
+          name: relationships_underlying_token_0_address_token_erc20
           arguments:
             to: ref('token_erc20')
-            from_columns: ["chain_id", "underlying_token_address"]
+            from_columns: ["chain_id", "underlying_token_0_address"]
+            to_columns: ["chain_id", "address"]
+      - relationships_multi_key:
+          name: relationships_underlying_token_1_address_token_erc20
+          arguments:
+            to: ref('token_erc20')
+            from_columns: ["chain_id", "underlying_token_1_address"]
             to_columns: ["chain_id", "address"]
 
     columns:
@@ -60,8 +66,12 @@ models:
       - name: latest_strategy_address
         description: "Latest strategy contract address"
         data_type: Nullable(String)
-      - name: underlying_token_address
-        description: "Underlying token contract address"
-        data_type: String
-        tests:
-          - not_null
+      - name: lp_token_address
+        description: "LP token contract address emitted by the vault"
+        data_type: Nullable(String)
+      - name: underlying_token_0_address
+        description: "First underlying token contract address backing the CLM position"
+        data_type: Nullable(String)
+      - name: underlying_token_1_address
+        description: "Second underlying token contract address backing the CLM position"
+        data_type: Nullable(String)
