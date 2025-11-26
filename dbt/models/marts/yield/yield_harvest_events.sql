@@ -22,11 +22,14 @@ WITH cleaned_yield AS (
     h.event_idx,
     lower(h.txn_hash) as tx_hash,
     h.harvest_amount as underlying_amount_compounded,
-    toDecimal256(coalesce(h.want_price, 0), 20) as underlying_token_price_usd,
+    coalesce(h.want_price, 0) as underlying_token_price_usd,
     -- Calculate yield: underlying_amount_compounded * underlying_token_price_usd
     -- Ensure proper Decimal multiplication with explicit casting
     -- Cast result to Decimal256(20) to maintain full precision
-    toDecimal256(coalesce(h.harvest_amount, 0) * coalesce(h.want_price, 0), 20) as underlying_amount_compounded_usd
+    toDecimal256(
+      toDecimal256(coalesce(h.harvest_amount, 0), 20) 
+      * toDecimal256(coalesce(h.want_price, 0), 20)
+    , 20) as underlying_amount_compounded_usd
   FROM {{ ref('stg_beefy_db_incremental__harvests') }} h
   INNER JOIN {{ ref('chain') }} dc
     ON h.chain_id = dc.chain_id

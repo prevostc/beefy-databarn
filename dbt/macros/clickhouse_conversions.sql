@@ -33,9 +33,8 @@
 --     CONCAT('0x', REPLACE(LOWER({{ hex_string }}), '0x', ''))
 -- {%- endmacro %}
 
-{% macro to_decimal(value, scale=20, precision=76) %}
+{% macro to_decimal(value) %}
     {#- Converts a value to Decimal with specified precision and scale -#}
-    {#- Default: Decimal256 with scale 20 -#}
-    toDecimal({{ value }}, {{ scale }}, {{ precision }})
+    toDecimal256({{ value }}, 20)
 {%- endmacro %}
 
