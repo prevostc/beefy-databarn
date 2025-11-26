@@ -93,13 +93,13 @@ async def beefy_db_incremental() -> Any:
             {"name": "txn_idx", "nullable": False },
             {"name": "event_idx", "nullable": False },
             # make sure metrics have enough precision, Decimal256(20) -> Decimal(76, 20)
-            {"name": "call_fee", "data_type": "decimal" },
-            {"name": "gas_fee", "data_type": "decimal" },
-            {"name": "platform_fee", "data_type": "decimal" },
-            {"name": "strategist_fee", "data_type": "decimal" },
-            {"name": "harvest_amount", "data_type": "decimal" },
-            {"name": "native_price", "data_type": "decimal" },
-            {"name": "want_price", "data_type": "decimal" },
+            {"name": "call_fee", "data_type": "decimal", "scale": 20, "precision": 76 },
+            {"name": "gas_fee", "data_type": "decimal", "scale": 20, "precision": 76 },
+            {"name": "platform_fee", "data_type": "decimal", "scale": 20, "precision": 76 },
+            {"name": "strategist_fee", "data_type": "decimal", "scale": 20, "precision": 76 },
+            {"name": "harvest_amount", "data_type": "decimal", "scale": 20, "precision": 76 },
+            {"name": "native_price", "data_type": "decimal", "scale": 20, "precision": 76 },
+            {"name": "want_price", "data_type": "decimal", "scale": 20, "precision": 76 },
         ]
     )
 
@@ -151,7 +151,7 @@ async def beefy_db_incremental() -> Any:
             {"name": "t", "nullable": False },
 
             # make sure metrics have enough precision, Decimal256(20) -> Decimal(76, 20)
-            {"name": "val", "data_type": "decimal" },
+            {"name": "val", "data_type": "decimal", "scale": 20, "precision": 256},
         ]
     )
 
