@@ -9,7 +9,7 @@
         </default>
         <web>
             <readonly>1</readonly>
-            <max_execution_time from_env="CLICKHOUSE_WEB_MAX_EXECUTION_TIME" replace="1">180</max_execution_time>
+            <max_execution_time from_env="CLICKHOUSE_WEB_MAX_EXECUTION_TIME" replace="replace">180</max_execution_time>
             <max_memory_usage from_env="CLICKHOUSE_WEB_MAX_MEMORY_USAGE" replace="1">6000000000</max_memory_usage>
             <max_result_rows from_env="CLICKHOUSE_WEB_MAX_RESULT_ROWS" replace="1">100000</max_result_rows>
             <max_rows_to_read from_env="CLICKHOUSE_WEB_MAX_ROWS_TO_READ" replace="1">1000000</max_rows_to_read>
