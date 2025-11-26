@@ -27,11 +27,12 @@ WORKDIR /app/dlt
 # Copy infra scripts and crontab (these change more often)
 COPY infra/dlt/run_dlt.sh /app/infra/dlt/run_dlt.sh
 COPY infra/dlt/crontab /app/infra/dlt/crontab
-RUN chmod +x /app/infra/dlt/run_dlt.sh
+COPY infra/dlt/docker-entrypoint.sh /app/infra/dlt/docker-entrypoint.sh
+RUN chmod +x /app/infra/dlt/run_dlt.sh /app/infra/dlt/docker-entrypoint.sh
 
 # Install crontab
 RUN crontab /app/infra/dlt/crontab
 
-# Default command: run cron in foreground (can be overridden in docker-stack.yml)
-CMD ["cron", "-f"]
+# Use entrypoint script to export environment variables for cron
+ENTRYPOINT ["/app/infra/dlt/docker-entrypoint.sh"]
 

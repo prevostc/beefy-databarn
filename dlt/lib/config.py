@@ -83,7 +83,10 @@ def configure_minio_filesystem_destination() -> None:
             "endpoint_url": minio_endpoint,
         }
     else:
-        dst_dir = os.environ.get("STORAGE_DIR") + "/dlt"
+        storage_dir = os.environ.get("STORAGE_DIR")
+        if not storage_dir:
+            raise ValueError("STORAGE_DIR environment variable must be set for non-production environments")
+        dst_dir = storage_dir + "/dlt"
         if not os.path.exists(dst_dir):
             os.makedirs(dst_dir)
             
