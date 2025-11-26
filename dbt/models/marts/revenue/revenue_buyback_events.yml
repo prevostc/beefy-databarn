@@ -2,7 +2,14 @@ version: 2
 
 models:
   - name: revenue_buyback_events
-    description: "Transform BIFI buyback events into revenue structure. Maps buyback events to a revenue model, where buyback_total represents revenue."
+    description: "Transform BIFI buyback events into revenue structure. Maps buyback events to a revenue model, where buyback_total represents revenue. Includes token dimension data for referential integrity."
+    tests:
+      - relationships_multi_key:
+          name: relationships_token_dimension
+          arguments:
+            to: ref('token')
+            from_columns: ["chain_id", "token_representation_address"]
+            to_columns: ["chain_id", "representation_address"]
     columns:
       - name: id
         description: "Unique identifier for the buyback event"
@@ -23,13 +30,46 @@ models:
         description: "Transaction hash of the buyback"
         tests:
           - not_null
+      - name: chain_id
+        description: "Chain ID where the buyback occurred (foreign key to chain.chain_id)"
+        data_type: Int64
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
+      - name: token_representation_address
+        description: "Token representation address (foreign key to token.representation_address)"
+        data_type: String
+        tests:
+          - not_null
+      - name: token_erc20_address
+        description: "ERC20 token address, null for native tokens"
+        data_type: Nullable(String)
+      - name: token_is_native
+        description: "Whether the token is native"
+        data_type: Bool
+        tests:
+          - not_null
       - name: token_symbol
-        description: "Token symbol (BIFI)"
+        description: "Token symbol from token dimension (BIFI)"
+        data_type: String
         tests:
           - not_null
           - accepted_values:
               arguments:
               values: ["BIFI"]
+      - name: token_name
+        description: "Token name from token dimension"
+        data_type: String
+        tests:
+          - not_null
+      - name: token_decimals
+        description: "Number of decimals for the token"
+        data_type: Int64
+        tests:
+          - not_null
       - name: token_price_usd
         description: "Price of BIFI token at the time of buyback in USD"
         tests:

@@ -8,6 +8,7 @@
 -- Intermediate model: Transform BIFI buyback events into revenue structure
 -- This model maps buyback events to a revenue model, where buyback_total represents revenue
 -- Handles data quality issues, standardizes formats, and prepares for revenue aggregation
+-- Joins with token dimension to provide token metadata
 
 WITH cleaned_revenue AS (
   SELECT
@@ -17,8 +18,6 @@ WITH cleaned_revenue AS (
     toDateTime(txn_timestamp) as date_time,
     event_idx,
     lower(txn_hash) as tx_hash,
-    -- Token symbol is BIFI (the token being bought back)
-    'BIFI' AS token_symbol,
     bifi_price as token_price_usd,
     bifi_amount as buyback_amount,
     -- Ensure proper Decimal multiplication with explicit casting
@@ -33,17 +32,22 @@ WITH cleaned_revenue AS (
     AND bifi_price > 0
 )
 
--- Output: Clean revenue events ready for aggregation
--- Each row represents a revenue-generating buyback event
-
 SELECT
-  id,
-  date_time,
-  block_number,
-  event_idx,
-  tx_hash,
-  token_symbol,
-  token_price_usd,
-  buyback_amount,
-  buyback_usd
-FROM cleaned_revenue
+  cr.id,
+  cr.date_time,
+  cr.block_number,
+  cr.event_idx,
+  cr.tx_hash,
+  t.chain_id,
+  t.representation_address as token_representation_address,
+  t.erc20_address as token_erc20_address,
+  t.is_native as token_is_native,
+  t.symbol as token_symbol,
+  t.name as token_name,
+  t.decimals as token_decimals,
+  cr.token_price_usd,
+  cr.buyback_amount,
+  cr.buyback_usd
+FROM cleaned_revenue cr
+INNER JOIN {{ ref('token') }} t
+  ON t.symbol = 'BIFI'

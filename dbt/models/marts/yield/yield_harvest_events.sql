@@ -13,8 +13,7 @@ WITH cleaned_yield AS (
   SELECT
     -- Create composite key for unique identification
     h.chain_id as chain_id,
-    dc.chain_name as chain_name,
-    dp.product_address,
+    h.vault_id as vault_id,
     h.block_number,
     -- Standardize timestamp (handle timezone issues if any)
     toDateTime(h.txn_timestamp) as date_time,
@@ -31,10 +30,6 @@ WITH cleaned_yield AS (
       * toDecimal256(coalesce(h.want_price, 0), 20)
     , 20) as underlying_amount_compounded_usd
   FROM {{ ref('stg_beefy_db_incremental__harvests') }} h
-  INNER JOIN {{ ref('chain') }} dc
-    ON h.chain_id = dc.chain_id
-  INNER JOIN {{ ref('product') }} dp
-    ON h.vault_id = dp.beefy_key
   WHERE
     -- Filter out invalid records (ensure yield data quality)
     h.harvest_amount IS NOT NULL
@@ -48,7 +43,7 @@ WITH cleaned_yield AS (
     -- next biggest harvest is bugged and shows as $32M
     AND toDecimal256(h.harvest_amount * h.want_price, 20) < 30_000_000.00
 
-    AND (chain_id, lower(h.txn_hash)) NOT IN (
+    AND (h.chain_id, lower(h.txn_hash)) NOT IN (
       -- armads: "this one doesnt even have any large transfers in the tx 😅, same for the other avax transactions"
       (43114 /* avax */, '0xfd904cb8742ea0caa10bc8a1475f487a2af885938997ff00dcbc195533961162'),
       (43114 /* avax */, '0xffe824f13634da2f10daedb3c3cc123fea419e1b03fb6d169e9a98c89a29100e'),
@@ -74,16 +69,21 @@ WITH cleaned_yield AS (
 -- Each row represents a yield-generating harvest event
 
 SELECT
-  date_time,
-  chain_id,
-  chain_name,
-  product_address,
-  block_number,
-  tx_idx,
-  event_idx,
-  tx_hash,
-  underlying_amount_compounded,
-  underlying_token_price_usd,
-  underlying_amount_compounded_usd
-FROM cleaned_yield
+  cy.date_time,
+  cy.chain_id as chain_id,
+  dc.chain_name,
+  dp.product_address,
+  cy.block_number,
+  cy.tx_idx,
+  cy.event_idx,
+  cy.tx_hash,
+  cy.underlying_amount_compounded,
+  cy.underlying_token_price_usd,
+  cy.underlying_amount_compounded_usd
+FROM cleaned_yield cy
+INNER JOIN {{ ref('chain') }} dc
+  ON cy.chain_id = dc.chain_id
+INNER JOIN {{ ref('product') }} dp
+  ON cy.chain_id = dp.chain_id
+  AND cy.vault_id = dp.beefy_key
 
