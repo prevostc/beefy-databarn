@@ -10,6 +10,7 @@ models:
           - not_null
       - name: network_id
         description: "Network identifier (part of primary key)"
+        data_type: Int64
         tests:
           - not_null
       - name: vault_id
@@ -35,4 +36,3 @@ models:
               - etag
               - network_id
               - vault_id
-

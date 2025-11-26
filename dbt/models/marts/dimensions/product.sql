@@ -1,7 +1,9 @@
 {{
   config(
     materialized='table',
-    tags=['dimension', 'products']
+    tags=['dimension', 'products'],
+    engine='MergeTree()',
+    order_by=['chain_id', 'product_address'],
   )
 }}
 
