@@ -418,7 +418,7 @@ services:
     volumes:
       - ../../dlt:/app/dlt
     environment:
-      DLT_ENV: production
+      DLT_ENV: ${DLT_ENV:-production}
       STORAGE_DIR: ${STORAGE_DIR}
       # ClickHouse configuration
       DLT_CLICKHOUSE_HOST: ${DLT_CLICKHOUSE_HOST:-clickhouse}
