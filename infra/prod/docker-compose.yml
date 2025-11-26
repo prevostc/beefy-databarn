@@ -446,6 +446,8 @@ services:
     depends_on:
       clickhouse:
         condition: service_healthy
+      minio:
+        condition: service_healthy
     healthcheck:
       test: ["CMD-SHELL", "pgrep -x cron > /dev/null && exit 0 || exit 1"]
       interval: 30s
