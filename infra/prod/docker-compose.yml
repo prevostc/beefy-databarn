@@ -188,7 +188,7 @@ services:
     labels:
       - "traefik.enable=false"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9001/minio/health/live"]
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 1s
       timeout: 20s
       retries: 10
@@ -414,6 +414,8 @@ services:
     volumes:
       - ../../dlt:/app/dlt
     environment:
+      DLT_ENV: production
+      STORAGE_DIR: ${STORAGE_DIR}
       # ClickHouse configuration
       DLT_CLICKHOUSE_HOST: ${DBT_CLICKHOUSE_HOST:-clickhouse}
       DLT_CLICKHOUSE_PORT: 8123

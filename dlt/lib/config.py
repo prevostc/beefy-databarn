@@ -42,7 +42,7 @@ def configure_minio_filesystem_destination() -> None:
     # but sends connection info to clickhouse to make it read from the minio server directly
     # and in dev clickhouse knows minio via "minio" network alias and dlt as localhost bind
 
-    if os.environ.get("ENV") == "production":
+    if os.environ.get("DLT_ENV") == "production":
         minio_bucket_name = os.environ.get("MINIO_DLT_STAGING_BUCKET")
         minio_access_key_id = os.environ.get("MINIO_ACCESS_KEY")
         minio_secret_access_key = os.environ.get("MINIO_SECRET_KEY")
