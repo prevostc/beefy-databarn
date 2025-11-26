@@ -8,7 +8,7 @@ from sqlalchemy import text, MetaData
 from dlt.sources.sql_database import sql_table, sql_database
 from dlt.sources.sql_database.helpers import SelectClause, Table
 from dlt.destinations.impl.clickhouse.typing import TABLE_ENGINE_TYPE_TO_CLICKHOUSE_ATTR
-from lib.config import BATCH_SIZE
+from lib.config import BATCH_SIZE, get_beefy_db_url
 import os
 
 logger = logging.getLogger(__name__)
@@ -18,7 +18,7 @@ DATE_RANGE_SIZE_IN_DAYS = 120
 
 def _fetch_cluster_keys() -> tuple[list[int], list[int]]:
     """Fetch cluster keys from the database."""
-    db_url = dlt.secrets["source.beefy_db.credentials"]["url"]
+    db_url = get_beefy_db_url()
     
     conn = psycopg2.connect(db_url)
     try:
@@ -41,7 +41,7 @@ def _fetch_cluster_keys() -> tuple[list[int], list[int]]:
 async def beefy_db_incremental() -> Any:
     """Expose Beefy DB resources for use by dlt pipelines."""
 
-    db_url = dlt.secrets["source.beefy_db.credentials"]["url"]
+    db_url = get_beefy_db_url()
     chain_ids, oracle_ids = _fetch_cluster_keys()
     
     # # Harvests table 
@@ -166,7 +166,7 @@ async def beefy_db_incremental() -> Any:
 async def beefy_db_configs() -> Any:
     """Expose Beefy DB resources for use by dlt pipelines."""
 
-    db_url = dlt.secrets["source.beefy_db.credentials"]["url"]
+    db_url = get_beefy_db_url()
 
     tables = {
         "address_metadata": [

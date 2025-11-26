@@ -32,6 +32,8 @@ if __name__ == "__main__":
         "progress": "log",
         "destination": "clickhouse",
     }
+    if os.environ.get("DLT_ENV") == "production":
+        pipeline_args["staging"] = "filesystem"
 
     # Run all tasks
     runner = AsyncPipelineRunner()

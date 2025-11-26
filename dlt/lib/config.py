@@ -88,15 +88,8 @@ def configure_beefy_db_source() -> None:
         raise ValueError("All Beefy DB credentials must be set")
 
     if beefy_db_host:
-        dlt.secrets["source.beefy_db.credentials"] = {
-            "engine": "postgresql",
-            "host": beefy_db_host,
-            "port": beefy_db_port,
-            "database": beefy_db_name,
-            "user": beefy_db_user,
-            "password": beefy_db_password,
-            "url": f"postgresql://{beefy_db_user}:{beefy_db_password}@{beefy_db_host}:{beefy_db_port}/{beefy_db_name}?sslmode={beefy_db_sslmode}",
-        }
+        dlt.secrets["source.beefy_db.credentials"] = f"postgresql://{beefy_db_user}:{beefy_db_password}@{beefy_db_host}:{beefy_db_port}/{beefy_db_name}?sslmode={beefy_db_sslmode}"
+
 
 def configure_clickhouse_destination() -> None:
     """Configure dlt from environment variables."""
@@ -111,6 +104,7 @@ def configure_clickhouse_destination() -> None:
     clickhouse_database = os.environ.get("DLT_CLICKHOUSE_DB")
     clickhouse_port = int(os.environ.get("DLT_CLICKHOUSE_PORT", "9000"))
     clickhouse_http_port = int(os.environ.get("DLT_CLICKHOUSE_HTTP_PORT", "8123"))
+    clickhouse_secure = os.environ.get("DLT_CLICKHOUSE_SECURE", "0")
 
     if clickhouse_user != "dlt":
         raise ValueError("ClickHouse user must be 'dlt'")
@@ -119,23 +113,20 @@ def configure_clickhouse_destination() -> None:
     if not all([clickhouse_host, clickhouse_user, clickhouse_password, clickhouse_database]):
         raise ValueError("All ClickHouse credentials must be set (host, user, password, database)")
 
-    dlt.secrets["destination.clickhouse.credentials"] = {
+    dlt.secrets["destination.clickhouse.credentials"] = f"clickhouse://{clickhouse_user}:{clickhouse_password}@{clickhouse_host}:{clickhouse_port}/{clickhouse_database}?secure={clickhouse_secure}"
+    
+
+
+def get_beefy_db_url() -> str:
+    return dlt.secrets["source.beefy_db.credentials"]
+
+
+def get_clickhouse_credentials() -> str:
+    return {
         "host": clickhouse_host,
         "port": clickhouse_port,
         "user": clickhouse_user,
         "password": clickhouse_password,
         "database": clickhouse_database,
-        "http_port": clickhouse_http_port,
-        "secure": 0,
+        "secure": clickhouse_secure,
     }
-    
-    # Also set as environment variables in dlt's expected format as fallback
-    # dlt may read these if secrets aren't available or if there's a timing issue
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__HOST"] = clickhouse_host
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__PORT"] = str(clickhouse_port)
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__USER"] = clickhouse_user
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__PASSWORD"] = clickhouse_password
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__DATABASE"] = clickhouse_database
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__HTTP_PORT"] = str(clickhouse_http_port)
-    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__SECURE"] = "0"
-

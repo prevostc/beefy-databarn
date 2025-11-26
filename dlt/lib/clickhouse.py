@@ -1,5 +1,6 @@
 import dlt
 import clickhouse_connect
+from lib.config import get_clickhouse_credentials
 
 # Cache for the ClickHouse async client
 _client_cache: clickhouse_connect.driver.asyncclient.AsyncClient | None = None
@@ -9,7 +10,7 @@ async def get_clickhouse_client() -> clickhouse_connect.driver.asyncclient.Async
     global _client_cache
     
     if _client_cache is None:
-        credentials = dlt.secrets["destination.clickhouse.credentials"]
+        credentials = get_clickhouse_credentials()
         _client_cache = await clickhouse_connect.get_async_client(
             host=credentials["host"],
             port=8123, # must use http port for http client
@@ -24,8 +25,7 @@ async def get_clickhouse_client() -> clickhouse_connect.driver.asyncclient.Async
 
 def clickhouse_default_database() -> str:
     """Get the default database from the ClickHouse credentials."""
-    credentials = dlt.secrets["destination.clickhouse.credentials"]
-    return credentials["database"]
+    return get_clickhouse_credentials()["database"]
 
 async def clickhouse_table_exists(table_name: str, database: str | None = None) -> bool:
     """
