@@ -36,16 +36,6 @@
 {% macro to_decimal(value, scale=20, precision=76) %}
     {#- Converts a value to Decimal with specified precision and scale -#}
     {#- Default: Decimal256 with scale 20 -#}
-    {% if precision == 32 %}
-        toDecimal32({{ value }}, {{ scale }})
-    {% elif precision == 64 %}
-        toDecimal64({{ value }}, {{ scale }})
-    {% elif precision == 128 %}
-        toDecimal128({{ value }}, {{ scale }})
-    {% elif precision == 256 %}
-        toDecimal256({{ value }}, {{ scale }})
-    {% else %}
-        {{ exceptions.raise_compiler_error("Invalid precision: " ~ precision ~ ". Must be 32, 64, 128, or 256") }}
-    {% endif %}
+    toDecimal({{ value }}, {{ scale }}, {{ precision }})
 {%- endmacro %}
 
