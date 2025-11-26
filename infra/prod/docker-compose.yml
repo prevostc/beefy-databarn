@@ -419,7 +419,7 @@ services:
       # ClickHouse configuration
       DLT_CLICKHOUSE_HOST: ${DLT_CLICKHOUSE_HOST:-clickhouse}
       DLT_CLICKHOUSE_PORT: ${DLT_CLICKHOUSE_PORT:-9000}
-      DLT_CLICKHOUSE_USER: ${DLT_CLICKHOUSE_USER:-default}
+      DLT_CLICKHOUSE_USER: ${DLT_CLICKHOUSE_USER:-dlt}
       DLT_CLICKHOUSE_PASSWORD: ${DLT_CLICKHOUSE_PASSWORD}
       DLT_CLICKHOUSE_DB: ${DLT_CLICKHOUSE_DB:-dlt}
       # beefy db source configuration
