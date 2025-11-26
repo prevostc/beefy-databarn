@@ -406,6 +406,51 @@ services:
         max-size: "1G"
         max-file: "3"
 
+  dlt:
+    build:
+      context: ../..
+      dockerfile: infra/dlt/Dockerfile
+    image: beefy-databarn-dlt:latest
+    volumes:
+      - ../../dlt:/app/dlt
+    environment:
+      # ClickHouse configuration
+      DLT_CLICKHOUSE_HOST: ${DBT_CLICKHOUSE_HOST:-clickhouse}
+      DLT_CLICKHOUSE_PORT: 8123
+      DLT_CLICKHOUSE_USER: ${DBT_CLICKHOUSE_USER:-default}
+      DLT_CLICKHOUSE_PASSWORD: ${DBT_CLICKHOUSE_PASSWORD}
+      DLT_CLICKHOUSE_DB: ${DBT_CLICKHOUSE_DB:-dlt}
+      # beefy db source configuration
+      BEEFY_DB_HOST: ${BEEFY_DB_HOST:-postgres}
+      BEEFY_DB_PORT: 5432
+      BEEFY_DB_NAME: ${BEEFY_DB_NAME:-beefy-db}
+      BEEFY_DB_USER: ${BEEFY_DB_USER:-postgres}
+      BEEFY_DB_PASSWORD: ${BEEFY_DB_PASSWORD}
+      # minio filesystem destination configuration
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://localhost:9002}
+      MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
+      MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
+      MINIO_DLT_STAGING_BUCKET: ${MINIO_DLT_STAGING_BUCKET:-dlt-staging}
+    networks:
+      - backend_network
+    restart: on-failure
+    labels:
+      - "traefik.enable=false"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "pgrep -x cron > /dev/null && exit 0 || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
+
+
 volumes:
   clickhouse_data:
     driver: local
