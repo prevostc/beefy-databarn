@@ -1,4 +1,4 @@
 # dbt cron schedule
-#*/5 * * * * /app/infra/dbt/run_dbt.sh run >> /proc/1/fd/1 2>&1
-* * * * * /app/infra/dbt/run_dbt.sh run >> /proc/1/fd/1 2>&1
+#*/5 * * * * /app/infra/dlt/run_dlt.sh run >> /proc/1/fd/1 2>&1
+* * * * * /app/infra/dlt/run_dlt.sh run >> /proc/1/fd/1 2>&1
 

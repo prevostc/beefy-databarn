@@ -153,13 +153,12 @@ def configure_clickhouse_destination() -> None:
         dlt.config["runtime.log_level"] = os.environ["RUNTIME__LOG_LEVEL"]
     
     credentials = get_clickhouse_credentials()
-    dlt.secrets["destination.clickhouse.credentials"] = {
-        "host": credentials["host"],
-        "port": credentials["port"],
-        "http_port": credentials["http_port"],
-        "user": credentials["user"],
-        "password": credentials["password"],
-        "database": credentials["database"],
-        "secure": credentials["secure"],
-    }
+    host = credentials["host"]
+    port = credentials["port"]
+    http_port = credentials["http_port"]
+    user = credentials["user"]
+    password = credentials["password"]
+    database = credentials["database"]
+    secure = credentials["secure"]
+    dlt.secrets["destination.clickhouse.credentials"] = f"clickhouse://{user}:{password}@{host}:{port}/{database}?secure={secure}"
     
