@@ -7,7 +7,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     git \
-    cron \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
@@ -21,18 +20,13 @@ RUN uv sync --frozen
 # Copy dlt project files
 COPY dlt/ /app/dlt/
 
+# Copy infra scripts (scheduler is deployment-specific)
+COPY infra/dlt/scheduler.py /app/infra/dlt/scheduler.py
+RUN chmod +x /app/infra/dlt/scheduler.py
+
 # Set working directory to dlt project
 WORKDIR /app/dlt
 
-# Copy infra scripts and crontab (these change more often)
-COPY infra/dlt/run_dlt.sh /app/infra/dlt/run_dlt.sh
-COPY infra/dlt/crontab /app/infra/dlt/crontab
-COPY infra/dlt/docker-entrypoint.sh /app/infra/dlt/docker-entrypoint.sh
-RUN chmod +x /app/infra/dlt/run_dlt.sh /app/infra/dlt/docker-entrypoint.sh
-
-# Install crontab
-RUN crontab /app/infra/dlt/crontab
-
-# Use entrypoint script to export environment variables for cron
-ENTRYPOINT ["/app/infra/dlt/docker-entrypoint.sh"]
+# Run the Python scheduler (runs every 5 minutes)
+CMD ["uv", "run", "/app/infra/dlt/scheduler.py"]
 

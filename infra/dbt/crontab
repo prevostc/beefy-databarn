@@ -1,5 +1,0 @@
-# dbt cron schedule
-# Format: minute hour day month weekday command
-# Default: run every hour at minute 0
-*/30 * * * * /app/infra/dbt/run_dbt.sh run >> /proc/1/fd/1 2>&1
-

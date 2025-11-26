@@ -9,7 +9,11 @@ from sources.beefy_api_snapshots import beefy_api_snapshots
 from sources.beefy_db import beefy_db_configs, beefy_db_incremental 
 
 
-if __name__ == "__main__":
+def run_pipelines():
+    """
+    Configure and run all DLT pipelines.
+    This function can be called directly or imported by schedulers.
+    """
     # Configure dlt from environment variables before creating pipelines
     configure_dlt()
     configure_minio_filesystem_destination()
@@ -53,4 +57,8 @@ if __name__ == "__main__":
             run_mode="loop",
         ),
     ])
+
+
+if __name__ == "__main__":
+    run_pipelines()
 

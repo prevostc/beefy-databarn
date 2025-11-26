@@ -7,7 +7,6 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y \
     curl \
     git \
-    cron \
     procps \
     && rm -rf /var/lib/apt/lists/*
 
@@ -24,24 +23,20 @@ COPY dbt/ /app/dbt/
 # Set working directory to dbt project
 WORKDIR /app/dbt
 
-# Install dbt packages (this changes less often, so do it before crontab)
+# Install dbt packages
 RUN uv run dbt deps
 
 # Create logs directory
 RUN mkdir -p /app/dbt/logs
 
-# Copy infra scripts and crontab (these change more often)
-COPY infra/dbt/run_dbt.sh /app/infra/dbt/run_dbt.sh
-COPY infra/dbt/crontab /app/infra/dbt/crontab
-RUN chmod +x /app/infra/dbt/run_dbt.sh
-
-# Install crontab
-RUN crontab /app/infra/dbt/crontab
+# Copy infra scripts (scheduler is deployment-specific)
+COPY infra/dbt/scheduler.py /app/infra/dbt/scheduler.py
+RUN chmod +x /app/infra/dbt/scheduler.py
 
 # Set environment variables
 ENV DBT_PROFILES_DIR=/app/dbt
 ENV DBT_PROJECT_DIR=/app/dbt
 
-# Default command: run cron in foreground (can be overridden in docker-stack.yml)
-CMD ["cron", "-f"]
+# Run the Python scheduler (runs every 30 minutes)
+CMD ["uv", "run", "/app/infra/dbt/scheduler.py"]
 

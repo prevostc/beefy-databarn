@@ -400,7 +400,7 @@ services:
       postgres:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -x cron > /dev/null && exit 0 || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f 'scheduler.py' > /dev/null && exit 0 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -449,7 +449,7 @@ services:
       minio:
         condition: service_healthy
     healthcheck:
-      test: ["CMD-SHELL", "pgrep -x cron > /dev/null && exit 0 || exit 1"]
+      test: ["CMD-SHELL", "pgrep -f 'scheduler.py' > /dev/null && exit 0 || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
