@@ -119,14 +119,23 @@ def configure_clickhouse_destination() -> None:
     if not all([clickhouse_host, clickhouse_user, clickhouse_password, clickhouse_database]):
         raise ValueError("All ClickHouse credentials must be set (host, user, password, database)")
 
-    if clickhouse_host:
-        dlt.secrets["destination.clickhouse.credentials"] = {
-            "host": clickhouse_host,
-            "port": clickhouse_port,
-            "user": clickhouse_user,
-            "password": clickhouse_password,
-            "database": clickhouse_database,
-            "http_port": clickhouse_http_port,
-            "secure": 0,
-        }
+    dlt.secrets["destination.clickhouse.credentials"] = {
+        "host": clickhouse_host,
+        "port": clickhouse_port,
+        "user": clickhouse_user,
+        "password": clickhouse_password,
+        "database": clickhouse_database,
+        "http_port": clickhouse_http_port,
+        "secure": 0,
+    }
+    
+    # Also set as environment variables in dlt's expected format as fallback
+    # dlt may read these if secrets aren't available or if there's a timing issue
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__HOST"] = clickhouse_host
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__PORT"] = str(clickhouse_port)
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__USER"] = clickhouse_user
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__PASSWORD"] = clickhouse_password
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__DATABASE"] = clickhouse_database
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__HTTP_PORT"] = str(clickhouse_http_port)
+    os.environ["DESTINATION__CLICKHOUSE__CREDENTIALS__SECURE"] = "0"
 
