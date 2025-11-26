@@ -115,6 +115,10 @@ def configure_clickhouse_destination() -> None:
     if clickhouse_user != "dlt":
         raise ValueError("ClickHouse user must be 'dlt'")
 
+    # Validate all required fields are present
+    if not all([clickhouse_host, clickhouse_user, clickhouse_password, clickhouse_database]):
+        raise ValueError("All ClickHouse credentials must be set (host, user, password, database)")
+
     if clickhouse_host:
         dlt.secrets["destination.clickhouse.credentials"] = {
             "host": clickhouse_host,

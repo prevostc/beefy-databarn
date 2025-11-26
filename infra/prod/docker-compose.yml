@@ -386,7 +386,7 @@ services:
       DBT_TARGET: prod
       DBT_CLICKHOUSE_HOST: ${DBT_CLICKHOUSE_HOST:-clickhouse}
       DBT_CLICKHOUSE_PORT: 8123
-      DBT_CLICKHOUSE_USER: ${DBT_CLICKHOUSE_USER:-default}
+      DBT_CLICKHOUSE_USER: ${DBT_CLICKHOUSE_USER:-dbt}
       DBT_CLICKHOUSE_PASSWORD: ${DBT_CLICKHOUSE_PASSWORD}
       DBT_CLICKHOUSE_DB: ${DBT_CLICKHOUSE_DB:-analytics}
     networks:
@@ -434,7 +434,7 @@ services:
       BEEFY_DB_USER: ${BEEFY_DB_USER:-postgres}
       BEEFY_DB_PASSWORD: ${BEEFY_DB_PASSWORD}
       # minio filesystem destination configuration
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://localhost:9002}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT:-http://minio:9000}
       MINIO_ACCESS_KEY: ${MINIO_ACCESS_KEY:-admin}
       MINIO_SECRET_KEY: ${MINIO_SECRET_KEY}
       MINIO_DLT_STAGING_BUCKET: ${MINIO_DLT_STAGING_BUCKET:-dlt-staging}
