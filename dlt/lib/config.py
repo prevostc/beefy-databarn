@@ -2,33 +2,10 @@ import os
 import dlt
 import logging
 
-BATCH_SIZE = 1_000_000
 
-os.environ['EXTRACT__WORKERS'] = "3"
-os.environ['EXTRACT__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
-os.environ['EXTRACT__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
-os.environ['EXTRACT__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
-os.environ['NORMALIZE__WORKERS'] = '3'
-os.environ['NORMALIZE__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
-os.environ['NORMALIZE__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
-os.environ['NORMALIZE__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
-os.environ["LOAD__WORKERS"] = "3"
-os.environ['LOAD__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
-os.environ['LOAD__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
-os.environ['LOAD__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
-
-logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger('dlt')
-logger.setLevel(logging.INFO)
-logger = logging.getLogger('dlt.source.sql')
-logger.setLevel(logging.INFO)
-logger = logging.getLogger('dlt.destination.clickhouse')
-logger.setLevel(logging.WARNING)
-logger = logging.getLogger('sqlalchemy.engine')
-logger.setLevel(logging.WARNING)
-
-
+## ========================================================
+## DLT configuration
+## ========================================================
 
 def is_production() -> bool:
     return os.environ.get("DLT_ENV") == "production"
@@ -42,7 +19,37 @@ def configure_dlt() -> None:
 
     dlt.config["truncate_staging_dataset"] = True
 
+    BATCH_SIZE = 1_000_000
 
+    os.environ['EXTRACT__WORKERS'] = "3"
+    os.environ['EXTRACT__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
+    os.environ['EXTRACT__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
+    os.environ['EXTRACT__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
+    os.environ['NORMALIZE__WORKERS'] = '3'
+    os.environ['NORMALIZE__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
+    os.environ['NORMALIZE__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
+    os.environ['NORMALIZE__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
+    os.environ["LOAD__WORKERS"] = "3"
+    os.environ['LOAD__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
+    os.environ['LOAD__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
+    os.environ['LOAD__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
+
+    logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
+    logging.basicConfig(level=logging.INFO)
+    logger = logging.getLogger('dlt')
+    logger.setLevel(logging.INFO)
+    logger = logging.getLogger('dlt.source.sql')
+    logger.setLevel(logging.INFO)
+    logger = logging.getLogger('dlt.destination.clickhouse')
+    logger.setLevel(logging.WARNING)
+    logger = logging.getLogger('sqlalchemy.engine')
+    logger.setLevel(logging.WARNING)
+
+
+
+## ========================================================
+## MinIO filesystem destination configuration
+## ========================================================
 
 def configure_minio_filesystem_destination() -> None:
     """
@@ -86,6 +93,10 @@ def configure_minio_filesystem_destination() -> None:
         }
 
 
+## ========================================================
+## Beefy DB source configuration
+## ========================================================
+
 def configure_beefy_db_source() -> None:
     """Configure dlt from environment variables."""
     # Set runtime configuration via environment variables
@@ -104,6 +115,13 @@ def configure_beefy_db_source() -> None:
         dlt.secrets["source.beefy_db.credentials"] = f"postgresql://{beefy_db_user}:{beefy_db_password}@{beefy_db_host}:{beefy_db_port}/{beefy_db_name}?sslmode={beefy_db_sslmode}"
 
 
+def get_beefy_db_url() -> str:
+    return dlt.secrets["source.beefy_db.credentials"]
+
+
+## ========================================================
+## ClickHouse destination configuration
+## ========================================================
 
 def get_clickhouse_credentials() -> str:
 
@@ -146,8 +164,3 @@ def configure_clickhouse_destination() -> None:
         "secure": credentials["secure"],
     }
     
-
-
-def get_beefy_db_url() -> str:
-    return dlt.secrets["source.beefy_db.credentials"]
-
