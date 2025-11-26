@@ -28,6 +28,18 @@
     end
 {%- endmacro %}
 
+{% macro to_str_list(json_string) %}
+    JSONExtract(coalesce({{ json_string }}, '[]'), 'Array(String)')
+{%- endmacro %}
+
+{% macro to_decimal_list(json_string) %}
+    arrayMap(x -> {{ to_decimal('x') }}, {{ to_str_list(json_string) }})
+{%- endmacro %}
+
+{% macro to_representation_evm_address_list(json_string) %}
+    arrayMap(x -> {{ to_representation_evm_address('x') }}, {{ to_str_list(json_string) }})
+{%- endmacro %}
+
 -- {% macro normalize_hex_string(hex_string) %}
 --     {#- Normalizes a hex string to lowercase, adding 0x prefix if it does not have it -#}
 --     CONCAT('0x', REPLACE(LOWER({{ hex_string }}), '0x', ''))

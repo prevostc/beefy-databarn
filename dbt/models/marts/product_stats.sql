@@ -35,11 +35,11 @@ WITH tvl_data AS (
     NULL as merkl_apr,
     NULL as linea_ignition_apr,
     NULL as lp_price,
-    NULL as tokens,
-    NULL as balances,
+    [] as breakdown_tokens,
+    [] as breakdown_balances,
     NULL as total_supply,
     NULL as underlying_liquidity,
-    NULL as underlying_balances,
+    [] as underlying_balances,
     NULL as underlying_price
   FROM {{ ref('stg_beefy_api_snapshots__tvl') }} t
   INNER JOIN {{ ref('product') }} p
@@ -69,11 +69,11 @@ apy_data AS (
     NULL as merkl_apr,
     NULL as linea_ignition_apr,
     NULL as lp_price,
-    NULL as tokens,
-    NULL as balances,
+    [] as breakdown_tokens,
+    [] as breakdown_balances,
     NULL as total_supply,
     NULL as underlying_liquidity,
-    NULL as underlying_balances,
+    [] as underlying_balances,
     NULL as underlying_price
   FROM {{ ref('stg_beefy_api_snapshots__apy') }} a
   INNER JOIN {{ ref('product') }} p
@@ -102,11 +102,11 @@ apy_breakdown_data AS (
     ab.merkl_apr,
     ab.linea_ignition_apr,
     NULL as lp_price,
-    NULL as tokens,
-    NULL as balances,
+    [] as breakdown_tokens,
+    [] as breakdown_balances,
     NULL as total_supply,
     NULL as underlying_liquidity,
-    NULL as underlying_balances,
+    [] as underlying_balances,
     NULL as underlying_price
   FROM {{ ref('stg_beefy_api_snapshots__apy_breakdown') }} ab
   INNER JOIN {{ ref('product') }} p
@@ -135,8 +135,8 @@ lps_breakdown_data AS (
     NULL as merkl_apr,
     NULL as linea_ignition_apr,
     lb.price as lp_price,
-    lb.tokens,
-    lb.balances,
+    lb.tokens as breakdown_tokens,
+    lb.balances as breakdown_balances,
     lb.total_supply,
     lb.underlying_liquidity,
     lb.underlying_balances,
@@ -180,8 +180,8 @@ hourly_stats AS (
     argMax(linea_ignition_apr, date_time) as linea_ignition_apr,
     -- LPS breakdown fields
     argMax(lp_price, date_time) as lp_price,
-    argMax(tokens, date_time) as tokens,
-    argMax(balances, date_time) as balances,
+    argMax(breakdown_tokens, date_time) as breakdown_tokens,
+    argMax(breakdown_balances, date_time) as breakdown_balances,
     argMax(total_supply, date_time) as total_supply,
     argMax(underlying_liquidity, date_time) as underlying_liquidity,
     argMax(underlying_balances, date_time) as underlying_balances,

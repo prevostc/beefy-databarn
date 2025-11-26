@@ -15,6 +15,14 @@ models:
             to: ref('product')
             from_columns: ["chain_id", "product_address"]
             to_columns: ["chain_id", "product_address"]
+      - relationships_array_multi_key:
+          name: relationships_product_stats_breakdown_tokens_token
+          arguments:
+            to: ref('token')
+            from_chain_column: chain_id
+            from_array_column: breakdown_tokens
+            to_chain_column: chain_id
+            to_address_column: representation_address
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
@@ -108,37 +116,37 @@ models:
         data_type: Nullable(Float64)
       - name: vault_apy
         description: "Vault APY"
-        data_type: Nullable(String)
+        data_type: Nullable(Float64)
       - name: liquid_staking_apr
         description: "Liquid staking APR"
-        data_type: Nullable(String)
+        data_type: Nullable(Float64)
       - name: composable_pool_apr
         description: "Composable pool APR"
-        data_type: Nullable(String)
+        data_type: Nullable(Float64)
       - name: merkl_apr
         description: "Merkl APR"
-        data_type: Nullable(String)
+        data_type: Nullable(Float64)
       - name: linea_ignition_apr
         description: "Linea Ignition APR"
-        data_type: Nullable(String)
+        data_type: Nullable(Float64)
       - name: lp_price
         description: "LP token price"
         data_type: Nullable(Float64)
-      - name: tokens
-        description: "Tokens information (JSON)"
-        data_type: Nullable(String)
-      - name: balances
+      - name: breakdown_tokens
+        description: "Tokens Addresses"
+        data_type: Array(String)
+      - name: breakdown_balances
         description: "Balances information (JSON)"
-        data_type: Nullable(String)
+        data_type: Array(Decimal(76, 20))
       - name: total_supply
         description: "Total supply"
-        data_type: Nullable(Decimal(38, 9))
+        data_type: Nullable(Decimal(76, 20))
       - name: underlying_liquidity
         description: "Underlying liquidity"
-        data_type: Nullable(Decimal(38, 9))
+        data_type: Nullable(Decimal(76, 20))
       - name: underlying_balances
-        description: "Underlying balances (JSON)"
-        data_type: Nullable(String)
+        description: "Underlying balances"
+        data_type: Array(Decimal(76, 20))
       - name: price
         description: "Underlying token price in USD"
-        data_type: Nullable(Decimal(38, 9))
+        data_type: Nullable(Decimal(76, 20))

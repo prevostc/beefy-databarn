@@ -25,7 +25,7 @@ models:
       +schema: "{{ env_var('DBT_CLICKHOUSE_STAGING_DB', 'dbt') }}"
       +tags: ["intermediate"]
     dimensions:
-      +schema: "{{ env_var('DBT_CLICKHOUSE_STAGING_DB', 'analytics') }}"
+      +schema: "{{ env_var('DBT_CLICKHOUSE_DB', 'analytics') }}"
       +tags: ["dimensions"]
       +materialized: table
     marts:
