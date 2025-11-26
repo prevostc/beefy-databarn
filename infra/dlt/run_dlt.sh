@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+# Set PATH to include common binary locations (cron doesn't inherit PATH)
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
 cd /app/dlt
 
 echo "$(date -Iseconds) [run_dlt] Running: ./run.py $*"

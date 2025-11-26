@@ -4,6 +4,9 @@
 
 set -euo pipefail
 
+# Set PATH to include common binary locations (cron doesn't inherit PATH)
+export PATH="/usr/local/bin:/usr/bin:/bin:$PATH"
+
 cd /app/dbt
 export DBT_PROFILES_DIR=/app/dbt
 export DBT_PROJECT_DIR=/app/dbt
