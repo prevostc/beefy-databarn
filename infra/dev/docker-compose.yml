@@ -12,8 +12,8 @@ services:
       - "9363:9363"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml
-      - ../clickhouse/users.xml:/etc/clickhouse-server/users.xml
+      - ../clickhouse/config.xml:/etc/clickhouse-server/config.d/config.xml
+      - ../clickhouse/users.xml:/etc/clickhouse-server/users.d/users.xml
       - ../clickhouse/init-clickhouse.sh:/docker-entrypoint-initdb.d/init-clickhouse.sh
     environment:
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
