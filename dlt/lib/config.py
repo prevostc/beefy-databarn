@@ -17,6 +17,9 @@ os.environ['LOAD__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
 os.environ['LOAD__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
 
 
+def is_production() -> bool:
+    return os.environ.get("DLT_ENV") == "production"
+
 
 def configure_dlt() -> None:
     """Configure dlt from environment variables."""
@@ -42,7 +45,7 @@ def configure_minio_filesystem_destination() -> None:
     # but sends connection info to clickhouse to make it read from the minio server directly
     # and in dev clickhouse knows minio via "minio" network alias and dlt as localhost bind
 
-    if os.environ.get("DLT_ENV") == "production":
+    if is_production():
         minio_bucket_name = os.environ.get("MINIO_DLT_STAGING_BUCKET")
         minio_access_key_id = os.environ.get("MINIO_ACCESS_KEY")
         minio_secret_access_key = os.environ.get("MINIO_SECRET_KEY")

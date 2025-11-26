@@ -1,12 +1,12 @@
 from __future__ import annotations
 import logging
 import dlt
-from lib.config import configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination
+from lib.config import configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination, is_production
 from lib.async_runner import AsyncPipelineRunner, PipelineTask
 from sources.github_files import github_files
 from sources.beefy_api_configs import beefy_api_configs
 from sources.beefy_api_snapshots import beefy_api_snapshots
-from sources.beefy_db import beefy_db_configs, beefy_db_incremental
+from sources.beefy_db import beefy_db_configs, beefy_db_incremental 
 
 
 if __name__ == "__main__":
@@ -32,7 +32,7 @@ if __name__ == "__main__":
         "progress": "log",
         "destination": "clickhouse",
     }
-    if os.environ.get("DLT_ENV") == "production":
+    if is_production():
         pipeline_args["staging"] = "filesystem"
 
     # Run all tasks
