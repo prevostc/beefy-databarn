@@ -151,7 +151,7 @@ def configure_clickhouse_destination() -> None:
     # Set runtime configuration via environment variables
     if "RUNTIME__LOG_LEVEL" in os.environ:
         dlt.config["runtime.log_level"] = os.environ["RUNTIME__LOG_LEVEL"]
-    
+
     credentials = get_clickhouse_credentials()
     host = credentials["host"]
     port = credentials["port"]
@@ -161,4 +161,12 @@ def configure_clickhouse_destination() -> None:
     database = credentials["database"]
     secure = credentials["secure"]
     dlt.secrets["destination.clickhouse.credentials"] = f"clickhouse://{user}:{password}@{host}:{port}/{database}?secure={secure}"
+
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__HOST'] = os.environ.get("DLT_CLICKHOUSE_HOST", "localhost")
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__PORT'] = os.environ.get("DLT_CLICKHOUSE_PORT", "9000")
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__HTTP_PORT'] = os.environ.get("DLT_CLICKHOUSE_HTTP_PORT", "8123")
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__USER'] = os.environ.get("DLT_CLICKHOUSE_USER", "dlt")
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__PASSWORD'] = os.environ.get("DLT_CLICKHOUSE_PASSWORD", "changeme")
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__DATABASE'] = os.environ.get("DLT_CLICKHOUSE_DB", "dlt")
+    os.environ['DESTINATION__CLICKHOUSE__CREDENTIALS__SECURE'] = os.environ.get("DLT_CLICKHOUSE_SECURE", "0")
     

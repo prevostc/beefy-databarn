@@ -1,7 +1,7 @@
 from __future__ import annotations
 import logging
 import dlt
-from lib.config import configure_dlt, configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination, is_production
+from lib.config import configure_dlt, configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination
 from lib.async_runner import AsyncPipelineRunner, PipelineTask
 from sources.github_files import github_files
 from sources.beefy_api_configs import beefy_api_configs
@@ -21,9 +21,8 @@ if __name__ == "__main__":
         "dev_mode": False,  # otherwise we have dates in the table names
         "progress": "log",
         "destination": "clickhouse",
+        "staging": "filesystem",
     }
-    if is_production():
-        pipeline_args["staging"] = "filesystem"
 
     # Run all tasks
     runner = AsyncPipelineRunner()
