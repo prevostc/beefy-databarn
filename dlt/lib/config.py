@@ -1,5 +1,6 @@
 import os
 import dlt
+import logging
 
 BATCH_SIZE = 1_000_000
 
@@ -15,6 +16,18 @@ os.environ["LOAD__WORKERS"] = "3"
 os.environ['LOAD__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
 os.environ['LOAD__DATA_WRITER__BUFFER_MAX_ITEMS'] = str(BATCH_SIZE)
 os.environ['LOAD__DATA_WRITER__FILE_MAX_ITEMS'] = str(BATCH_SIZE)
+
+logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger('dlt')
+logger.setLevel(logging.INFO)
+logger = logging.getLogger('dlt.source.sql')
+logger.setLevel(logging.INFO)
+logger = logging.getLogger('dlt.destination.clickhouse')
+logger.setLevel(logging.WARNING)
+logger = logging.getLogger('sqlalchemy.engine')
+logger.setLevel(logging.WARNING)
+
 
 
 def is_production() -> bool:
@@ -87,11 +100,33 @@ def configure_beefy_db_source() -> None:
     beefy_db_password = os.environ.get("BEEFY_DB_PASSWORD")
     beefy_db_sslmode = os.environ.get("BEEFY_DB_SSLMODE") or "require"
 
-    if not all([beefy_db_host, beefy_db_port, beefy_db_name, beefy_db_user, beefy_db_password]):
-        raise ValueError("All Beefy DB credentials must be set")
-
     if beefy_db_host:
         dlt.secrets["source.beefy_db.credentials"] = f"postgresql://{beefy_db_user}:{beefy_db_password}@{beefy_db_host}:{beefy_db_port}/{beefy_db_name}?sslmode={beefy_db_sslmode}"
+
+
+
+def get_clickhouse_credentials() -> str:
+
+    clickhouse_host = os.environ.get("DLT_CLICKHOUSE_HOST")
+    clickhouse_user = os.environ.get("DLT_CLICKHOUSE_USER")
+    clickhouse_password = os.environ.get("DLT_CLICKHOUSE_PASSWORD")
+    clickhouse_database = os.environ.get("DLT_CLICKHOUSE_DB")
+    clickhouse_port = int(os.environ.get("DLT_CLICKHOUSE_PORT", "9000"))
+    clickhouse_http_port = int(os.environ.get("DLT_CLICKHOUSE_HTTP_PORT", "8123"))
+    clickhouse_secure = int(os.environ.get("DLT_CLICKHOUSE_SECURE", "0"))
+
+    if not all([clickhouse_host, clickhouse_user, clickhouse_password, clickhouse_database]):
+        raise ValueError("All ClickHouse credentials must be set")
+
+    return {
+        "host": clickhouse_host,
+        "port": clickhouse_port,
+        "http_port": clickhouse_http_port,
+        "user": clickhouse_user,
+        "password": clickhouse_password,
+        "database": clickhouse_database,
+        "secure": clickhouse_secure,
+    }
 
 
 def configure_clickhouse_destination() -> None:
@@ -100,36 +135,10 @@ def configure_clickhouse_destination() -> None:
     if "RUNTIME__LOG_LEVEL" in os.environ:
         dlt.config["runtime.log_level"] = os.environ["RUNTIME__LOG_LEVEL"]
     
-    # Configure ClickHouse destination credentials from environment variables
-    clickhouse_host = os.environ.get("DLT_CLICKHOUSE_HOST")
-    clickhouse_user = os.environ.get("DLT_CLICKHOUSE_USER")
-    clickhouse_password = os.environ.get("DLT_CLICKHOUSE_PASSWORD")
-    clickhouse_database = os.environ.get("DLT_CLICKHOUSE_DB")
-    clickhouse_port = int(os.environ.get("DLT_CLICKHOUSE_PORT", "9000"))
-    clickhouse_http_port = int(os.environ.get("DLT_CLICKHOUSE_HTTP_PORT", "8123"))
-    clickhouse_secure = os.environ.get("DLT_CLICKHOUSE_SECURE", "0")
-
-    if clickhouse_user != "dlt":
-        raise ValueError("ClickHouse user must be 'dlt'")
-
-    # Validate all required fields are present
-    if not all([clickhouse_host, clickhouse_user, clickhouse_password, clickhouse_database]):
-        raise ValueError("All ClickHouse credentials must be set (host, user, password, database)")
-
-    dlt.secrets["destination.clickhouse.credentials"] = f"clickhouse://{clickhouse_user}:{clickhouse_password}@{clickhouse_host}:{clickhouse_port}/{clickhouse_database}?secure={clickhouse_secure}"
+    dlt.secrets["destination.clickhouse.credentials"] = get_clickhouse_credentials()
     
 
 
 def get_beefy_db_url() -> str:
     return dlt.secrets["source.beefy_db.credentials"]
 
-
-def get_clickhouse_credentials() -> str:
-    return {
-        "host": clickhouse_host,
-        "port": clickhouse_port,
-        "user": clickhouse_user,
-        "password": clickhouse_password,
-        "database": clickhouse_database,
-        "secure": clickhouse_secure,
-    }

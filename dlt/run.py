@@ -15,17 +15,6 @@ if __name__ == "__main__":
     configure_beefy_db_source()
     configure_clickhouse_destination()
     
-    logging.getLogger("urllib3.connectionpool").setLevel(logging.ERROR)
-    logging.basicConfig(level=logging.INFO)
-    logger = logging.getLogger('dlt')
-    logger.setLevel(logging.INFO)
-    logger = logging.getLogger('dlt.source.sql')
-    logger.setLevel(logging.INFO)
-    logger = logging.getLogger('dlt.destination.clickhouse')
-    logger.setLevel(logging.INFO)
-    logger = logging.getLogger('sqlalchemy.engine')
-    logger.setLevel(logging.INFO)
-
     # Pipeline configuration
     pipeline_args = {
         "dev_mode": False,  # otherwise we have dates in the table names
