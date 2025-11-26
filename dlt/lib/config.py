@@ -10,6 +10,7 @@ import logging
 def is_production() -> bool:
     return os.environ.get("DLT_ENV") == "production"
 
+BATCH_SIZE = 1_000_000
 
 def configure_dlt() -> None:
     """Configure dlt from environment variables."""
@@ -18,8 +19,6 @@ def configure_dlt() -> None:
         dlt.config["runtime.log_level"] = os.environ["RUNTIME__LOG_LEVEL"]
 
     dlt.config["truncate_staging_dataset"] = True
-
-    BATCH_SIZE = 1_000_000
 
     os.environ['EXTRACT__WORKERS'] = "3"
     os.environ['EXTRACT__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'
