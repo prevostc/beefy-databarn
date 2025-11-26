@@ -19,13 +19,13 @@ clean-targets:
 models:
   beefy_databarn:
     staging:
-      +materialized: view
+      +schema: "{{ env_var('DBT_CLICKHOUSE_STAGING_DB', 'dbt') }}"
       +tags: ["staging"]
     intermediate:
-      +materialized: view
+      +schema: "{{ env_var('DBT_CLICKHOUSE_STAGING_DB', 'dbt') }}"
       +tags: ["intermediate"]
     marts:
-      +materialized: table
+      +schema: "{{ env_var('DBT_CLICKHOUSE_DB', 'analytics') }}"
       +tags: ["marts"]
 
 data_tests:

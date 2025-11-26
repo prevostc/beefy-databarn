@@ -59,7 +59,7 @@ models:
           - not_null
           - accepted_values:
               arguments:
-              values: ["BIFI"]
+                values: ["BIFI"]
       - name: token_name
         description: "Token name from token dimension"
         data_type: String
