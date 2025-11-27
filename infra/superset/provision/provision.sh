@@ -36,5 +36,9 @@ superset init
 echo_step "4" "Starting" "Adding ClickHouse database connection"
 python3 /usr/local/bin/provision/add-clickhouse-connection.py
 
-echo_step "5" "Completed" "Superset initialization complete"
+# Ensure Alpha role has SQL Lab permissions
+echo_step "5" "Starting" "Setting up Alpha role SQL Lab permissions"
+python3 /usr/local/bin/provision/setup-alpha-permissions.py
+
+echo_step "6" "Completed" "Superset initialization complete"
 
