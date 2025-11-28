@@ -22,15 +22,6 @@
             </networks>
             <!-- Enable RBAC management for this user -->
             <access_management>1</access_management>
-            <named_collection_control>1</named_collection_control>
-            <show_named_collections>1</show_named_collections>
-            <show_named_collections_secrets>1</show_named_collections_secrets>
-
-            <!-- This is the missing piece: give default full admin grants -->
-            <grants>
-                <!-- Make default a true superuser in the RBAC world -->
-                <query>GRANT ALL ON *.* TO default WITH GRANT OPTION</query>
-            </grants>
         </default>
     </users>
 

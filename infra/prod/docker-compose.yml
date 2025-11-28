@@ -35,10 +35,13 @@ services:
     image: clickhouse/clickhouse-server:25.10
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml
-      - ../clickhouse/users.xml:/etc/clickhouse-server/users.xml
-      - ../clickhouse/init-clickhouse.sh:/docker-entrypoint-initdb.d/init-clickhouse.sh
+      - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml:ro
+      - ../clickhouse/users.xml:/etc/clickhouse-server/users.xml:ro
+      - ../clickhouse/users.d:/etc/clickhouse-server/users.d:ro
+      - ../clickhouse/init-clickhouse.sh:/docker-entrypoint-initdb.d/init-clickhouse.sh:ro
     environment:
+      CLICKHOUSE_SKIP_USER_SETUP: 1
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}

@@ -12,10 +12,13 @@ services:
       - "9363:9363"
     volumes:
       - clickhouse_data:/var/lib/clickhouse
-      - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml
-      - ../clickhouse/users.xml:/etc/clickhouse-server/users.xml
-      - ../clickhouse/init-clickhouse.sh:/docker-entrypoint-initdb.d/init-clickhouse.sh
+      - ../clickhouse/config.xml:/etc/clickhouse-server/config.xml:ro
+      - ../clickhouse/users.xml:/etc/clickhouse-server/users.xml:ro
+      - ../clickhouse/users.d:/etc/clickhouse-server/users.d:ro
+      - ../clickhouse/init-clickhouse.sh:/docker-entrypoint-initdb.d/init-clickhouse.sh:ro
     environment:
+      CLICKHOUSE_SKIP_USER_SETUP: 1
+      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: 1
       CLICKHOUSE_DB: ${CLICKHOUSE_DB:-analytics}
       CLICKHOUSE_USER: ${CLICKHOUSE_USER:-default}
       CLICKHOUSE_PASSWORD: ${CLICKHOUSE_PASSWORD}
@@ -33,7 +36,6 @@ services:
       CLICKHOUSE_WEB_MAX_MEMORY_USAGE: ${CLICKHOUSE_WEB_MAX_MEMORY_USAGE:-6000000000}
       CLICKHOUSE_WEB_MAX_RESULT_ROWS: ${CLICKHOUSE_WEB_MAX_RESULT_ROWS:-100000000}
       CLICKHOUSE_WEB_MAX_ROWS_TO_READ: ${CLICKHOUSE_WEB_MAX_ROWS_TO_READ:-100000000}
-      CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT:-1}
     healthcheck:
       test: wget --no-verbose --tries=1 http://127.0.0.1:8123/ping || exit 1
       interval: 1s
