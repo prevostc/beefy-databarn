@@ -63,6 +63,7 @@ services:
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT:-1}
     networks:
       - backend_network
+      - frontend_network
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
