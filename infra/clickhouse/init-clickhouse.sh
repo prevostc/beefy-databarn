@@ -125,7 +125,9 @@ clickhouse-client \
 
     -- superset: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM superset;
-    GRANT ${READ_PERM} ON analytics.* TO superset;
+    GRANT ${READ_PERM} ON dlt.*       TO grafana;
+    GRANT ${READ_PERM} ON dbt.*       TO grafana;
+    GRANT ${READ_PERM} ON analytics.* TO grafana;
 
     -------------------------------------------
     -- Settings profiles (env-synced)
