@@ -38,25 +38,21 @@ def run_dbt():
             deps_result = subprocess.run(
                 ["uv", "run", "dbt", "deps"],
                 cwd=dbt_dir,
-                capture_output=True,
-                text=True,
             )
             if deps_result.returncode != 0:
-                logger.error(f"Error running 'dbt deps': {deps_result.stderr}")
+                logger.error("Error running 'dbt deps'")
                 return
         
-        # Run dbt
+        # Run dbt - output streams directly to stdout/stderr for docker logs
         result = subprocess.run(
             ["uv", "run", "dbt", "run", "--show-all-deprecations"],
             cwd=dbt_dir,
-            capture_output=True,
-            text=True,
         )
         
         if result.returncode == 0:
             logger.info("dbt run completed successfully")
         else:
-            logger.error(f"dbt run failed: {result.stderr}")
+            logger.error("dbt run failed")
             
     except Exception as e:
         logger.error(f"Error running dbt: {e}", exc_info=True)
