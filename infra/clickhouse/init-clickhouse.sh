@@ -1,10 +1,193 @@
 #!/bin/bash
 set -euo pipefail
 
+# Validate password: must not contain backticks to avoid unescape issues
+validate_password() {
+  local var_name="$1"
+  local var_value="${!var_name:-}"
+  
+  if [[ -z "$var_value" ]]; then
+    echo "Error: Environment variable $var_name is not set" >&2
+    exit 1
+  fi
+  
+  if [[ "$var_value" == *"'"* ]]; then
+    echo "Error: Environment variable $var_name contains a tick (single quote), which is not allowed" >&2
+    exit 1
+  fi
+  
+  if [[ "$var_value" == *"\`"* ]]; then
+    echo "Error: Environment variable $var_name contains a backtick, which is not allowed" >&2
+    exit 1
+  fi
+}
+
+# Validate IP config: must be either "ANY" or "IP '<cidr>'"
+validate_ip_config() {
+  local var_name="$1"
+  local var_value="${!var_name:-}"
+  
+  if [[ -z "$var_value" ]]; then
+    echo "Error: Environment variable $var_name is not set" >&2
+    exit 1
+  fi
+  
+  if [[ "$var_value" == "ANY" ]]; then
+    return 0
+  fi
+  
+  # Match pattern: IP '...' where ... can contain any characters except single quotes
+  # Accept: IP '<cidr>' (single quotes only, without double quotes)
+  if [[ "$var_value" =~ ^IP\ \'[^\'\"]+\'$ ]]; then
+    return 0
+  fi
+  
+  echo "Error: Environment variable $var_name must be either 'ANY' or 'IP '<cidr>'' (got: $var_value)" >&2
+  exit 1
+}
+
+# Validate all environment variables
+echo "Validating environment variables..."
+validate_password CLICKHOUSE_PASSWORD
+validate_password DLT_CLICKHOUSE_PASSWORD
+validate_password DBT_CLICKHOUSE_PASSWORD
+validate_password GRAFANA_CLICKHOUSE_PASSWORD
+validate_password SUPERSET_CLICKHOUSE_PASSWORD
+validate_ip_config DLT_CLICKHOUSE_ALLOWED_HOST
+validate_ip_config DBT_CLICKHOUSE_ALLOWED_HOST
+validate_ip_config GRAFANA_CLICKHOUSE_ALLOWED_HOST
+validate_ip_config SUPERSET_CLICKHOUSE_ALLOWED_HOST
+
 echo "Initializing ClickHouse databases..."
 
-clickhouse-client --query="CREATE DATABASE IF NOT EXISTS analytics"
-clickhouse-client --query="CREATE DATABASE IF NOT EXISTS dbt"
-clickhouse-client --query="CREATE DATABASE IF NOT EXISTS dlt"
+clickhouse-client \
+  --user default \
+  --password "$CLICKHOUSE_PASSWORD" \
+  --multiquery \
+  --query "
+    CREATE DATABASE IF NOT EXISTS analytics;
+    CREATE DATABASE IF NOT EXISTS dbt;
+    CREATE DATABASE IF NOT EXISTS dlt;
+  "
 
-echo "✓ Databases analytics & dlt created"
+
+READ_PERM="SELECT"
+WRITE_PERM="INSERT, ALTER, CREATE TABLE, DROP TABLE, TRUNCATE, OPTIMIZE, CREATE DICTIONARY, DROP DICTIONARY"
+
+clickhouse-client \
+  --user default \
+  --password "$CLICKHOUSE_PASSWORD" \
+  --multiquery \
+  --query "
+    -------------------------
+    -- Users (idempotent)
+    -------------------------
+
+    -- dlt
+    CREATE USER IF NOT EXISTS dlt IDENTIFIED WITH sha256_password BY '${DLT_CLICKHOUSE_PASSWORD}';
+    ALTER USER dlt IDENTIFIED WITH sha256_password BY '${DLT_CLICKHOUSE_PASSWORD}';
+    ALTER USER dlt ADD HOST ${DLT_CLICKHOUSE_ALLOWED_HOST};
+
+    -- dbt
+    CREATE USER IF NOT EXISTS dbt IDENTIFIED WITH sha256_password BY '${DBT_CLICKHOUSE_PASSWORD}';
+    ALTER USER dbt IDENTIFIED WITH sha256_password BY '${DBT_CLICKHOUSE_PASSWORD}';
+    ALTER USER dbt ADD HOST ${DBT_CLICKHOUSE_ALLOWED_HOST};
+
+    -- grafana
+    CREATE USER IF NOT EXISTS grafana IDENTIFIED WITH sha256_password BY '${GRAFANA_CLICKHOUSE_PASSWORD}';
+    ALTER USER grafana IDENTIFIED WITH sha256_password BY '${GRAFANA_CLICKHOUSE_PASSWORD}';
+    ALTER USER grafana ADD HOST ${GRAFANA_CLICKHOUSE_ALLOWED_HOST};
+
+    -- superset
+    CREATE USER IF NOT EXISTS superset IDENTIFIED WITH sha256_password BY '${SUPERSET_CLICKHOUSE_PASSWORD}';
+    ALTER USER superset IDENTIFIED WITH sha256_password BY '${SUPERSET_CLICKHOUSE_PASSWORD}';
+    ALTER USER superset ADD HOST ${SUPERSET_CLICKHOUSE_ALLOWED_HOST};
+
+    -------------------------
+    -- Grants (idempotent)
+    -------------------------
+
+    -- dlt: RW on dlt.*
+    REVOKE ALL PRIVILEGES ON *.* FROM dlt;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON dlt.*       TO dlt;
+
+    -- dbt: R on dlt.*, RW on dbt.* & analytics.*
+    REVOKE ALL PRIVILEGES ON *.* FROM dbt;
+    GRANT ${READ_PERM}                ON dlt.*       TO dbt;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON dbt.*       TO dbt;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON analytics.* TO dbt;
+
+    -- grafana: R on dlt.*, dbt.*, analytics.*
+    REVOKE ALL PRIVILEGES ON *.* FROM grafana;
+    GRANT ${READ_PERM} ON dlt.*       TO grafana;
+    GRANT ${READ_PERM} ON dbt.*       TO grafana;
+    GRANT ${READ_PERM} ON analytics.* TO grafana;
+
+    -- superset: R on analytics.*
+    REVOKE ALL PRIVILEGES ON *.* FROM superset;
+    GRANT ${READ_PERM} ON analytics.* TO superset;
+
+    -------------------------------------------
+    -- Settings profiles (env-synced)
+    -------------------------------------------
+
+    -- Web profile: readonly dashboards (grafana + superset)
+    CREATE SETTINGS PROFILE IF NOT EXISTS web_profile;
+    ALTER  SETTINGS PROFILE web_profile
+        SETTINGS
+            readonly = 1,
+            max_execution_time = ${CLICKHOUSE_WEB_MAX_EXECUTION_TIME:-180}
+                MIN 0
+                MAX 180
+                CHANGEABLE_IN_READONLY,
+            max_memory_usage = ${CLICKHOUSE_WEB_MAX_MEMORY_USAGE:-6000000000}
+                MIN 0
+                MAX 10000000000
+                CHANGEABLE_IN_READONLY,
+            max_result_rows   = ${CLICKHOUSE_WEB_MAX_RESULT_ROWS:-100000},
+            max_rows_to_read  = ${CLICKHOUSE_WEB_MAX_ROWS_TO_READ:-1000000},
+            use_uncompressed_cache = 0,
+            load_balancing = 'random'
+        TO grafana, superset;
+
+    -- ETL profile: dbt + dlt
+    CREATE SETTINGS PROFILE IF NOT EXISTS etl_profile;
+    ALTER  SETTINGS PROFILE etl_profile
+        SETTINGS
+            max_execution_time = 3600,
+            max_memory_usage   = ${CLICKHOUSE_MAX_MEMORY_USAGE:-10000000000}
+        TO dlt, dbt;
+
+    -------------------------------------------
+    -- Quotas (same as your XML quotas)
+    -------------------------------------------
+
+    -- Optional default quota (effectively unlimited, like XML <default>)
+    CREATE QUOTA OR REPLACE default_quota
+        FOR INTERVAL 3600 SECOND MAX
+            queries        = 0,
+            query_selects  = 0,
+            errors         = 0,
+            result_rows    = 0,
+            result_bytes   = 0,
+            read_rows      = 0,
+            read_bytes     = 0,
+            execution_time = 0
+        TO dlt, dbt;
+
+    -- Web quota: limit dashboard workloads
+    CREATE QUOTA OR REPLACE web_quota
+        FOR INTERVAL 3600 SECOND MAX
+            queries        = 5000,
+            query_selects  = 5000,
+            errors         = 1000,
+            result_rows    = 10000000000,
+            result_bytes   = 10000000000000,
+            read_rows      = 100000000000,
+            read_bytes     = 100000000000000,
+            execution_time = 7200
+        TO grafana, superset;
+"
+
+echo "✓ Databases analytics, dbt & dlt initialized"
+echo "✓ Users, grants, profiles, quotas reset & synced to env"
