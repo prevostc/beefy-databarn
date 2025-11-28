@@ -1,6 +1,7 @@
 api:
   dashboard: false
   insecure: false
+  ping: true
 
 entryPoints:
   web:
@@ -35,9 +36,9 @@ providers:
 certificatesResolvers:
   letsencrypt:
     acme:
+      storage: /letsencrypt/acme.json
       httpChallenge:
         entryPoint: web
-      storage: /letsencrypt/acme.json
 
 log:
   level: DEBUG
