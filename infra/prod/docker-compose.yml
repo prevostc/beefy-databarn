@@ -20,6 +20,7 @@ services:
       TRAEFIK_EMAIL: ${TRAEFIK_EMAIL}
     networks:
       - frontend_network
+      - clickhouse_clients_network
     labels:
       - "traefik.enable=false"
     healthcheck:
@@ -62,8 +63,8 @@ services:
       CLICKHOUSE_WEB_MAX_ROWS_TO_READ: ${CLICKHOUSE_WEB_MAX_ROWS_TO_READ:-1000000000}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT:-1}
     networks:
-      - frontend_network
       - backend_network
+      - clickhouse_clients_network
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
@@ -387,6 +388,7 @@ services:
     networks:
       - frontend_network
       - backend_network
+      - clickhouse_clients_network
     logging:
       driver: "local"
       options:
@@ -411,6 +413,7 @@ services:
       DBT_CLICKHOUSE_DB: ${DBT_CLICKHOUSE_DB:-analytics}
     networks:
       - backend_network
+      - clickhouse_clients_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
@@ -460,6 +463,7 @@ services:
       MINIO_DLT_STAGING_BUCKET: ${MINIO_DLT_STAGING_BUCKET:-dlt-staging}
     networks:
       - backend_network
+      - clickhouse_clients_network
     restart: on-failure
     labels:
       - "traefik.enable=false"
