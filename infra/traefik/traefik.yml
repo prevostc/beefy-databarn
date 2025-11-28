@@ -24,6 +24,11 @@ entryPoints:
       accessLogs: false
       metrics: false
       tracing: false
+  ping:
+    address: ":8082"
+
+ping:
+  entrypoint: ping
 
 providers:
   docker:
