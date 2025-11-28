@@ -17,9 +17,9 @@
     <users>
         <default>
             <password from_env="CLICKHOUSE_PASSWORD" replace="1">changeme</password>
-            <networks>
-                <ip>127.0.0.1</ip>
+            <networks replace="replace">
                 <ip>::1</ip>
+                <ip>127.0.0.1</ip>
             </networks>
             <!-- Enable RBAC management for this user -->
             <access_management>1</access_management>
