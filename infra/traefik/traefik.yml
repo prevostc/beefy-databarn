@@ -1,7 +1,6 @@
 api:
   dashboard: false
   insecure: false
-  ping: true
 
 entryPoints:
   web:
