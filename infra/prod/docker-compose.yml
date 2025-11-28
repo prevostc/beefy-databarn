@@ -15,7 +15,7 @@ services:
       - traefik_certs:/letsencrypt
       - /var/run/docker.sock:/var/run/docker.sock:ro
     environment:
-      TRAEFIK_DOCKER_NETWORK: ${TRAEFIK_DOCKER_NETWORK:-beefy-databarn_frontend_network}
+      TRAEFIK_DOCKER_NETWORK: beefy-databarn_frontend_network
       TRAEFIK_LOG_LEVEL: ${TRAEFIK_LOG_LEVEL:-INFO}
       TRAEFIK_EMAIL: ${TRAEFIK_EMAIL}
     networks:
@@ -67,6 +67,7 @@ services:
     restart: unless-stopped
     labels:
       - "traefik.enable=true"
+      - "traefik.docker.network=beefy-databarn_frontend_network"
       - "traefik.http.routers.clickhouse.rule=Host(`clickhouse-databarn.beefy.com`)"
       - "traefik.http.routers.clickhouse.entrypoints=websecure"
       - "traefik.http.routers.clickhouse.tls.certresolver=letsencrypt"
@@ -546,6 +547,7 @@ networks:
           gateway: 172.19.0.1
   backend_network:
     driver: bridge
+    name: beefy-databarn_backend_network
     ipam:
       config:
         - subnet: 172.19.1.0/24
