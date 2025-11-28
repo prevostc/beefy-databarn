@@ -12,6 +12,9 @@ def is_production() -> bool:
 
 BATCH_SIZE = 1_000_000
 
+# Pipeline iteration timeout (in seconds)
+PIPELINE_ITERATION_TIMEOUT = int(os.environ.get("DLT_PIPELINE_ITERATION_TIMEOUT", "3600"))
+
 def configure_dlt() -> None:
     """Configure dlt from environment variables."""
     # Set runtime configuration via environment variables
