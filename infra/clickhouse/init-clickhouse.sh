@@ -167,8 +167,7 @@ clickhouse-client \
             max_result_rows    = ${CLICKHOUSE_EXTERNAL_MAX_RESULT_ROWS:-100000},
             max_rows_to_read   = ${CLICKHOUSE_EXTERNAL_MAX_ROWS_TO_READ:-1000000},
             use_uncompressed_cache = 0,
-            load_balancing = 'random'
-        TO external;
+            load_balancing = 'random';
 
 
     -------------------------------------------
