@@ -158,6 +158,19 @@ clickhouse-client \
             max_memory_usage   = ${CLICKHOUSE_MAX_MEMORY_USAGE:-10000000000}
         TO dlt, dbt;
 
+    -- External profile
+    CREATE SETTINGS PROFILE IF NOT EXISTS external_profile;
+    ALTER  SETTINGS PROFILE external_profile
+        SETTINGS
+            max_execution_time = ${CLICKHOUSE_EXTERNAL_MAX_MEMORY_USAGE:-20},
+            max_memory_usage   = ${CLICKHOUSE_EXTERNAL_MAX_MEMORY_USAGE:-10000000000},
+            max_result_rows    = ${CLICKHOUSE_EXTERNAL_MAX_RESULT_ROWS:-100000},
+            max_rows_to_read   = ${CLICKHOUSE_EXTERNAL_MAX_ROWS_TO_READ:-1000000},
+            use_uncompressed_cache = 0,
+            load_balancing = 'random'
+        TO external;
+
+
     -------------------------------------------
     -- Quotas (same as your XML quotas)
     -------------------------------------------
@@ -187,6 +200,18 @@ clickhouse-client \
             read_bytes     = 100000000000000,
             execution_time = 7200
         TO grafana, superset;
+
+    -- External quota: limit external workloads
+    CREATE QUOTA OR REPLACE external_quota
+        FOR INTERVAL 3600 SECOND MAX
+            queries        = 5000,
+            query_selects  = 5000,
+            errors         = 1000,
+            result_rows    = 10000000000,
+            result_bytes   = 10000000000000,
+            read_rows      = 100000000000,
+            read_bytes     = 100000000000000,
+            execution_time = 7200;
 "
 
 echo "✓ Databases analytics, dbt & dlt initialized"

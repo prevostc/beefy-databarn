@@ -62,10 +62,25 @@ services:
       CLICKHOUSE_WEB_MAX_ROWS_TO_READ: ${CLICKHOUSE_WEB_MAX_ROWS_TO_READ:-1000000000}
       CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT: ${CLICKHOUSE_DEFAULT_ACCESS_MANAGEMENT:-1}
     networks:
+      - frontend_network
       - backend_network
     restart: unless-stopped
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.http.routers.clickhouse.rule=Host(`clickhouse-databarn.beefy.com`)"
+      - "traefik.http.routers.clickhouse.entrypoints=websecure"
+      - "traefik.http.routers.clickhouse.tls.certresolver=letsencrypt"
+      - "traefik.http.routers.clickhouse.middlewares=clickhouse-ratelimit"
+      - "traefik.http.middlewares.clickhouse-ratelimit.ratelimit.average=100"
+      - "traefik.http.middlewares.clickhouse-ratelimit.ratelimit.period=1m"
+      - "traefik.http.middlewares.clickhouse-ratelimit.ratelimit.burst=20"
+      - "traefik.http.middlewares.clickhouse-ratelimit.ratelimit.sourcecriterion.ipstrategy.depth=1"
+      - "traefik.http.services.clickhouse.loadbalancer.server.port=8123"
+      - "traefik.http.services.clickhouse.loadbalancer.server.scheme=http"
+      - "traefik.http.services.clickhouse.loadbalancer.healthcheck.path=/ping"
+      - "traefik.http.services.clickhouse.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.clickhouse.loadbalancer.healthcheck.timeout=5s"
+      - "traefik.http.routers.clickhouse.service=clickhouse"
     healthcheck:
       test: wget -O - --no-verbose --tries=1 http://127.0.0.1:8123/ping || exit 1
       interval: 1s
