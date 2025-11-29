@@ -2,7 +2,7 @@ version: 2
 
 models:
   - name: daily_revenue_summary
-    description: "Daily aggregation of revenue, yield, and BIFI buyback metrics (last 30 days). Provides daily totals for revenue from BIFI buybacks, yield from harvest events, and BIFI buyback amounts. Limited to the last 30 days for performance."
+    description: "Daily aggregation of revenue, yield, and BIFI buyback metrics (last 30 days). Provides daily totals for revenue from BIFI buybacks and feebatch harvests (treasury amounts), yield from harvest events, and BIFI buyback amounts. Limited to the last 30 days for performance."
     config:
       contract:
         enforced: true
@@ -21,7 +21,7 @@ models:
           - not_null
           - unique
       - name: revenue_usd
-        description: "Total revenue from BIFI buybacks in USD for the day"
+        description: "Total revenue from BIFI buybacks and feebatch harvests (treasury amounts) in USD for the day"
         data_type: Decimal(76, 20)
         tests:
           - not_null

@@ -23,7 +23,6 @@ dbt/.dbt/
 !.env.example
 
 # IDE
-.vscode/
 .idea/
 *.swp
 *.swo

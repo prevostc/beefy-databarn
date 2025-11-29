@@ -154,11 +154,13 @@ class AsyncPipelineRunner:
             # Otherwise, re-raise the original exception
             raise
     
-    async def _run_async(self, tasks: list[PipelineTask]) -> list[Any]:
+    async def _run_async(self, tasks: list[PipelineTask], resource_filter: dict[str, str] | None = None) -> list[Any]:
         """Run all pipeline tasks in parallel using ThreadPoolExecutor.
         
         Args:
             tasks: List of PipelineTask instances to execute
+            resource_filter: Optional dict mapping pipeline names to resource names to filter.
+                           When provided, there should only be one pipeline task.
             
         Returns:
             List of results from pipeline runs
@@ -166,15 +168,31 @@ class AsyncPipelineRunner:
         Raises:
             Exception: If any pipeline execution fails (except signal interruptions)
         """
-        loop = asyncio.get_running_loop()
+        # When filtering to a specific resource, there should only be one pipeline task
+        if resource_filter:
+            if len(tasks) != 1:
+                raise ValueError(
+                    f"Expected exactly one pipeline task when resource_filter is provided, "
+                    f"but got {len(tasks)} tasks. Resource filter: {resource_filter}"
+                )
+            if list(resource_filter.keys())[0] != tasks[0].pipeline.pipeline_name:
+                raise ValueError(
+                    f"Resource filter pipeline name '{list(resource_filter.keys())[0]}' "
+                    f"does not match task pipeline name '{tasks[0].pipeline.pipeline_name}'"
+                )
         
-        # Instantiate all async sources
+        # Instantiate and filter all sources BEFORE starting any threads/processes
         sources = []
         for task in tasks:
             source = await task.get_source()
+            # Filter to specific resource if requested for this pipeline
+            if resource_filter and task.pipeline.pipeline_name in resource_filter:
+                resource_name = resource_filter[task.pipeline.pipeline_name]
+                source = source.with_resources(resource_name)
             sources.append((task.pipeline, source, task.run_mode))
         
-        # Run pipelines in parallel using ThreadPoolExecutor
+        # Now that all sources are instantiated and filtered, run pipelines in parallel
+        loop = asyncio.get_running_loop()
         try:
             executor = ThreadPoolExecutor()
             try:
@@ -209,7 +227,7 @@ class AsyncPipelineRunner:
             logger.info("Pipeline execution interrupted by user signal.")
             return []
     
-    def run(self, tasks: list[PipelineTask]) -> None:
+    def run(self, tasks: list[PipelineTask], resource_filter: dict[str, str] | None = None) -> None:
         """Run all pipeline tasks with signal handling.
         
         This is the main entry point that sets up signal handling and runs
@@ -217,10 +235,13 @@ class AsyncPipelineRunner:
         
         Args:
             tasks: List of PipelineTask instances to execute
+            resource_filter: Optional dict mapping pipeline names to resource names to filter.
+                           If provided, only the specified resource will be run for each pipeline.
+                           Example: {"beefy_db_configs": "feebatch_harvests"}
         """
         try:
             with signals.intercepted_signals():
-                asyncio.run(self._run_async(tasks))
+                asyncio.run(self._run_async(tasks, resource_filter))
             # Ensure we log completion
             logger.info("All pipelines completed successfully")
         except (SignalReceivedException, KeyboardInterrupt):

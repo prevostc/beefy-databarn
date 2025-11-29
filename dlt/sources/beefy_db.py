@@ -187,6 +187,10 @@ async def beefy_db_configs() -> Any:
         "vault_strategies": [
             {"name": "id", "primary_key": True },
         ],
+        "feebatch_harvests": [
+            {"name": "chain_id", "primary_key": True },
+            {"name": "block_number", "primary_key": True },
+        ]
     }
 
     resources = []

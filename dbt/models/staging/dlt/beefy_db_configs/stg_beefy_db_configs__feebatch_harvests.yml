@@ -1,0 +1,48 @@
+version: 2
+
+models:
+  - name: stg_beefy_db_configs__feebatch_harvests
+    description: "Staging model for fee batch harvest events from dlt beefy_db_configs dataset"
+    columns:
+      - name: _dlt_id
+        description: "Unique identifier for the harvest event (DLT internal ID)"
+        tests:
+          - not_null
+          - unique
+      - name: chain_id
+        description: "Chain ID where the harvest occurred"
+        tests:
+          - not_null
+      - name: block_number
+        description: "Block number when the harvest transaction occurred"
+        tests:
+          - not_null
+      - name: txn_timestamp
+        description: "Timestamp when the harvest transaction occurred"
+        tests:
+          - not_null
+      - name: txn_hash
+        description: "Transaction hash"
+        tests:
+          - not_null
+      - name: harvest_usd
+        description: "Total harvest amount in USD"
+      - name: treasury_amt
+        description: "Amount going to treasury in USD - this is the revenue"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: rewardpool_amt
+        description: "Amount going to reward pool in USD"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: native_price
+        description: "Native token price at time of harvest"
+      - name: stable_price
+        description: "Stable token price at time of harvest"
+

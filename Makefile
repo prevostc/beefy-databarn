@@ -20,7 +20,9 @@ help: ## Show this help message
 	@echo "Usage: make <command> [subcommand]"
 	@echo ""
 	@echo "dlt:"
-	@echo "  make dlt run             Run the Beefy API dlt pipeline"
+	@echo "  make dlt run                    Run all dlt pipelines"
+	@echo "  make dlt run <resource>         Run a specific pipeline or resource"
+	@echo "                                  Examples: beefy_db_configs or beefy_db_configs.feebatch_harvests"
 	@echo ""
 	@echo "Infrastructure:"
 	@echo "  make infra start         Start infrastructure services (rebuilds if needed)"
@@ -179,15 +181,24 @@ run test compile sql docs:
 # dlt commands - using subcommands
 dlt:
 	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "run" ]; then \
-		$(MAKE) -s _dlt-run; \
+		$(MAKE) -s _dlt-run RESOURCE=""; \
+	elif [ "$(word 2,$(MAKECMDGOALS))" = "run" ]; then \
+		$(MAKE) -s _dlt-run RESOURCE="$(word 3,$(MAKECMDGOALS))"; \
 	else \
-		echo "Usage: make dlt [run]"; \
+		echo "Usage: make dlt run <resource>"; \
+		echo "  resource can be a pipeline name (e.g., beefy_db_configs)"; \
+		echo "  or pipeline.resource (e.g., beefy_db_configs.feebatch_harvests)"; \
 		exit 1; \
 	fi
 
 _dlt-run:
-	@echo "Running Beefy API dlt pipeline..."
-	@cd dlt && uv run --env-file ../.env ./run.py
+	@if [ -n "$(RESOURCE)" ]; then \
+		echo "Running dlt resource: $(RESOURCE)..."; \
+		cd dlt && uv run --env-file ../.env ./run.py $(RESOURCE); \
+	else \
+		echo "Running all dlt pipelines..."; \
+		cd dlt && uv run --env-file ../.env ./run.py; \
+	fi
 
 # Catch unknown commands - show help and exit with error
 # Only show error if this is the first goal (not a model name or subcommand argument)

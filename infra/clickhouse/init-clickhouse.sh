@@ -109,13 +109,15 @@ clickhouse-client \
 
     -- dlt: RW on dlt.*
     REVOKE ALL PRIVILEGES ON *.* FROM dlt;
-    GRANT ${READ_PERM}, ${WRITE_PERM} ON dlt.*       TO dlt;
+    GRANT ${READ_PERM}                ON INFORMATION_SCHEMA.*       TO dlt;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON dlt.*                      TO dlt;
 
     -- dbt: R on dlt.*, RW on dbt.* & analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM dbt;
-    GRANT ${READ_PERM}                ON dlt.*       TO dbt;
-    GRANT ${READ_PERM}, ${WRITE_PERM} ON dbt.*       TO dbt;
-    GRANT ${READ_PERM}, ${WRITE_PERM} ON analytics.* TO dbt;
+    GRANT ${READ_PERM}                ON INFORMATION_SCHEMA.*       TO dbt;
+    GRANT ${READ_PERM}                ON dlt.*                      TO dbt;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON dbt.*                      TO dbt;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON analytics.*                TO dbt;
 
     -- grafana: R on dlt.*, dbt.*, analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM grafana;

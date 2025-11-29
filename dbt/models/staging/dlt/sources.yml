@@ -28,6 +28,8 @@ sources:
         description: "Address metadata from Beefy database"
       - name: beefy_db_configs___bifi_buyback
         description: "BIFI buyback events from Beefy database"
+      - name: beefy_db_configs___feebatch_harvests
+        description: "Fee batch harvest events from Beefy database"
       - name: beefy_db_configs___vault_ids
         description: "Vault ID mappings from Beefy database"
       - name: beefy_db_configs___price_oracles
