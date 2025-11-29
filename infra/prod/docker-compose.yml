@@ -59,6 +59,8 @@ services:
       SUPERSET_CLICKHOUSE_ALLOWED_HOST: IP '172.19.1.0/24'
       GRAFANA_CLICKHOUSE_PASSWORD: ${GRAFANA_CLICKHOUSE_PASSWORD}
       GRAFANA_CLICKHOUSE_ALLOWED_HOST: IP '172.19.1.0/24'
+      API_CLICKHOUSE_PASSWORD: ${API_CLICKHOUSE_PASSWORD}
+      API_CLICKHOUSE_ALLOWED_HOST: IP '172.19.1.0/24'
       CLICKHOUSE_WEB_MAX_EXECUTION_TIME: ${CLICKHOUSE_WEB_MAX_EXECUTION_TIME:-3600}
       CLICKHOUSE_WEB_MAX_MEMORY_USAGE: ${CLICKHOUSE_WEB_MAX_MEMORY_USAGE:-32212254720}
       CLICKHOUSE_WEB_MAX_RESULT_ROWS: ${CLICKHOUSE_WEB_MAX_RESULT_ROWS:-1000000000}
@@ -476,6 +478,51 @@ services:
       interval: 30s
       timeout: 10s
       retries: 3
+    logging:
+      driver: "local"
+      options:
+        max-size: "1G"
+        max-file: "3"
+
+  api:
+    build:
+      context: ../..
+      dockerfile: infra/api/Dockerfile
+    image: beefy-databarn-api:latest
+    environment:
+      API_CLICKHOUSE_HOST: ${API_CLICKHOUSE_HOST:-clickhouse}
+      API_CLICKHOUSE_PORT: 8123
+      API_CLICKHOUSE_USER: ${API_CLICKHOUSE_USER:-api}
+      API_CLICKHOUSE_PASSWORD: ${API_CLICKHOUSE_PASSWORD}
+      API_CLICKHOUSE_DB: ${API_CLICKHOUSE_DB:-analytics}
+      API_RATE_LIMIT_PER_MINUTE: ${API_RATE_LIMIT_PER_MINUTE:-100}
+      API_CACHE_TTL_SECONDS: ${API_CACHE_TTL_SECONDS:-3600}
+    networks:
+      - backend_network
+      - frontend_network
+    restart: unless-stopped
+    labels:
+      - "traefik.enable=true"
+      - "traefik.docker.network=beefy-databarn_frontend_network"
+      # Only allow /api/v1 paths through Traefik - blocks /health, /metrics, etc. from external access
+      # No stripprefix needed since API routes already include /api/v1 prefix
+      - "traefik.http.routers.api.rule=Host(`${API_WEBAPP_DOMAIN_NAME}`) && PathPrefix(`/api/v1`)"
+      - "traefik.http.routers.api.entrypoints=websecure"
+      - "traefik.http.routers.api.tls.certresolver=letsencrypt"
+      - "traefik.http.services.api.loadbalancer.server.port=8080"
+      - "traefik.http.services.api.loadbalancer.server.scheme=http"
+      - "traefik.http.services.api.loadbalancer.healthcheck.path=/health"
+      - "traefik.http.services.api.loadbalancer.healthcheck.interval=10s"
+      - "traefik.http.services.api.loadbalancer.healthcheck.timeout=5s"
+      - "traefik.http.routers.api.service=api"
+    depends_on:
+      clickhouse:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/health || exit 1"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
     logging:
       driver: "local"
       options:

@@ -11,10 +11,10 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first (for better layer caching)
-COPY pyproject.toml uv.lock /app/
+COPY dlt/pyproject.toml dlt/uv.lock /app/dlt/
 
 # Install Python dependencies using uv
-WORKDIR /app
+WORKDIR /app/dlt
 RUN uv sync --frozen
 
 # Copy dlt project files

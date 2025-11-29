@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: api_revenue_summary
+    description: "API view providing aggregated revenue metrics for the last 30 days. Returns a single row with revenue_usd_30d (sum of revenue for last 30 days), yield_usd_7d (sum of yield for last 7 days), and bifi_buyback_usd_7d (sum of BIFI buyback for last 7 days)."
+    config:
+      contract:
+        enforced: true
+    tests:
+      - expect_exactly_one_row
+    columns:
+      - name: revenue_usd_30d
+        description: "Sum of revenue in USD for the last 30 days"
+        data_type: Float64
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: yield_usd_7d
+        description: "Sum of yield in USD for the last 7 days"
+        data_type: Float64
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: bifi_buyback_usd_7d
+        description: "Sum of BIFI buyback in USD for the last 7 days"
+        data_type: Float64
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+

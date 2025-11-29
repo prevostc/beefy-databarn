@@ -53,10 +53,12 @@ validate_password DLT_CLICKHOUSE_PASSWORD
 validate_password DBT_CLICKHOUSE_PASSWORD
 validate_password GRAFANA_CLICKHOUSE_PASSWORD
 validate_password SUPERSET_CLICKHOUSE_PASSWORD
+validate_password API_CLICKHOUSE_PASSWORD
 validate_ip_config DLT_CLICKHOUSE_ALLOWED_HOST
 validate_ip_config DBT_CLICKHOUSE_ALLOWED_HOST
 validate_ip_config GRAFANA_CLICKHOUSE_ALLOWED_HOST
 validate_ip_config SUPERSET_CLICKHOUSE_ALLOWED_HOST
+validate_ip_config API_CLICKHOUSE_ALLOWED_HOST
 
 echo "Initializing ClickHouse databases..."
 
@@ -103,6 +105,11 @@ clickhouse-client \
     ALTER USER superset IDENTIFIED WITH sha256_password BY '${SUPERSET_CLICKHOUSE_PASSWORD}';
     ALTER USER superset HOST ${SUPERSET_CLICKHOUSE_ALLOWED_HOST};
 
+    -- api
+    CREATE USER IF NOT EXISTS api IDENTIFIED WITH sha256_password BY '${API_CLICKHOUSE_PASSWORD}';
+    ALTER USER api IDENTIFIED WITH sha256_password BY '${API_CLICKHOUSE_PASSWORD}';
+    ALTER USER api HOST ${API_CLICKHOUSE_ALLOWED_HOST};
+
     -------------------------
     -- Grants (idempotent)
     -------------------------
@@ -131,11 +138,17 @@ clickhouse-client \
     GRANT ${READ_PERM} ON dbt.*       TO superset;
     GRANT ${READ_PERM} ON analytics.* TO superset;
 
+    -- api: R on analytics.*
+    REVOKE ALL PRIVILEGES ON *.* FROM api;
+    GRANT ${READ_PERM} ON analytics.* TO api;
+    GRANT ${READ_PERM} ON dlt.* TO api;
+    GRANT ${READ_PERM} ON dbt.* TO api;
+
     -------------------------------------------
     -- Settings profiles (env-synced)
     -------------------------------------------
 
-    -- Web profile: readonly dashboards (grafana + superset)
+    -- Web profile: readonly dashboards (grafana + superset + api)
     CREATE SETTINGS PROFILE IF NOT EXISTS web_profile;
     ALTER  SETTINGS PROFILE web_profile
         SETTINGS
@@ -152,7 +165,7 @@ clickhouse-client \
             max_rows_to_read  = ${CLICKHOUSE_WEB_MAX_ROWS_TO_READ:-1000000},
             use_uncompressed_cache = 0,
             load_balancing = 'random'
-        TO grafana, superset;
+        TO grafana, superset, api;
 
     -- ETL profile: dbt + dlt
     CREATE SETTINGS PROFILE IF NOT EXISTS etl_profile;
@@ -202,7 +215,7 @@ clickhouse-client \
             read_rows      = 100000000000,
             read_bytes     = 100000000000000,
             execution_time = 7200
-        TO grafana, superset;
+        TO grafana, superset, api;
 
     -- External quota: limit external workloads
     CREATE QUOTA OR REPLACE external_quota

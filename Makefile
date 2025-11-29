@@ -1,5 +1,5 @@
 .PHONY: help setup start dev
-.PHONY: infra dbt dlt grafana clickhouse deps-check
+.PHONY: infra dbt dlt grafana clickhouse api deps-check
 
 # Load .env file if it exists
 ifneq (,$(wildcard ./.env))
@@ -44,8 +44,11 @@ help: ## Show this help message
 	@echo "  make grafana restart     Re-restart Grafana (reload configs)"
 	@echo ""
 	@echo "ClickHouse:"
-	@echo "  make clickhouse restart  Re-restart ClickHouse (reload configs)"
-	@echo "  make clickhouse client   Open ClickHouse client shell"
+	@echo "  make clickhouse restart          Re-restart ClickHouse (reload configs)"
+	@echo "  make clickhouse client [<user>]  Open ClickHouse client shell (default user)"
+	@echo ""
+	@echo "API:"
+	@echo "  make api dev              Start API service in dev mode (with auto-reload)"
 	@echo ""
 	@echo "Dependencies:"
 	@echo "  make deps-check          Check for outdated dependencies"
@@ -132,30 +135,30 @@ dbt:
 _dbt-run:
 	@if [ -n "$(MODEL)" ]; then \
 		echo "Running dbt model: $(MODEL)..."; \
-		cd dbt && uv run --env-file ../.env dbt run --select $(MODEL) --show-all-deprecations; \
+		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt run --select $(MODEL) --show-all-deprecations; \
 	else \
 		echo "Running dbt models..."; \
-		cd dbt && uv run --env-file ../.env dbt run --show-all-deprecations; \
+		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt run --show-all-deprecations; \
 	fi
 
 _dbt-test:
 	@if [ -n "$(MODEL)" ]; then \
 		echo "Running dbt tests for model: $(MODEL)..."; \
-		cd dbt && uv run --env-file ../.env dbt test --select $(MODEL); \
+		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test --select $(MODEL); \
 	else \
 		echo "Running dbt tests..."; \
-		cd dbt && uv run --env-file ../.env dbt test; \
+		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test; \
 	fi
 
 _dbt-compile:
 	@echo "Compiling dbt models..."
-	@cd dbt && uv run --env-file ../.env dbt compile
+	@cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt compile
 
 _dbt-sql:
 	@echo "Compiling and showing SQL (no queries executed)..."
 	@cd dbt && \
 	if [ -n "$(MODEL)" ]; then \
-		uv run --env-file ../.env dbt compile --select $(MODEL) > /dev/null 2>&1 && \
+		unset VIRTUAL_ENV && uv run --env-file ../.env dbt compile --select $(MODEL) > /dev/null 2>&1 && \
 		COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$(MODEL).sql" -type f | head -1) && \
 		if [ -n "$$COMPILED_FILE" ]; then \
 			echo "=== Compiled SQL for $(MODEL) ===" && \
@@ -165,7 +168,7 @@ _dbt-sql:
 			exit 1; \
 		fi; \
 	else \
-		uv run --env-file ../.env dbt compile > /dev/null 2>&1 && \
+		unset VIRTUAL_ENV && uv run --env-file ../.env dbt compile > /dev/null 2>&1 && \
 		echo "Compiled SQL files are in target/compiled/beefy_databarn/models/"; \
 		find target/compiled/beefy_databarn/models -name "*.sql" -type f | head -10; \
 	fi
@@ -229,9 +232,11 @@ clickhouse:
 	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
 		$(MAKE) -s _clickhouse-restart; \
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "client" ]; then \
-		$(MAKE) -s _clickhouse-client; \
+		$(MAKE) -s _clickhouse-client USER=""; \
+	elif [ "$(word 2,$(MAKECMDGOALS))" = "client" ]; then \
+		$(MAKE) -s _clickhouse-client USER="$(word 3,$(MAKECMDGOALS))"; \
 	else \
-		echo "Usage: make clickhouse [restart|client]"; \
+		echo "Usage: make clickhouse [restart|client [user]]"; \
 		exit 1; \
 	fi
 
@@ -241,8 +246,29 @@ _clickhouse-restart:
 	@echo "✓ ClickHouse restarted"
 
 _clickhouse-client:
-	@echo "Opening ClickHouse client shell..."
-	@docker compose -f infra/dev/docker-compose.yml exec clickhouse clickhouse-client
+	@if [ -n "$(USER)" ]; then \
+		echo "Opening ClickHouse client shell as user: $(USER)..."; \
+		docker compose -f infra/dev/docker-compose.yml exec clickhouse clickhouse-client --user $(USER); \
+	else \
+		echo "Opening ClickHouse client shell (default user)..."; \
+		docker compose -f infra/dev/docker-compose.yml exec clickhouse clickhouse-client; \
+	fi
+
+# API commands - using subcommands
+api:
+	@if [ "$@" != "$(firstword $(MAKECMDGOALS))" ]; then \
+		:; \
+	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "dev" ]; then \
+		$(MAKE) -s _api-dev; \
+	else \
+		echo "Usage: make api dev"; \
+		exit 1; \
+	fi
+
+# Internal targets
+_api-dev:
+	@echo "Starting API service in dev mode (with auto-reload)..."
+	@cd api && unset VIRTUAL_ENV && PYTHONPATH=.. uv run --env-file ../.env uvicorn main:app --host 0.0.0.0 --port 8080 --reload
 
 # Catch subcommands
 restart client:
@@ -271,7 +297,10 @@ setup: ## Initial setup (copy .env, install deps)
 	else \
 		echo "✓ .env file already exists"; \
 	fi
-	uv sync
+	@echo "Installing dependencies for each application..."
+	@cd dlt && uv sync || echo "Warning: dlt dependencies not installed"
+	@cd dbt && uv sync || echo "Warning: dbt dependencies not installed"
+	@cd api && uv sync || echo "Warning: api dependencies not installed"
 	@echo "✓ Dependencies installed"
 	@echo ""
 	@echo "Next steps:"
@@ -293,7 +322,10 @@ dev: ## Full development workflow (setup, start, run dbt)
 _print-urls:
 	@echo ""
 	@echo "Access services:"
-	@echo "  - Superset: http://localhost:8088" && \
+	@echo "  - API: http://localhost:8080" && \
+	echo "  - API Docs: http://localhost:8080/docs" && \
+	echo "  - API Metrics: http://localhost:8080/metrics" && \
+	echo "  - Superset: http://localhost:8088" && \
 	echo "  - Traefik Dashboard: http://localhost:8080" && \
 	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
 	echo "  - Grafana: http://localhost:3000 ($${GRAFANA_ADMIN_USER:-admin}/$${GRAFANA_ADMIN_PASSWORD:-admin})" && \

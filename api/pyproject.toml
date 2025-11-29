@@ -1,0 +1,27 @@
+[project]
+name = "beefy-databarn-api"
+version = "0.1.0"
+description = "Beefy Databarn - FastAPI service"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+    "fastapi>=0.115.0",
+    "uvicorn[standard]>=0.32.0",
+    "slowapi>=0.1.9",
+    "cachetools>=5.3.0",
+    "clickhouse-connect>=0.10.0",
+    "pydantic>=2.0.0",
+    "prometheus-fastapi-instrumentator>=7.0.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0.0",
+]
+
+# This is a data project, not a Python package - disable building
+[tool.uv]
+package = false
+
+[dependency-groups]
+dev = []
+
