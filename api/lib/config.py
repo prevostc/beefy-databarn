@@ -1,6 +1,5 @@
 """Configuration management for the API."""
 import os
-from typing import Optional
 
 
 class Settings:
@@ -8,7 +7,7 @@ class Settings:
 
     # ClickHouse configuration
     CLICKHOUSE_HOST: str = os.getenv("API_CLICKHOUSE_HOST", "clickhouse")
-    CLICKHOUSE_PORT: int = int(os.getenv("API_CLICKHOUSE_PORT", "8123"))
+    CLICKHOUSE_PORT: int = int(os.getenv("API_CLICKHOUSE_PORT", "9000"))
     CLICKHOUSE_USER: str = os.getenv("API_CLICKHOUSE_USER", "api")
     CLICKHOUSE_PASSWORD: str = os.getenv("API_CLICKHOUSE_PASSWORD", "")
     CLICKHOUSE_DB: str = os.getenv("API_CLICKHOUSE_DB", "analytics")

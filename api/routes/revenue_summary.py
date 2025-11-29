@@ -12,7 +12,6 @@ from api.lib.cache import cached
 
 router = APIRouter(prefix="/api/v1", tags=["revenue"])
 
-
 class RevenueSummaryResponse(BaseModel):
     """Daily revenue summary response model."""
     revenue_usd_30d: float = Field(
@@ -38,7 +37,10 @@ class RevenueSummaryResponse(BaseModel):
 @limiter.limit(f"{settings.RATE_LIMIT_PER_MINUTE}/minute")
 @cached()
 async def get_revenue_summary(request: Request):
-    rows = execute_query("SELECT * FROM analytics.api_revenue_summary")
+    rows = execute_query("""
+        SELECT revenue_usd_30d, yield_usd_7d, bifi_buyback_usd_7d
+        FROM analytics.api_revenue_summary
+    """)
     if not rows or not rows[0]:
         return RevenueSummaryResponse(
             revenue_usd_30d=0.0,
