@@ -41,3 +41,21 @@ models:
           - accepted_values:
               arguments:
                 values: [0, 1]
+      - name: public_rpc_urls
+        description: "RPC endpoint URLs for the chain (array)"
+        data_type: Array(String)
+      - name: explorer_url
+        description: "Block explorer URL for the chain"
+        data_type: Nullable(String)
+      - name: multicall3_address
+        description: "Multicall3 contract address (normalized EVM address)"
+        data_type: String
+      - name: ui_lens_address
+        description: "App multicall contract address (normalized EVM address)"
+        data_type: String
+      - name: gas_type
+        description: "Gas type (e.g., eip1559, standard)"
+        data_type: Nullable(String)
+      - name: eol_date_time
+        description: "End of life timestamp as DateTime"
+        data_type: Nullable(DateTime)

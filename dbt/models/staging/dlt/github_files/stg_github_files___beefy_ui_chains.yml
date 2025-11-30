@@ -1,0 +1,39 @@
+version: 2
+
+models:
+  - name: stg_github_files___beefy_ui_chains
+    description: "Staging model for beefy UI chains from dlt github_files dataset"
+    columns:
+      - name: chain_id
+        description: "Chain identifier (primary key)"
+        tests:
+          - not_null
+          - unique
+      - name: name
+        description: "Chain name"
+        tests:
+          - not_null
+      - name: chain_key
+        description: "Chain key identifier"
+        tests:
+          - not_null
+      - name: rpc
+        description: "RPC endpoint URLs for the chain (array)"
+      - name: explorer_url
+        description: "Block explorer URL for the chain"
+      - name: multicall3_address
+        description: "Multicall3 contract address (normalized EVM address)"
+      - name: app_multicall_contract_address
+        description: "App multicall contract address (normalized EVM address)"
+      - name: native_token_symbol
+        description: "Native token symbol"
+      - name: native_token_oracle_id
+        description: "Native token oracle ID"
+      - name: gas_type
+        description: "Gas type"
+      - name: eol_date_time
+        description: "End of life timestamp as DateTime"
+      - name: ui_disabled
+        description: "Whether the chain is disabled in UI"
+      - name: ui_new
+        description: "Whether the chain is marked as new in UI"

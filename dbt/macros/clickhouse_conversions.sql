@@ -22,6 +22,7 @@
     case 
         --when length({{ hex_string }}) = 20 then assumeNotNull({{ hex_string }})
         when {{ hex_string }} is null then {{ representation_native_evm_address() }}
+        when trim(lower({{ hex_string }})) = 'native' then {{ representation_native_evm_address() }}
         when trim(lower({{ hex_string }})) = 'null' then {{ representation_native_evm_address() }} 
         when trim(lower({{ hex_string }})) = '' then {{ representation_native_evm_address() }}
         else assumeNotNull({{ evm_address(hex_string) }})

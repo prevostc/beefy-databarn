@@ -61,3 +61,5 @@ sources:
       # github_files tables
       - name: github_files___beefy_platforms
         description: "Beefy platform configurations from GitHub files"
+      - name: github_files___beefy_ui_chains
+        description: "Beefy UI chain configurations from GitHub files"

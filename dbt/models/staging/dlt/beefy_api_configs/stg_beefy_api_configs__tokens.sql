@@ -17,4 +17,4 @@ SELECT
   bridge,
   toBool(staked) as staked
 FROM {{ source('dlt', 'beefy_api_configs___tokens') }}
-
+where chain_id is not null

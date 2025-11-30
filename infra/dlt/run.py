@@ -14,5 +14,9 @@ from run import run_pipelines
 
 
 if __name__ == "__main__":
-    run_pipelines()
+    # Get resource identifier from command-line argument if provided
+    # Format: "pipeline_name" or "pipeline_name.resource_name"
+    # Examples: "github_files" or "github_files.beefy_ui_chains"
+    resource = sys.argv[1] if len(sys.argv) > 1 else None
+    run_pipelines(resource)
 

@@ -197,10 +197,10 @@ dlt:
 _dlt-run:
 	@if [ -n "$(RESOURCE)" ]; then \
 		echo "Running dlt resource: $(RESOURCE)..."; \
-		cd dlt && uv run --env-file ../.env ./run.py $(RESOURCE); \
+		cd dlt && unset VIRTUAL_ENV && uv run --env-file ../.env ./run.py $(RESOURCE); \
 	else \
 		echo "Running all dlt pipelines..."; \
-		cd dlt && uv run --env-file ../.env ./run.py; \
+		cd dlt && unset VIRTUAL_ENV && uv run --env-file ../.env ./run.py; \
 	fi
 
 # Catch unknown commands - show help and exit with error
@@ -322,9 +322,7 @@ dev: ## Full development workflow (setup, start, run dbt)
 _print-urls:
 	@echo ""
 	@echo "Access services:"
-	@echo "  - API: http://localhost:8080" && \
-	echo "  - API Docs: http://localhost:8080/docs" && \
-	echo "  - API Metrics: http://localhost:8080/metrics" && \
+	echo "  - API: http://localhost:8080/docs" && \
 	echo "  - Superset: http://localhost:8088" && \
 	echo "  - Traefik Dashboard: http://localhost:8080" && \
 	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
