@@ -72,7 +72,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.docker.network=beefy-databarn_frontend_network"
-      - "traefik.http.routers.clickhouse.rule=Host(`clickhouse-databarn.beefy.com`)"
+      - "traefik.http.routers.clickhouse.rule=Host(`${CLICKHOUSE_EXTERNAL_DOMAIN_NAME}`)"
       - "traefik.http.routers.clickhouse.entrypoints=websecure"
       - "traefik.http.routers.clickhouse.tls.certresolver=letsencrypt"
       - "traefik.http.routers.clickhouse.middlewares=clickhouse-ratelimit"
