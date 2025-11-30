@@ -10,7 +10,7 @@ from clickhouse_connect.driver.exceptions import DatabaseError, InterfaceError
 from api.lib.config import settings
 from api.lib.middleware import limiter, rate_limit_handler
 from api.lib.exceptions import database_exception_handler, general_exception_handler
-from api.routes import health, revenue_summary
+from api.routes import health, revenue_summary, products
 
 logger = logging.getLogger(__name__)
 
@@ -60,6 +60,7 @@ def create_app() -> FastAPI:
     # Include routers
     app.include_router(health.router)
     app.include_router(revenue_summary.router)
+    app.include_router(products.router)
     
     # Modify OpenAPI schema to exclude /metrics endpoint
     # /health is already excluded via include_in_schema=False on the route

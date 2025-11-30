@@ -261,7 +261,7 @@ api:
 	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "dev" ]; then \
 		$(MAKE) -s _api-dev; \
 	else \
-		echo "Usage: make api dev"; \
+		echo "Usage: make api [dev]"; \
 		exit 1; \
 	fi
 
@@ -324,7 +324,6 @@ _print-urls:
 	@echo "Access services:"
 	@echo "  - API: http://localhost:8080" && \
 	echo "  - API Docs: http://localhost:8080/docs" && \
-	echo "  - API Metrics: http://localhost:8080/metrics" && \
 	echo "  - Superset: http://localhost:8088" && \
 	echo "  - Traefik Dashboard: http://localhost:8080" && \
 	echo "  - ClickHouse: http://localhost:8123 ($${CLICKHOUSE_USER:-default}/$${CLICKHOUSE_PASSWORD:-<set in .env>})" && \
