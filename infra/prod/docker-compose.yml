@@ -506,7 +506,7 @@ services:
       - "traefik.docker.network=beefy-databarn_frontend_network"
       # Only allow /api/v1 paths through Traefik - blocks /health, /metrics, etc. from external access
       # No stripprefix needed since API routes already include /api/v1 prefix
-      - "traefik.http.routers.api.rule=Host(`${API_WEBAPP_DOMAIN_NAME}`) && PathPrefix(`/api/v1`)"
+      - "traefik.http.routers.api.rule=Host(`${API_WEBAPP_DOMAIN_NAME}`) && (PathPrefix(`/api/v1`) || Path(`/docs`) || Path(`/redoc`) || Path(`/openapi.json`))"
       - "traefik.http.routers.api.entrypoints=websecure"
       - "traefik.http.routers.api.tls.certresolver=letsencrypt"
       - "traefik.http.services.api.loadbalancer.server.port=8080"
