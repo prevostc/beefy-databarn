@@ -11,13 +11,13 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first (for better layer caching)
-COPY pyproject.toml uv.lock /app/
+COPY dbt/pyproject.toml dbt/uv.lock /app/dbt/
 
-# Install Python dependencies using uv
-WORKDIR /app
+# Install Python dependencies using uv from dbt project
+WORKDIR /app/dbt
 RUN uv sync --frozen
 
-# Copy dbt project files
+# Copy rest of dbt project files
 COPY dbt/ /app/dbt/
 
 # Set working directory to dbt project
