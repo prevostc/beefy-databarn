@@ -49,16 +49,24 @@ validate_ip_config() {
 # Validate all environment variables
 echo "Validating environment variables..."
 validate_password CLICKHOUSE_PASSWORD
+
 validate_password DLT_CLICKHOUSE_PASSWORD
-validate_password DBT_CLICKHOUSE_PASSWORD
-validate_password GRAFANA_CLICKHOUSE_PASSWORD
-validate_password SUPERSET_CLICKHOUSE_PASSWORD
-validate_password API_CLICKHOUSE_PASSWORD
 validate_ip_config DLT_CLICKHOUSE_ALLOWED_HOST
+
+validate_password DBT_CLICKHOUSE_PASSWORD
 validate_ip_config DBT_CLICKHOUSE_ALLOWED_HOST
+
+validate_password GRAFANA_CLICKHOUSE_PASSWORD
 validate_ip_config GRAFANA_CLICKHOUSE_ALLOWED_HOST
+
+validate_password SUPERSET_CLICKHOUSE_PASSWORD
 validate_ip_config SUPERSET_CLICKHOUSE_ALLOWED_HOST
+
+validate_password API_CLICKHOUSE_PASSWORD
 validate_ip_config API_CLICKHOUSE_ALLOWED_HOST
+
+validate_password ENVIO_CLICKHOUSE_PASSWORD
+validate_ip_config ENVIO_CLICKHOUSE_ALLOWED_HOST
 
 echo "Initializing ClickHouse databases..."
 
@@ -70,6 +78,7 @@ clickhouse-client \
     CREATE DATABASE IF NOT EXISTS analytics;
     CREATE DATABASE IF NOT EXISTS dbt;
     CREATE DATABASE IF NOT EXISTS dlt;
+    CREATE DATABASE IF NOT EXISTS envio;
   "
 
 
@@ -110,6 +119,11 @@ clickhouse-client \
     ALTER USER api IDENTIFIED WITH sha256_password BY '${API_CLICKHOUSE_PASSWORD}';
     ALTER USER api HOST ${API_CLICKHOUSE_ALLOWED_HOST};
 
+    -- envio
+    CREATE USER IF NOT EXISTS envio IDENTIFIED WITH sha256_password BY '${ENVIO_CLICKHOUSE_PASSWORD}';
+    ALTER USER envio IDENTIFIED WITH sha256_password BY '${ENVIO_CLICKHOUSE_PASSWORD}';
+    ALTER USER envio HOST ${ENVIO_CLICKHOUSE_ALLOWED_HOST};
+
     -------------------------
     -- Grants (idempotent)
     -------------------------
@@ -123,6 +137,7 @@ clickhouse-client \
     REVOKE ALL PRIVILEGES ON *.* FROM dbt;
     GRANT ${READ_PERM}                ON INFORMATION_SCHEMA.*       TO dbt;
     GRANT ${READ_PERM}                ON dlt.*                      TO dbt;
+    GRANT ${READ_PERM}                ON envio.*                    TO dbt;
     GRANT ${READ_PERM}, ${WRITE_PERM} ON dbt.*                      TO dbt;
     GRANT ${READ_PERM}, ${WRITE_PERM} ON analytics.*                TO dbt;
 
@@ -131,18 +146,25 @@ clickhouse-client \
     GRANT ${READ_PERM} ON dlt.*       TO grafana;
     GRANT ${READ_PERM} ON dbt.*       TO grafana;
     GRANT ${READ_PERM} ON analytics.* TO grafana;
+    GRANT ${READ_PERM} ON envio.* TO grafana;
 
     -- superset: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM superset;
     GRANT ${READ_PERM} ON dlt.*       TO superset;
     GRANT ${READ_PERM} ON dbt.*       TO superset;
     GRANT ${READ_PERM} ON analytics.* TO superset;
+    GRANT ${READ_PERM} ON envio.* TO superset;
 
     -- api: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM api;
     GRANT ${READ_PERM} ON analytics.* TO api;
     GRANT ${READ_PERM} ON dlt.* TO api;
     GRANT ${READ_PERM} ON dbt.* TO api;
+    GRANT ${READ_PERM} ON envio.* TO api;
+
+    -- envio-sync: R on analytics.*
+    REVOKE ALL PRIVILEGES ON *.* FROM envio;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON envio.* TO envio;
 
     -------------------------------------------
     -- Settings profiles (env-synced)
@@ -184,7 +206,8 @@ clickhouse-client \
             max_result_rows    = ${CLICKHOUSE_EXTERNAL_MAX_RESULT_ROWS:-100000},
             max_rows_to_read   = ${CLICKHOUSE_EXTERNAL_MAX_ROWS_TO_READ:-1000000},
             use_uncompressed_cache = 0,
-            load_balancing = 'random';
+            load_balancing = 'random'
+        TO envio;
 
 
     -------------------------------------------
@@ -227,7 +250,8 @@ clickhouse-client \
             result_bytes   = 10000000000000,
             read_rows      = 100000000000,
             read_bytes     = 100000000000000,
-            execution_time = 7200;
+            execution_time = 7200
+        TO envio;
 "
 
 echo "✓ Databases analytics, dbt & dlt initialized"
