@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt
+.PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt clickhouse
 
 # Load .env file from project root if it exists
 ifneq (,$(wildcard ../../.env))
@@ -40,6 +40,7 @@ help:
 	@echo "  make dbt run           Run dbt in the dbt container"
 	@echo "  make dbt test          Test dbt in the dbt container"
 	@echo "  make dlt run            Run dlt in the dlt container"
+	@echo "  make clickhouse client Open ClickHouse client"
 	@echo "  make ensure-dirs       Create required data directories"
 	@echo ""
 
@@ -82,7 +83,18 @@ dlt:
 		exit 1; \
 	fi
 
-# Prevent make from treating dbt/superset/run/test as targets
+# ClickHouse client: make clickhouse client
+# Usage: make clickhouse client
+clickhouse:
+	@if [ -n "$(filter client,$(MAKECMDGOALS))" ]; then \
+		echo "Opening ClickHouse client..."; \
+		docker exec -it beefy-databarn-clickhouse-1 clickhouse-client; \
+	else \
+		echo "Usage: make clickhouse client"; \
+		exit 1; \
+	fi
+
+# Prevent make from treating dbt/superset/run/test/client as targets
 %:
 	@:
 
