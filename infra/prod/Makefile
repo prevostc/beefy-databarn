@@ -38,6 +38,7 @@ help:
 	@echo "  make deploy            Build and deploy"
 	@echo "  make restart <service> Restart a specific service (service name required)"
 	@echo "  make dbt run           Run dbt in the dbt container"
+	@echo "  make dbt test          Test dbt in the dbt container"
 	@echo "  make dlt run            Run dlt in the dlt container"
 	@echo "  make ensure-dirs       Create required data directories"
 	@echo ""
@@ -56,14 +57,17 @@ build:
 		echo "All images built successfully"; \
 	fi
 
-# Run dbt: make dbt run
-# Usage: make dbt run
+# Run dbt: make dbt run or make dbt test
+# Usage: make dbt run or make dbt test
 dbt:
 	@if [ -n "$(filter run,$(MAKECMDGOALS))" ]; then \
 		echo "Running dbt..."; \
 		docker exec -it beefy-databarn-dbt-1 uv run dbt run; \
+	elif [ -n "$(filter test,$(MAKECMDGOALS))" ]; then \
+		echo "Testing dbt..."; \
+		docker exec -it beefy-databarn-dbt-1 uv run dbt test; \
 	else \
-		echo "Usage: make dbt run"; \
+		echo "Usage: make dbt run or make dbt test"; \
 		exit 1; \
 	fi
 
@@ -78,7 +82,7 @@ dlt:
 		exit 1; \
 	fi
 
-# Prevent make from treating dbt/superset/run as targets
+# Prevent make from treating dbt/superset/run/test as targets
 %:
 	@:
 
