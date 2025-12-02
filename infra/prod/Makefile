@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs up deploy ensure-dirs restart
+.PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt
 
 # Load .env file from project root if it exists
 ifneq (,$(wildcard ../../.env))
@@ -37,6 +37,8 @@ help:
 	@echo "  make up                Rolling update (deploy with no-downtime)"
 	@echo "  make deploy            Build and deploy"
 	@echo "  make restart <service> Restart a specific service (service name required)"
+	@echo "  make dbt run           Run dbt in the dbt container"
+	@echo "  make dlt run            Run dlt in the dlt container"
 	@echo "  make ensure-dirs       Create required data directories"
 	@echo ""
 
@@ -54,7 +56,29 @@ build:
 		echo "All images built successfully"; \
 	fi
 
-# Prevent make from treating dbt/superset as targets
+# Run dbt: make dbt run
+# Usage: make dbt run
+dbt:
+	@if [ -n "$(filter run,$(MAKECMDGOALS))" ]; then \
+		echo "Running dbt..."; \
+		docker exec -it beefy-databarn-dbt-1 uv run dbt run; \
+	else \
+		echo "Usage: make dbt run"; \
+		exit 1; \
+	fi
+
+# Run dlt: make dlt run
+# Usage: make dlt run
+dlt:
+	@if [ -n "$(filter run,$(MAKECMDGOALS))" ]; then \
+		echo "Running dlt..."; \
+		docker exec -it beefy-databarn-dlt-1 uv run /app/infra/dlt/run.py; \
+	else \
+		echo "Usage: make dlt run"; \
+		exit 1; \
+	fi
+
+# Prevent make from treating dbt/superset/run as targets
 %:
 	@:
 
