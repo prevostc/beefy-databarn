@@ -144,10 +144,10 @@ _dbt-run:
 _dbt-test:
 	@if [ -n "$(MODEL)" ]; then \
 		echo "Running dbt tests for model: $(MODEL)..."; \
-		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test --select $(MODEL); \
+		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test --select $(MODEL) --write-json; \
 	else \
 		echo "Running dbt tests..."; \
-		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test; \
+		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test --write-json; \
 	fi
 
 _dbt-compile:

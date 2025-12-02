@@ -13,6 +13,11 @@ models:
           arguments:
             combination_of_columns:
               - date_day
+      - expect_date_exists:
+          name: expect_yesterday_exists
+          arguments:
+            expression: date_day
+            days_ago: 1
     columns:
       - name: date_day
         description: "Date of the aggregation (day level)"
