@@ -164,11 +164,8 @@ clickhouse-client \
 
     -- envio-sync: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM envio;
-    GRANT 
-      CREATE DATABASE ON envio,
-      DROP   DATABASE ON envio,
-      ALL    ON envio.*
-    TO envio;
+    GRANT CREATE ON DATABASE envio TO envio;
+    GRANT ${READ_PERM}, ${WRITE_PERM} ON envio.* TO envio;
 
     -------------------------------------------
     -- Settings profiles (env-synced)
