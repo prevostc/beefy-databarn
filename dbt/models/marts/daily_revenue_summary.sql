@@ -26,7 +26,6 @@ WITH bifi_buyback_daily AS (
     AND txn_timestamp IS NOT NULL
     AND bifi_amount > 0
     AND bifi_price > 0
-    AND toDate(txn_timestamp) >= today() - 30
   GROUP BY toDate(txn_timestamp)
 ),
 
@@ -41,7 +40,6 @@ feebatch_revenue_daily AS (
     treasury_amt IS NOT NULL
     AND txn_timestamp IS NOT NULL
     AND treasury_amt > 0
-    AND toDate(txn_timestamp) >= today() - 30
   GROUP BY toDate(txn_timestamp)
 ),
 
@@ -50,7 +48,6 @@ yield_daily AS (
     toDate(date_time) as date_day,
     sum(underlying_amount_compounded_usd) as yield_usd
   FROM {{ ref('int_yield') }}
-  WHERE toDate(date_time) >= today() - 30
   GROUP BY toDate(date_time)
 )
 
@@ -64,6 +61,8 @@ FULL OUTER JOIN feebatch_revenue_daily f
   ON b.date_day = f.date_day
 FULL OUTER JOIN yield_daily y
   ON coalesce(b.date_day, f.date_day) = y.date_day
-WHERE coalesce(b.date_day, f.date_day, y.date_day) >= today() - 30
+WHERE 
+  coalesce(b.date_day, f.date_day, y.date_day) is not null
+  and coalesce(b.date_day, f.date_day, y.date_day) > '1970-01-01'
 ORDER BY date_day DESC
 
