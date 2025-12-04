@@ -1,15 +1,16 @@
 from __future__ import annotations
 import logging
+import asyncio
 from typing import List
 import sys
 import dlt
 from lib.config import configure_dlt, configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination
-from lib.async_runner import AsyncPipelineRunner, PipelineTask
+from lib.async_runner import PipelineRunner, PipelineTask
 from sources.github_files import github_files
 from sources.beefy_api_configs import beefy_api_configs
 from sources.beefy_api_snapshots import beefy_api_snapshots
 from sources.beefy_db import beefy_db_configs, beefy_db_incremental 
-
+from dlt.common.runtime import signals
 
 def configure_env() -> None:
     """Configure the environment for the DLT pipelines."""
@@ -76,25 +77,17 @@ def get_resource_filter(all_tasks: List[PipelineTask], resource: str | None = No
     return resource_filter
 
 
-def run_pipelines(resource: str | None = None):
+async def run_pipelines(resource: str | None = None):
     configure_env()
     tasks = get_all_tasks()
     resource_filter = get_resource_filter(tasks, resource)
-    AsyncPipelineRunner().run(tasks, resource_filter=resource_filter)
-
-
-async def run_pipelines_async(resource: str | None = None):
-    configure_env()
-    tasks = get_all_tasks()
-    resource_filter = get_resource_filter(tasks, resource)
-    return await AsyncPipelineRunner().run_async(tasks, resource_filter=resource_filter)
-
-
-
+    await PipelineRunner().run(tasks, resource_filter=resource_filter)
 
 if __name__ == "__main__":
     # Get resource identifier from command-line argument if provided
     # Format: "pipeline_name" or "pipeline_name.resource_name"
     resource = sys.argv[1] if len(sys.argv) > 1 else None
-    run_pipelines(resource)
+
+    with signals.intercepted_signals():
+        asyncio.run(run_pipelines(resource))
 

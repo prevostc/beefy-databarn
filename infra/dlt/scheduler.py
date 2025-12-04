@@ -15,7 +15,7 @@ from apscheduler.triggers.cron import CronTrigger
 sys.path.insert(0, "/app/dlt")
 
 # Import the pipeline runner function from run.py
-from run import run_pipelines_async
+from run import run_pipelines
 
 # Configure logging
 logging.basicConfig(
@@ -30,7 +30,8 @@ def run_dlt_pipeline():
     """Run the DLT pipeline by calling the reusable function from run.py."""
     try:
         logger.info("Starting DLT pipeline run...")
-        run_pipelines_async()
+        with signals.intercepted_signals():
+            asyncio.run(run_pipelines())
         logger.info("DLT pipeline run completed successfully")
     except Exception as e:
         logger.error(f"Error running DLT pipeline: {e}", exc_info=True)
@@ -53,7 +54,6 @@ if __name__ == "__main__":
     )
 
 
-    with signals.intercepted_signals():
-        scheduler.start()
-        asyncio.get_event_loop().run_forever()
+    scheduler.start()
+    asyncio.get_event_loop().run_forever()
 

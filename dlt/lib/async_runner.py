@@ -30,57 +30,23 @@ class PipelineTask:
             raise ValueError(f"run_mode must be 'once' or 'loop', got '{self.run_mode}'")
 
 
-class AsyncPipelineRunner:
+class PipelineRunner:
     """Handles async execution of multiple pipeline tasks with signal handling."""
     
-    def _run_pipeline(self, pipeline: dlt.Pipeline, source: Any, run_mode: str) -> Any:
-        """Run a dlt pipeline with an already-instantiated source.
+    async def run(self, tasks: list[PipelineTask], resource_filter: dict[str, str] | None = None) -> None:
+        """Run all pipeline tasks asynchronously with signal handling.
         
-        Python does not let you use generators across threads.
-        
-        Args:
-            pipeline: The dlt.Pipeline instance to run
-            source: The instantiated source to run
-            run_mode: Either "once" or "loop" to control execution mode
-            
-        Returns:
-            The result from pipeline.run()
-        """
-        logger.info("Running the %s pipeline", pipeline.pipeline_name)
-
-        if run_mode == "once":
-            result = pipeline.run(source)
-        elif run_mode == "loop":
-            iteration_count = 0
-            while True:
-                iteration_count += 1
-                result = pipeline.run(source)
-                if result.is_empty:
-                    logger.info("%s loop completed (reached end of data after %d iterations)", pipeline.pipeline_name, iteration_count)
-                    break
-                logger.info("%s loop iteration %d completed", pipeline.pipeline_name, iteration_count)
-        else:
-            raise ValueError(f"Invalid run_mode: {run_mode}")
-
-        logger.info("%s completed", pipeline.pipeline_name)
-        
-        return result
-    
-    async def run_async(self, tasks: list[PipelineTask], resource_filter: dict[str, str] | None = None) -> list[Any]:
-        """Run all pipeline tasks in parallel with timeout.
+        This is the main entry point that sets up signal handling and runs
+        all tasks asynchronously.
         
         Args:
             tasks: List of PipelineTask instances to execute
             resource_filter: Optional dict mapping pipeline names to resource names to filter.
-                           When provided, there should only be one pipeline task.
-            
-        Returns:
-            List of results from pipeline runs
-            
-        Raises:
-            Exception: If any pipeline execution fails (except signal interruptions)
-            TimeoutError: If execution exceeds PIPELINE_ITERATION_TIMEOUT
+                           If provided, only the specified resource will be run for each pipeline.
+                           Example: {"beefy_db_configs": "feebatch_harvests"}
         """
+
+
         # When filtering to a specific resource, there should only be one pipeline task
         if resource_filter:
             if len(tasks) != 1:
@@ -95,43 +61,47 @@ class AsyncPipelineRunner:
                 )
         
         # Instantiate all sources upfront before threading
-        sources = []
+
+        exceptions = []
+        
         for task in tasks:
-            source = await task.get_source()
-            # Filter to specific resource if requested for this pipeline
-            if resource_filter and task.pipeline.pipeline_name in resource_filter:
-                resource_name = resource_filter[task.pipeline.pipeline_name]
-                source = source.with_resources(resource_name)
-            sources.append((task.pipeline, source, task.run_mode))
-        
-        logger.info("Running pipelines with timeout: %d seconds", PIPELINE_ITERATION_TIMEOUT)
-        async with asyncio.timeout(PIPELINE_ITERATION_TIMEOUT):
-            run_calls = [
-                asyncio.to_thread(self._run_pipeline, pipeline, source, run_mode)
-                for pipeline, source, run_mode in sources
-            ]
-            results = await asyncio.gather(*run_calls, return_exceptions=True)
-        
-        # Check for exceptions in results
-        for result in results:
-            if isinstance(result, BaseException):
-                raise result
-        
-        return results
-    
-    def run(self, tasks: list[PipelineTask], resource_filter: dict[str, str] | None = None) -> None:
-        """Run all pipeline tasks with signal handling.
-        
-        This is the main entry point that sets up signal handling and runs
-        all tasks asynchronously.
-        
-        Args:
-            tasks: List of PipelineTask instances to execute
-            resource_filter: Optional dict mapping pipeline names to resource names to filter.
-                           If provided, only the specified resource will be run for each pipeline.
-                           Example: {"beefy_db_configs": "feebatch_harvests"}
-        """
-        with signals.intercepted_signals():
-            asyncio.run(self.run_async(tasks, resource_filter))
+            try:
+                source = await task.get_source()
+                # Filter to specific resource if requested for this pipeline
+                if resource_filter and task.pipeline.pipeline.pipeline_name in resource_filter:
+                    resource_name = resource_filter[task.pipeline.pipeline_name]
+                    source = source.with_resources(resource_name)
+
+                logger.info("Running pipeline %s", task.pipeline.pipeline_name)
+                if task.run_mode == "once":
+                    print(source)
+                    result = task.pipeline.run(source)
+                elif task.run_mode == "loop":
+                    iteration_count = 0
+                    while True:
+                        iteration_count += 1
+                        result = task.pipeline.run(source)
+                        if result.is_empty:
+                            logger.info("%s loop completed (reached end of data after %d iterations)", task.pipeline.pipeline_name, iteration_count)
+                            break
+                        logger.info("%s loop iteration %d completed", task.pipeline.pipeline_name, iteration_count)
+                else:
+                    raise ValueError(f"Invalid run_mode: {task.run_mode}")
+
+                logger.info("%s completed", task.pipeline.pipeline_name)
+            except Exception as e:
+                logger.error("Error occurred while running pipeline %s: %s", task.pipeline.pipeline_name, e)
+                exceptions.append(e)
+
+        if exceptions:
+            raise PipelineRunnerError(exceptions)
+
         logger.info("All pipelines completed successfully")
 
+  
+class PipelineRunnerError(Exception):
+    """Exception raised when an error occurs while running a pipeline."""
+    
+    def __init__(self, causes: list[Exception]):
+        self.causes = causes
+        super().__init__(f"Errors occurred while running pipelines: {causes}")
