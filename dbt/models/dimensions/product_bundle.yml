@@ -14,7 +14,22 @@ models:
             combination_of_columns:
               - chain_id
               - bundle_root_product_address
-
+      - relationships_array_multi_key:
+          name: relationships_reward_pool_addresses_token
+          arguments:
+            to: ref('reward_pool')
+            from_chain_column: chain_id
+            from_array_column: reward_pool_addresses
+            to_chain_column: chain_id
+            to_address_column: reward_pool_address
+      - relationships_array_multi_key:
+          name: relationships_classic_boost_addresses_token
+          arguments:
+            to: ref('classic_boost')
+            from_chain_column: chain_id
+            from_array_column: classic_boost_addresses
+            to_chain_column: chain_id
+            to_address_column: boost_address
     columns:
       - name: chain_id
         description: "Chain ID where the bundle exists"
