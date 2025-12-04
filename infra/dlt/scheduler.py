@@ -39,10 +39,10 @@ async def dlt_task():
         logger.error(f"Error running DLT pipeline: {e}", exc_info=True)
 
 
-if __name__ == "__main__":
+async def main():
+    """Main async function to run the scheduler."""
     logger.info("Starting DLT scheduler (runs every 5 minutes)...")
     
-
     scheduler = AsyncIOScheduler()
 
     # Schedule the pipeline to run every 5 minutes
@@ -55,7 +55,16 @@ if __name__ == "__main__":
         coalesce=True,   # Combine multiple pending runs into one
     )
 
-
     scheduler.start()
-    asyncio.get_event_loop().run_forever()
+    
+    # Keep the event loop running
+    try:
+        await asyncio.Event().wait()
+    except (KeyboardInterrupt, SystemExit):
+        logger.info("Shutting down scheduler...")
+        scheduler.shutdown()
+
+
+if __name__ == "__main__":
+    asyncio.run(main())
 
