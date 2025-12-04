@@ -74,14 +74,15 @@ def get_resource_filter(all_tasks: List[PipelineTask], resource: str | None = No
         )
         sys.exit(1)
     
-    return resource_filter
+    return tasks, resource_filter
 
 
 async def run_pipelines(resource: str | None = None):
     configure_env()
-    tasks = get_all_tasks()
-    resource_filter = get_resource_filter(tasks, resource)
+    tasks, resource_filter = get_resource_filter(get_all_tasks(), resource)
     await PipelineRunner().run(tasks, resource_filter=resource_filter)
+
+
 
 if __name__ == "__main__":
     # Get resource identifier from command-line argument if provided
