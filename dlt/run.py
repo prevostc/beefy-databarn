@@ -1,5 +1,6 @@
 from __future__ import annotations
 import logging
+from typing import List
 import sys
 import dlt
 from lib.config import configure_dlt, configure_clickhouse_destination, configure_beefy_db_source, configure_minio_filesystem_destination
@@ -10,24 +11,16 @@ from sources.beefy_api_snapshots import beefy_api_snapshots
 from sources.beefy_db import beefy_db_configs, beefy_db_incremental 
 
 
-def run_pipelines(resource: str | None = None):
-    """
-    Configure and run DLT pipelines.
-    This function can be called directly or imported by schedulers.
-    
-    Args:
-        resource: Optional resource identifier to run.
-                 Format: "pipeline_name" or "pipeline_name.resource_name"
-                 Examples: "beefy_db_configs" or "beefy_db_configs.feebatch_harvests"
-                 If None, runs all pipelines.
-                 Valid pipeline names: github_files, beefy_api_configs, beefy_api_snapshots,
-                                      beefy_db_configs, beefy_db_incremental
-    """
-    # Configure dlt from environment variables before creating pipelines
+def configure_env() -> None:
+    """Configure the environment for the DLT pipelines."""
     configure_dlt()
     configure_minio_filesystem_destination()
     configure_beefy_db_source()
     configure_clickhouse_destination()
+
+
+def get_all_tasks() -> List[PipelineTask]:
+    """Get the tasks to run."""
 
     # Pipeline configuration
     pipeline_args = {
@@ -37,12 +30,8 @@ def run_pipelines(resource: str | None = None):
         "staging": "filesystem",
     }
 
-    # Parse resource identifier if provided
-    pipeline_name, resource_name = resource.split(".", 1) if resource and "." in resource else (resource, None)
-    resource_filter = {pipeline_name: resource_name} if pipeline_name and resource_name else None
-
     # Define all available pipeline tasks (configuration is always the same)
-    all_tasks = [
+    return [
         PipelineTask(
             pipeline=dlt.pipeline("github_files", dataset_name="github_files", **pipeline_args),
             get_source=github_files,
@@ -70,7 +59,12 @@ def run_pipelines(resource: str | None = None):
         ),
     ]
 
+
+def get_resource_filter(all_tasks: List[PipelineTask], resource: str | None = None) -> dict[str, str] | None:
+    """Get the resource filter for the tasks."""
     # Filter tasks if a specific pipeline name is provided
+    pipeline_name, resource_name = resource.split(".", 1) if resource and "." in resource else (resource, None)
+    resource_filter = {pipeline_name: resource_name} if pipeline_name and resource_name else None
     tasks = [task for task in all_tasks if not pipeline_name or task.pipeline.pipeline_name == pipeline_name]
     if pipeline_name and not tasks:
         available_names = [task.pipeline.pipeline_name for task in all_tasks]
@@ -78,9 +72,24 @@ def run_pipelines(resource: str | None = None):
             f"Pipeline '{pipeline_name}' not found. Available pipelines: {', '.join(available_names)}"
         )
         sys.exit(1)
+    
+    return resource_filter
 
-    # Run selected tasks with optional resource filtering
+
+def run_pipelines(resource: str | None = None):
+    configure_env()
+    tasks = get_all_tasks()
+    resource_filter = get_resource_filter(tasks, resource)
     AsyncPipelineRunner().run(tasks, resource_filter=resource_filter)
+
+
+async def run_pipelines_async(resource: str | None = None):
+    configure_env()
+    tasks = get_all_tasks()
+    resource_filter = get_resource_filter(tasks, resource)
+    return await AsyncPipelineRunner().run_async(tasks, resource_filter=resource_filter)
+
+
 
 
 if __name__ == "__main__":
