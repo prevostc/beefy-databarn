@@ -65,4 +65,11 @@ models:
       - name: reward_pool_addresses
         description: "Array of reward pool contract addresses associated with this bundle"
         data_type: Array(String)
+        tests:
+          - not_null
+      - name: classic_boost_addresses
+        description: "Array of classic boost contract addresses associated with this bundle"
+        data_type: Array(String)
+        tests:
+          - not_null
 

@@ -1,0 +1,70 @@
+version: 2
+
+models:
+  - name: product_classic_boost
+    description: "Dimension table for classic boost product reference data. Provides boost metadata for joining with fact tables."
+    config:
+      contract:
+        enforced: true
+      meta:
+        primary_key: ["chain_id", "boost_address"]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - chain_id
+              - boost_address
+      - relationships_multi_key:
+          name: relationships_underlying_token_representation_address_token
+          arguments:
+            to: ref('token')
+            from_columns: ["chain_id", "underlying_token_representation_address"]
+            to_columns: ["chain_id", "representation_address"]
+      - relationships_multi_key:
+          name: relationships_reward_token_representation_address_token
+          arguments:
+            to: ref('token')
+            from_columns: ["chain_id", "reward_token_representation_address"]
+            to_columns: ["chain_id", "representation_address"]
+
+    columns:
+      - name: chain_id
+        description: "Chain ID where the boost exists"
+        data_type: Int64
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
+      - name: boost_address
+        description: "Boost contract address"
+        data_type: String
+        tests:
+          - not_null
+      - name: beefy_key
+        description: "Beefy-specific boost identifier"
+        data_type: String
+        tests:
+          - not_null
+      - name: display_name
+        description: "Boost display name"
+        data_type: String
+        tests:
+          - not_null
+      - name: is_active
+        description: "Whether the boost is currently active"
+        data_type: Bool
+        tests:
+          - not_null
+      - name: underlying_token_representation_address
+        description: "Underlying token contract address"
+        data_type: String
+        tests:
+          - not_null
+      - name: reward_token_representation_address
+        description: "Reward token contract address"
+        data_type: String
+        tests:
+          - not_null
+

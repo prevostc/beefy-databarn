@@ -41,7 +41,7 @@ models:
           - not_null
       - name: platform_id
         description: "Platform identifier"
-        data_type: String
+        data_type: Nullable(String)
         tests:
           - relationships:
               arguments:

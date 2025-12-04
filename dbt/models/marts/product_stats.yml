@@ -69,9 +69,8 @@ models:
           - not_null
       - name: platform_id
         description: "Platform identifier (foreign key to platform.platform_id)"
-        data_type: String
+        data_type: Nullable(String)
         tests:
-          - not_null
           - relationships:
               arguments:
                 to: ref('platform')

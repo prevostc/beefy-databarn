@@ -17,7 +17,8 @@ with clm_bundles as (
         clm.beefy_key as beefy_key,
         clm.display_name as display_name,
         clm.platform_id as platform_id,
-        groupArray(10)(DISTINCT reward_pool.reward_pool_address) as reward_pool_addresses
+        groupArray(10)(DISTINCT reward_pool.reward_pool_address) as reward_pool_addresses,
+        groupArray(10)(DISTINCT boost.boost_address) as classic_boost_addresses
     from {{ ref('product_clm') }} clm
     left join {{ ref('product_classic') }} classic
         on classic.chain_id = clm.chain_id
@@ -28,6 +29,9 @@ with clm_bundles as (
             reward_pool.underlying_product_address = clm.vault_address 
             or reward_pool.underlying_product_address = classic.vault_address
         )
+    left join {{ ref('product_classic_boost') }} boost
+        on boost.chain_id = clm.chain_id
+        and boost.underlying_token_representation_address = clm.vault_address
     group by 1,2,3,4,5,6,7
 ),
 classic_bundles as (
@@ -39,11 +43,15 @@ classic_bundles as (
         classic.beefy_key as beefy_key,
         classic.display_name as display_name,
         classic.platform_id as platform_id,
-        groupArray(10)(DISTINCT reward_pool.reward_pool_address) as reward_pool_addresses
+        groupArray(10)(DISTINCT reward_pool.reward_pool_address) as reward_pool_addresses,
+        groupArray(10)(DISTINCT boost.boost_address) as classic_boost_addresses
     from {{ ref('product_classic') }} classic
     left join {{ ref('product_reward_pool') }} reward_pool 
         on reward_pool.chain_id = classic.chain_id
         and reward_pool.underlying_product_address = classic.vault_address
+    left join {{ ref('product_classic_boost') }} boost
+        on boost.chain_id = classic.chain_id
+        and boost.underlying_token_representation_address = classic.vault_address
     where
         (classic.chain_id, classic.vault_address) not in (
             select chain_id, bundle_root_product_address

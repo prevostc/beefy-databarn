@@ -44,3 +44,15 @@ SELECT
     is_active,
     platform_id
 FROM {{ ref('product_reward_pool') }}
+
+UNION ALL
+
+SELECT
+    chain_id,
+    'boost' as product_type,
+    boost_address as product_address,
+    beefy_key,
+    display_name,
+    is_active,
+    null as platform_id
+FROM {{ ref('product_classic_boost') }}
