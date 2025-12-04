@@ -25,13 +25,15 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
+TASK_TIMEOUT = 60 * 30 # 30 minutes timeout max
 
-def run_dlt_pipeline():
+
+async def dlt_task():
     """Run the DLT pipeline by calling the reusable function from run.py."""
     try:
         logger.info("Starting DLT pipeline run...")
-        with signals.intercepted_signals():
-            asyncio.run(run_pipelines())
+        async with asyncio.timeout(TASK_TIMEOUT):
+            await run_pipelines()
         logger.info("DLT pipeline run completed successfully")
     except Exception as e:
         logger.error(f"Error running DLT pipeline: {e}", exc_info=True)
@@ -45,7 +47,7 @@ if __name__ == "__main__":
 
     # Schedule the pipeline to run every 5 minutes
     scheduler.add_job(
-        run_dlt_pipeline,
+        dlt_task,
         trigger=CronTrigger(minute="*/5"),
         id="dlt_pipeline",
         name="DLT Pipeline",
