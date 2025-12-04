@@ -135,7 +135,7 @@ ensure-dirs:
 
 # up (and build)
 up: ensure-dirs
-	docker compose -f docker-compose.yml up -d --build
+	docker compose -f docker-compose.yml up -d
 
 # down
 down:
