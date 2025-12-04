@@ -5,8 +5,8 @@
 }}
 
 SELECT
-  assumeNotNull(id) as id,
-  assumeNotNull(name) as name,
+  cast(id as String) as id,
+  ifNull(name, 'Unknown') as name,
   website,
   twitter,
   documentation,

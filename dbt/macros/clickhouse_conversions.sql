@@ -11,22 +11,22 @@
 {%- endmacro %}
 
 {% macro normalize_network_beefy_key(network) %}
-    assumeNotNull(replace(lower(trim({{ network }})), 'harmony', 'one'))
+    replace(lower(trim({{ network }})), 'harmony', 'one')
 {%- endmacro %}
 
 {% macro representation_native_evm_address() %}
-    assumeNotNull('0x0000000000000000000000000000000000000000')
+     '0x0000000000000000000000000000000000000000'
 {%- endmacro %}
 
 {% macro to_representation_evm_address(hex_string) %}
-    case 
-        --when length({{ hex_string }}) = 20 then assumeNotNull({{ hex_string }})
+    cast(case 
+        --when length({{ hex_string }}) = 20 then {{ hex_string }}
         when {{ hex_string }} is null then {{ representation_native_evm_address() }}
         when trim(lower({{ hex_string }})) = 'native' then {{ representation_native_evm_address() }}
         when trim(lower({{ hex_string }})) = 'null' then {{ representation_native_evm_address() }} 
         when trim(lower({{ hex_string }})) = '' then {{ representation_native_evm_address() }}
-        else assumeNotNull({{ evm_address(hex_string) }})
-    end
+        else {{ evm_address(hex_string) }}
+    end as String)
 {%- endmacro %}
 
 {% macro to_str_list(json_string) %}
@@ -51,3 +51,11 @@
     toDecimal256({{ value }}, 20)
 {%- endmacro %}
 
+{% macro if_null(value, default_value) %}
+    case 
+        when {{ value }} is null then {{ default_value }} 
+        when {{ value }} = '' then {{ default_value }} 
+        when {{ value }} = 'null' then {{ default_value }} 
+        else {{ value }} 
+    end
+{%- endmacro %}

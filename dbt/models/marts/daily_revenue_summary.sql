@@ -72,9 +72,9 @@ all_rows as (
 
 SELECT
   date_day as date_day,
-  assumeNotNull(coalesce(sum(yield_usd), 0)) as yield_usd,
-  assumeNotNull(coalesce(sum(revenue_usd), 0)) as revenue_usd,
-  assumeNotNull(coalesce(sum(bifi_buyback_usd), 0)) as bifi_buyback_usd
+  coalesce(sum(yield_usd), 0) as yield_usd,
+  coalesce(sum(revenue_usd), 0) as revenue_usd,
+  coalesce(sum(bifi_buyback_usd), 0) as bifi_buyback_usd
 FROM all_rows
 GROUP BY date_day
 ORDER BY date_day DESC

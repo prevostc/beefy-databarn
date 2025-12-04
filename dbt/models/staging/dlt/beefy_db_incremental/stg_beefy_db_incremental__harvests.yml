@@ -4,9 +4,9 @@ models:
   - name: stg_beefy_db_incremental__harvests
     description: "Staging model for harvest events from dlt beefy_db_incremental dataset"
     columns:
-      - name: chain_id
-        description: "Chain ID where the harvest occurred (references chain.chain_id)"
-        data_type: String
+      - name: network_id
+        description: "Network ID where the harvest occurred (references chain.network_id)"
+        data_type: Int64
         codec: Delta, LZ4
         tests:
           - not_null

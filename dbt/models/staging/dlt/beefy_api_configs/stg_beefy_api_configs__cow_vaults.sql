@@ -10,7 +10,7 @@ SELECT
   point_structure_ids,
   deposit_token_addresses,
   zaps,
-  assumeNotNull(id) as id,
+  cast(id as String) as id,
   name,
   token,
   token_address,

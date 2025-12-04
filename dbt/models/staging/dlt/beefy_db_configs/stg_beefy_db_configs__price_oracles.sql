@@ -5,8 +5,8 @@
 }}
 
 SELECT
-  assumeNotNull(id) as id,
-  assumeNotNull(oracle_id) as oracle_id,
-  assumeNotNull(tokens) as tokens
+  cast(id as String) as id,
+  cast(oracle_id as String) as oracle_id,
+  ifNull(tokens, '[]') as tokens
 FROM {{ source('dlt', 'beefy_db_configs___price_oracles') }}
 

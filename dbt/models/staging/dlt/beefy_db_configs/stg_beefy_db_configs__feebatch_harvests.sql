@@ -5,11 +5,11 @@
 }}
 
 SELECT
-  assumeNotNull(_dlt_id) as _dlt_id,
-  assumeNotNull(chain_id) as chain_id,
-  assumeNotNull(block_number) as block_number,
-  assumeNotNull(txn_timestamp) as txn_timestamp,
-  assumeNotNull({{ evm_transaction_hash('txn_hash') }}) as txn_hash,
+  cast(_dlt_id as String) as _dlt_id,
+  cast(chain_id as String) as chain_id,
+  cast(block_number as Int64) as block_number,
+  cast(txn_timestamp as DateTime('UTC')) as txn_timestamp,
+  {{ evm_transaction_hash('txn_hash') }} as txn_hash,
   {{ to_decimal('harvest_usd') }} as harvest_usd,
   {{ to_decimal('treasury_amt') }} as treasury_amt,
   {{ to_decimal('rewardpool_amt') }} as rewardpool_amt,

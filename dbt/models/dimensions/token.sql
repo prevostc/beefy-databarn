@@ -17,11 +17,11 @@ with tokens as (
     {{ to_representation_evm_address('tokens.address') }} as representation_address,
 
     case 
-      when tokens.type = 'erc20' then assumeNotNull(tokens.address) 
+      when tokens.type = 'erc20' then cast(tokens.address as String) 
       else null 
     end as erc20_address,
     
-    assumeNotNull(toBool(tokens.type = 'native')) as is_native,
+    ifNull(toBool(tokens.type = 'native'), false) as is_native,
 
     tokens.symbol,
     tokens.name,

@@ -17,7 +17,7 @@ SELECT
   vaults.id as beefy_key,
   vaults.name as display_name,
   vaults.platform_id as platform_id,
-  toBool(assumeNotNull(vaults.status = 'active')) as is_active,
+  toBool(ifNull(vaults.status = 'active', false)) as is_active,
   vaults.strategy as latest_strategy_address,
   vaults.token_address as lp_token_representation_address,
   arrayMap(x -> {{ to_representation_evm_address('x') }}, vaults.deposit_token_addresses) as underlying_token_representation_addresses

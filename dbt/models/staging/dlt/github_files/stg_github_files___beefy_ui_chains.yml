@@ -4,7 +4,7 @@ models:
   - name: stg_github_files___beefy_ui_chains
     description: "Staging model for beefy UI chains from dlt github_files dataset"
     columns:
-      - name: chain_id
+      - name: network_id
         description: "Chain identifier (primary key)"
         tests:
           - not_null

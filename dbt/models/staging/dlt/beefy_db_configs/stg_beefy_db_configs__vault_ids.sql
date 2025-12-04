@@ -5,7 +5,7 @@
 }}
 
 SELECT
-  assumeNotNull(id) as id,
-  assumeNotNull(vault_id) as vault_id
+  cast(id as String) as id,
+  cast(vault_id as String) as vault_id
 FROM {{ source('dlt', 'beefy_db_configs___vault_ids') }}
 

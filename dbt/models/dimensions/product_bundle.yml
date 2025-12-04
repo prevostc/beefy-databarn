@@ -1,0 +1,68 @@
+version: 2
+
+models:
+  - name: product_bundle
+    description: "Dimension table for product bundles that group related products (CLM, classic vaults, and reward pools) together. Provides bundle metadata for joining with fact tables."
+    config:
+      contract:
+        enforced: true
+      meta:
+        primary_key: ["chain_id", "bundle_root_product_address"]
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - chain_id
+              - bundle_root_product_address
+
+    columns:
+      - name: chain_id
+        description: "Chain ID where the bundle exists"
+        data_type: Int64
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
+      - name: bundle_root_product_address
+        description: "Root product contract address that defines the bundle (either CLM vault address or classic vault address)"
+        data_type: String
+        tests:
+          - not_null
+      - name: bundle_type
+        description: "Type of bundle: 'clm_bundle' or 'classic_bundle'"
+        data_type: String
+        tests:
+          - not_null
+          - accepted_values:
+              values:
+                - clm_bundle
+                - classic_bundle
+      - name: is_active
+        description: "Whether the bundle is currently active"
+        data_type: Bool
+        tests:
+          - not_null
+      - name: beefy_key
+        description: "Beefy-specific bundle/product identifier"
+        data_type: String
+        tests:
+          - not_null
+      - name: display_name
+        description: "Bundle display name"
+        data_type: String
+        tests:
+          - not_null
+      - name: platform_id
+        description: "Platform identifier"
+        data_type: String
+        tests:
+          - relationships:
+              arguments:
+                to: ref('platform')
+                field: platform_id
+      - name: reward_pool_addresses
+        description: "Array of reward pool contract addresses associated with this bundle"
+        data_type: Array(String)
+

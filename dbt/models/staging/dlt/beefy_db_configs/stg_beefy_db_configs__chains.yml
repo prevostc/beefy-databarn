@@ -4,7 +4,7 @@ models:
   - name: stg_beefy_db_configs__chains
     description: "Staging model for chains reference data from dlt beefy_db_configs dataset"
     columns:
-      - name: chain_id
+      - name: network_id
         description: "Unique identifier for the chain"
         tests:
           - not_null

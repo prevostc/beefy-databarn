@@ -8,7 +8,7 @@ SELECT
   assets,
   partners,
   period_finishes,
-  assumeNotNull(id) as id,
+  cast(id as String) as id,
   name,
   chain,
   pool_id,

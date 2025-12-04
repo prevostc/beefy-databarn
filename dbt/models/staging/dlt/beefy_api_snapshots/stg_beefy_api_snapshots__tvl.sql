@@ -5,10 +5,10 @@
 }}
 
 SELECT
-  assumeNotNull(etag) as etag,
-  toInt64(assumeNotNull(network_id)) as network_id,
-  assumeNotNull(vault_id) as vault_id,
-  assumeNotNull(tvl) as tvl,
-  assumeNotNull(date_time) as date_time
+  cast(etag as String) as etag,
+  cast(network_id as Int64) as network_id,
+  cast(vault_id as String) as vault_id,
+  toFloat64(tvl) as tvl,
+  cast(date_time as DateTime('UTC')) as date_time
 FROM {{ source('dlt', 'beefy_api_snapshots___tvl') }}
 

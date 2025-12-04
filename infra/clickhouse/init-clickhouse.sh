@@ -84,6 +84,7 @@ clickhouse-client \
 
 READ_PERM="SELECT"
 WRITE_PERM="INSERT, ALTER, CREATE TABLE, DROP TABLE, TRUNCATE, OPTIMIZE, CREATE DICTIONARY, DROP DICTIONARY"
+RESET_DB_PERM="DROP DATABASE, CREATE DATABASE"
 
 clickhouse-client \
   --user default \
@@ -164,7 +165,7 @@ clickhouse-client \
 
     -- envio-sync: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM envio;
-    GRANT ${READ_PERM}, ${WRITE_PERM} ON envio.* TO envio;
+    GRANT ${READ_PERM}, ${WRITE_PERM}, ${RESET_DB_PERM} ON envio.* TO envio;
 
     -------------------------------------------
     -- Settings profiles (env-synced)

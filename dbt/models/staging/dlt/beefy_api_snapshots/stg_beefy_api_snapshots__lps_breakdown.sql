@@ -5,9 +5,9 @@
 }}
 
 SELECT
-  assumeNotNull(etag) as etag,
-  assumeNotNull(vault_id) as vault_id,
-  assumeNotNull(date_time) as date_time,
+  cast(etag as String) as etag,
+  cast(vault_id as String) as vault_id,
+  cast(date_time as DateTime('UTC')) as date_time,
   toFloat64(price) as price,
   {{ to_representation_evm_address_list('tokens') }} as tokens,
   {{ to_decimal_list('balances') }} as balances,
