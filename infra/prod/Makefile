@@ -92,7 +92,7 @@ dbt: ensure-dirs
 		;; \
 		restart) \
 			echo "Restarting dbt..."; \
-			$(DC) restart dbt --force-recreate --build; \
+			$(DC) up -d --force-recreate --build dbt; \
 		;; \
 		run) \
 			echo "Running dbt..."; \
@@ -141,7 +141,7 @@ dlt:
 		;; \
 		restart) \
 			echo "Restarting dlt..."; \
-			$(DC) restart dlt --force-recreate --build; \
+			$(DC) up -d --force-recreate --build dlt; \
 		;; \
 		ps) \
 			echo "Showing dlt service status..."; \
@@ -185,7 +185,7 @@ clickhouse:
 		;; \
 		restart) \
 			echo "Restarting ClickHouse..."; \
-			$(DC) restart clickhouse --force-recreate --build; \
+			$(DC) up -d --force-recreate --build clickhouse; \
 		;; \
 		ps) \
 			echo "Showing ClickHouse service status..."; \
@@ -207,7 +207,7 @@ clickhouse:
 	esac
 
 # Prevent make from treating command arguments as targets
-run test client github_files tvls beefy_db beefy_api:
+run test client github_files tvls beefy_db beefy_api logs restart ps:
 	@:
 
 # Catch-all for any other resource/source names
