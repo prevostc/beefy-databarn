@@ -1,0 +1,26 @@
+import logging
+from typing import Any
+import dlt
+from .resources.beefy_db.harvests import get_beefy_db_harvests_resource
+from .resources.beefy_db.prices import get_beefy_db_prices_resource
+from .resources.beefy_db.tvls import get_beefy_db_tvls_resource
+from .resources.beefy_db.apys import get_beefy_db_apys_resource
+from .resources.beefy_db.tvl_by_chain import get_beefy_db_tvl_by_chain_resource
+from .resources.beefy_db.tables import get_beefy_db_other_tables_resources
+
+logger = logging.getLogger(__name__)
+
+@dlt.source(name="beefy_db", parallelized=True)
+async def beefy_db_source() -> Any:
+    """Expose Beefy DB resources for use by dlt pipelines."""
+
+    resources = [
+        await get_beefy_db_harvests_resource(),
+        await get_beefy_db_prices_resource(),
+        await get_beefy_db_tvls_resource(),
+        await get_beefy_db_apys_resource(),
+        await get_beefy_db_tvl_by_chain_resource(),
+    ]
+    resources.extend(get_beefy_db_other_tables_resources())
+
+    return resources

@@ -19,7 +19,7 @@ WITH bifi_buyback_daily AS (
     0 as yield_usd,
     0 as revenue_usd,
     sum(toDecimal256(bifi_amount * bifi_price, 20)) as bifi_buyback_usd
-  FROM {{ ref('stg_beefy_db_configs__bifi_buyback') }}
+  FROM {{ ref('stg_beefy_db__bifi_buyback') }}
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
     buyback_total IS NOT NULL
@@ -37,7 +37,7 @@ feebatch_revenue_daily AS (
     0 as yield_usd,
     sum(toDecimal256(treasury_amt, 20)) as revenue_usd,
     0 as bifi_buyback_usd
-  FROM {{ ref('stg_beefy_db_configs__feebatch_harvests') }}
+  FROM {{ ref('stg_beefy_db__feebatch_harvests') }}
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
     treasury_amt IS NOT NULL

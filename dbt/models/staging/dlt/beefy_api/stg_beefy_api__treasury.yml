@@ -1,0 +1,77 @@
+version: 2
+
+models:
+  - name: stg_beefy_api__treasury
+    description: "Staging model for treasury data from dlt beefy_api dataset"
+    columns:
+      - name: etag
+        description: "ETag for this data snapshot (part of primary key)"
+        tests:
+          - not_null
+      - name: chain_id
+        description: "Chain identifier (part of primary key)"
+        tests:
+          - not_null
+      - name: wallet_address
+        description: "Wallet address (part of primary key)"
+        tests:
+          - not_null
+      - name: token_address
+        description: "Token address (part of primary key)"
+        tests:
+          - not_null
+      - name: date_time
+        description: "Timestamp when this data was captured"
+        tests:
+          - not_null
+      - name: wallet_name
+        description: "Wallet name"
+      - name: token_decimals
+        description: "Token decimals"
+      - name: token_price
+        description: "Token price"
+      - name: usd_value
+        description: "USD value"
+      - name: balance
+        description: "Token balance"
+      - name: name
+        description: "Token name"
+      - name: address
+        description: "Token address (alternative)"
+      - name: decimals
+        description: "Token decimals (as string)"
+      - name: asset_type
+        description: "Asset type"
+      - name: oracle_id
+        description: "Oracle ID"
+      - name: oracle_type
+        description: "Oracle type"
+      - name: symbol
+        description: "Token symbol"
+      - name: price
+        description: "Token price (as string)"
+      - name: id
+        description: "Token ID"
+      - name: staked
+        description: "Whether token is staked"
+      - name: number_id
+        description: "Number ID"
+      - name: method
+        description: "Method"
+      - name: method_path
+        description: "Method path"
+      - name: vault_id
+        description: "Vault ID"
+      - name: price_per_full_share
+        description: "Price per full share"
+      - name: helper
+        description: "Helper information"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - etag
+              - chain_id
+              - wallet_address
+              - token_address
+

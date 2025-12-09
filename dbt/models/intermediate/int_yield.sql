@@ -24,7 +24,7 @@ WITH cleaned_yield AS (
     -- Calculate yield: underlying_amount_compounded * underlying_token_price_usd
     -- Cast result to Decimal256(20) to maintain full precision
     toDecimal256(harvest_amount * want_price, 20) as underlying_amount_compounded_usd
-  FROM {{ ref('stg_beefy_db_incremental__harvests') }}
+  FROM {{ ref('stg_beefy_db__harvests') }}
   WHERE
     -- Filter out invalid records (ensure yield data quality)
     harvest_amount IS NOT NULL

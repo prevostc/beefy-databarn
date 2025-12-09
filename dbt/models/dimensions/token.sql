@@ -31,7 +31,7 @@ with tokens as (
     -- type,
     -- bridge,
     -- staked
-  FROM {{ ref('stg_beefy_api_configs__tokens') }} tokens
+  FROM {{ ref('stg_beefy_api__tokens') }} tokens
   JOIN {{ ref('chain') }} chain_dim
     ON tokens.chain_beefy_key = chain_dim.beefy_key
 )

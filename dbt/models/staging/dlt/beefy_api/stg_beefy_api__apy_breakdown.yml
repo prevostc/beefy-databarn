@@ -1,0 +1,74 @@
+version: 2
+
+models:
+  - name: stg_beefy_api__apy_breakdown
+    description: "Staging model for APY breakdown from dlt beefy_api dataset"
+    columns:
+      - name: compoundings_per_year
+        description: "Number of compoundings per year"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: beefy_performance_fee
+        description: "Beefy performance fee"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
+      - name: lp_fee
+        description: "LP fee"
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1
+                inclusive: true
+      - name: total_apy
+        description: "Total APY"
+      - name: vault_apr
+        description: "Vault APR"
+      - name: trading_apr
+        description: "Trading APR"
+      - name: clm_apr
+        description: "CLM APR"
+      - name: reward_pool_apr
+        description: "Reward pool APR"
+      - name: reward_pool_trading_apr
+        description: "Reward pool trading APR"
+      - name: etag
+        description: "ETag for this data snapshot (part of primary key)"
+        tests:
+          - not_null
+      - name: vault_id
+        description: "Vault identifier (part of primary key)"
+        tests:
+          - not_null
+      - name: date_time
+        description: "Timestamp when this data was captured"
+        tests:
+          - not_null
+      - name: total_apy__v_text
+        description: "Total APY as text (variant column from dlt)"
+      - name: vault_apy
+        description: "Vault APY as text"
+      - name: liquid_staking_apr
+        description: "Liquid staking APR as text"
+      - name: composable_pool_apr
+        description: "Composable pool APR as text"
+      - name: vault_apr__v_text
+        description: "Vault APR as text (variant column from dlt)"
+      - name: merkl_apr
+        description: "Merkl APR as text"
+      - name: linea_ignition_apr
+        description: "Linea Ignition APR as text"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - etag
+              - vault_id
+

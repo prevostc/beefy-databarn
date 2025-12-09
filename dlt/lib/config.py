@@ -15,13 +15,22 @@ BATCH_SIZE = 1_000_000
 # Pipeline iteration timeout (in seconds)
 PIPELINE_ITERATION_TIMEOUT = int(os.environ.get("DLT_PIPELINE_ITERATION_TIMEOUT", "3600"))
 
+def configure_env() -> None:
+    """Configure the environment for the DLT pipelines."""
+    configure_dlt()
+    configure_minio_filesystem_destination()
+    configure_beefy_db_source()
+    configure_clickhouse_destination()
+
 def configure_dlt() -> None:
     """Configure dlt from environment variables."""
     # Set runtime configuration via environment variables
     if "RUNTIME__LOG_LEVEL" in os.environ:
         dlt.config["runtime.log_level"] = os.environ["RUNTIME__LOG_LEVEL"]
 
+    dlt.config["load.truncate_staging_dataset"] = True
     dlt.config["truncate_staging_dataset"] = True
+    os.environ['LOAD__TRUNCATE_STAGING_DATASET'] = 'true'
 
     os.environ['EXTRACT__WORKERS'] = "3"
     os.environ['EXTRACT__DATA_WRITER__DISABLE_COMPRESSION'] = 'true'

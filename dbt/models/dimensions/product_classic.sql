@@ -20,7 +20,7 @@ SELECT
   toBool(ifNull(vaults.status = 'active', false)) as is_active,
   vaults.strategy as latest_strategy_address,
   {{ to_representation_evm_address('vaults.token_address') }} as underlying_token_representation_address
-FROM {{ ref('stg_beefy_api_configs__vaults') }} vaults
+FROM {{ ref('stg_beefy_api__vaults') }} vaults
 LEFT JOIN {{ ref('chain') }} chain_dim
   ON vaults.network = chain_dim.beefy_key
 WHERE NOT vaults.is_gov_vault

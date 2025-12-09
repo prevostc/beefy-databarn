@@ -23,8 +23,7 @@ COPY dlt/ /app/dlt/
 
 # Copy infra scripts (scheduler is deployment-specific)
 COPY infra/dlt/scheduler.py /app/infra/dlt/scheduler.py
-COPY infra/dlt/run.py /app/infra/dlt/run.py
-RUN chmod +x /app/infra/dlt/scheduler.py /app/infra/dlt/run.py
+RUN chmod +x /app/infra/dlt/scheduler.py
 
 # Set working directory to dlt project
 WORKDIR /app/dlt

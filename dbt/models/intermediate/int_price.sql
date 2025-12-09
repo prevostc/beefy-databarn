@@ -16,8 +16,8 @@ prices_with_oracle_key AS (
     o.oracle_id AS oracle_key,
     p.t AS date_time,
     toDecimal256(p.val, 20) AS price
-  FROM {{ ref('stg_beefy_db_incremental__prices') }} p FINAL
-  INNER JOIN {{ ref('stg_beefy_db_configs__price_oracles') }} o
+  FROM {{ ref('stg_beefy_db__prices') }} p FINAL
+  INNER JOIN {{ ref('stg_beefy_db__price_oracles') }} o
     ON p.oracle_id = o.id
   WHERE NOT endsWith(o.oracle_id, '-rp') -- no need to keep -rp prices since they are duplicates of the base oracle
 )

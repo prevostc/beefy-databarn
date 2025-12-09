@@ -27,5 +27,5 @@ SELECT
   ui.gas_type,
   ui.eol_date_time
 FROM {{ ref('stg_github_files___beefy_ui_chains') }} ui
- LEFT JOIN {{ ref('stg_beefy_db_configs__chains') }} db
+ LEFT JOIN {{ ref('stg_beefy_db__chains') }} db
   ON ui.network_id = db.network_id

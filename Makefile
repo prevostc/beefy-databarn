@@ -1,17 +1,15 @@
 .PHONY: help setup start dev
 .PHONY: infra dbt dlt grafana clickhouse api deps-check
 
-# Load .env file if it exists
-ifneq (,$(wildcard ./.env))
-    include ./.env
-    export
-endif
-
 # Prevent execution in production (user "databarn")
 CURRENT_USER := $(shell whoami 2>/dev/null)
 ifeq ($(CURRENT_USER),databarn)
     $(error This Makefile should not be run in production. Use infra/prod/Makefile instead.)
 endif
+
+ROOT_DIR := $(shell pwd)
+DC := docker compose -f $(ROOT_DIR)/infra/dev/docker-compose.yml --env-file $(ROOT_DIR)/.env
+UV := uv run --env-file $(ROOT_DIR)/.env
 
 # Main help
 help: ## Show this help message
@@ -19,37 +17,12 @@ help: ## Show this help message
 	@echo ""
 	@echo "Usage: make <command> [subcommand]"
 	@echo ""
-	@echo "dlt:"
-	@echo "  make dlt run                    Run all dlt pipelines"
-	@echo "  make dlt run <resource>         Run a specific pipeline or resource"
-	@echo "                                  Examples: beefy_db_configs or beefy_db_configs.feebatch_harvests"
-	@echo ""
-	@echo "Infrastructure:"
-	@echo "  make infra start         Start infrastructure services (rebuilds if needed)"
-	@echo "  make infra build         Rebuild infrastructure images"
-	@echo "  make infra stop          Stop infrastructure services"
-	@echo "  make infra restart       Restart infrastructure services"
-	@echo "  make infra logs          View infrastructure logs"
-	@echo "  make infra ps            Show service status"
-	@echo ""
-	@echo "dbt:"
-	@echo "  make dbt run             Run dbt models"
-	@echo "  make dbt run <model>     Run a specific dbt model"
-	@echo "  make dbt test            Run dbt tests"
-	@echo "  make dbt compile         Compile dbt models"
-	@echo "  make dbt sql [<model>]   Show compiled SQL (optionally for specific model)"
-	@echo "  make dbt docs            Generate and serve documentation"
-	@echo ""
-	@echo "Grafana:"
-	@echo "  make grafana restart     Re-restart Grafana (reload configs)"
-	@echo ""
-	@echo "ClickHouse:"
-	@echo "  make clickhouse restart          Re-restart ClickHouse (reload configs)"
-	@echo "  make clickhouse client [<user>]  Open ClickHouse client shell (default user)"
-	@echo ""
-	@echo "API:"
-	@echo "  make api dev              Start API service in dev mode (with auto-reload)"
-	@echo ""
+	@$(MAKE) -s dlt help
+	@$(MAKE) -s infra help
+	@$(MAKE) -s dbt help
+	@$(MAKE) -s grafana help
+	@$(MAKE) -s clickhouse help
+	@$(MAKE) -s api help
 	@echo "Dependencies:"
 	@echo "  make deps-check          Check for outdated dependencies"
 	@echo ""
@@ -60,148 +33,145 @@ help: ## Show this help message
 
 # Infrastructure commands - using subcommands
 infra:
-	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "start" ]; then \
-		$(MAKE) -s _infra-start; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "build" ]; then \
-		$(MAKE) -s _infra-build; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "stop" ]; then \
-		$(MAKE) -s _infra-stop; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
-		$(MAKE) -s _infra-restart; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "logs" ]; then \
-		$(MAKE) -s _infra-logs; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "ps" ]; then \
-		$(MAKE) -s _infra-ps; \
-	else \
-		echo "Usage: make infra [start|build|stop|restart|logs|ps]"; \
-		exit 1; \
-	fi
-
-# Internal targets
-_infra-start:
-	@echo "Starting infrastructure services (rebuilding images if needed)..."
-	@docker compose -f infra/dev/docker-compose.yml up -d --build
-	@echo "✓ Infrastructure services started"
-	@$(MAKE) -s _print-urls
-
-_infra-build:
-	@echo "Rebuilding infrastructure images..."
-	@docker compose -f infra/dev/docker-compose.yml build
-	@echo "✓ Infrastructure images rebuilt"
-
-_infra-stop:
-	@echo "Stopping infrastructure services..."
-	@docker compose -f infra/dev/docker-compose.yml down
-
-_infra-logs:
-	@docker compose -f infra/dev/docker-compose.yml logs -f
-
-_infra-ps:
-	@docker compose -f infra/dev/docker-compose.yml ps
-
-_infra-restart:
-	@echo "Restarting infrastructure services..."
-	@docker compose -f infra/dev/docker-compose.yml restart
-	@echo "✓ Infrastructure services restarted"
-
-# Catch subcommands (prevents "No rule to make target" errors)
-start build stop logs ps:
-	@:
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		start) \
+			echo "Starting infrastructure services (rebuilding images if needed)..."; \
+			$(DC) up -d --build; \
+			echo "✓ Infrastructure services started"; \
+			$(MAKE) -s _print-urls \
+			;; \
+		build) \
+			echo "Rebuilding infrastructure images..."; \
+			$(DC) build; \
+			echo "✓ Infrastructure images rebuilt" \
+			;; \
+		stop) \
+			echo "Stopping infrastructure services..."; \
+			$(DC) down \
+			;; \
+		restart) \
+			echo "Restarting infrastructure services..."; \
+			$(DC) restart; \
+			echo "✓ Infrastructure services restarted" \
+			;; \
+		logs) \
+			$(DC) logs -f \
+			;; \
+		ps) \
+			$(DC) ps \
+			;; \
+		help|"") \
+			echo "Infrastructure:"; \
+			echo "  make infra start         Start infrastructure services (rebuilds if needed)"; \
+			echo "  make infra build         Rebuild infrastructure images"; \
+			echo "  make infra stop          Stop infrastructure services"; \
+			echo "  make infra restart       Restart infrastructure services"; \
+			echo "  make infra logs          View infrastructure logs"; \
+			echo "  make infra ps            Show service status"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make infra [start|build|stop|restart|logs|ps|help]"; \
+			exit 1 \
+			;; \
+	esac
 
 # dbt commands - using subcommands
 dbt:
-	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "run" ]; then \
-		$(MAKE) -s _dbt-run MODEL=""; \
-	elif [ "$(word 2,$(MAKECMDGOALS))" = "run" ]; then \
-		$(MAKE) -s _dbt-run MODEL="$(word 3,$(MAKECMDGOALS))"; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "test" ]; then \
-		$(MAKE) -s _dbt-test MODEL=""; \
-	elif [ "$(word 2,$(MAKECMDGOALS))" = "test" ]; then \
-		$(MAKE) -s _dbt-test MODEL="$(word 3,$(MAKECMDGOALS))"; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "compile" ]; then \
-		$(MAKE) -s _dbt-compile; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "sql" ]; then \
-		$(MAKE) -s _dbt-sql MODEL=""; \
-	elif [ "$(word 2,$(MAKECMDGOALS))" = "sql" ]; then \
-		$(MAKE) -s _dbt-sql MODEL="$(word 3,$(MAKECMDGOALS))"; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "docs" ]; then \
-		$(MAKE) -s _dbt-docs; \
-	else \
-		echo "Usage: make dbt [run [model]|test|compile|sql [model_name]|docs]"; \
-		exit 1; \
-	fi
-
-# Internal targets
-_dbt-run:
-	@if [ -n "$(MODEL)" ]; then \
-		echo "Running dbt model: $(MODEL)..."; \
-		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt run --select $(MODEL) --show-all-deprecations; \
-	else \
-		echo "Running dbt models..."; \
-		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt run --show-all-deprecations; \
-	fi
-
-_dbt-test:
-	@if [ -n "$(MODEL)" ]; then \
-		echo "Running dbt tests for model: $(MODEL)..."; \
-		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test --select $(MODEL) --write-json; \
-	else \
-		echo "Running dbt tests..."; \
-		cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt test --write-json; \
-	fi
-
-_dbt-compile:
-	@echo "Compiling dbt models..."
-	@cd dbt && unset VIRTUAL_ENV && uv run --env-file ../.env dbt compile
-
-_dbt-sql:
-	@echo "Compiling and showing SQL (no queries executed)..."
-	@cd dbt && \
-	if [ -n "$(MODEL)" ]; then \
-		unset VIRTUAL_ENV && uv run --env-file ../.env dbt compile --select $(MODEL) > /dev/null 2>&1 && \
-		COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$(MODEL).sql" -type f | head -1) && \
-		if [ -n "$$COMPILED_FILE" ]; then \
-			echo "=== Compiled SQL for $(MODEL) ===" && \
-			cat "$$COMPILED_FILE"; \
-		else \
-			echo "Error: Could not find compiled SQL for $(MODEL)"; \
-			exit 1; \
-		fi; \
-	else \
-		unset VIRTUAL_ENV && uv run --env-file ../.env dbt compile > /dev/null 2>&1 && \
-		echo "Compiled SQL files are in target/compiled/beefy_databarn/models/"; \
-		find target/compiled/beefy_databarn/models -name "*.sql" -type f | head -10; \
-	fi
-
-_dbt-docs:
-	@echo "Generating dbt documentation..."
-	@cd dbt && uv run --env-file ../.env dbt docs generate && uv run --env-file ../.env dbt docs serve
-
-# Catch subcommands
-run test compile sql docs:
-	@:
+	@cd dbt && unset VIRTUAL_ENV && \
+	SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	MODEL="$(word 3,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		run) \
+			if [ -n "$$MODEL" ]; then \
+				echo "Running dbt model: $$MODEL..."; \
+				$(UV) dbt run --select $$MODEL --show-all-deprecations; \
+			else \
+				echo "Running dbt models..."; \
+				$(UV) dbt run --show-all-deprecations; \
+			fi \
+			;; \
+		test) \
+			if [ -n "$$MODEL" ]; then \
+				echo "Running dbt tests for model: $$MODEL..."; \
+				$(UV) dbt test --select $$MODEL --write-json; \
+			else \
+				echo "Running dbt tests..."; \
+				$(UV) dbt test --write-json; \
+			fi \
+			;; \
+		compile) \
+			echo "Compiling dbt models..."; \
+			$(UV) dbt compile \
+			;; \
+		sql) \
+			echo "Compiling and showing SQL (no queries executed)..."; \
+			if [ -n "$$MODEL" ]; then \
+				$(UV) dbt compile --select $$MODEL > /dev/null 2>&1 && \
+				COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$$MODEL.sql" -type f | head -1) && \
+				if [ -n "$$COMPILED_FILE" ]; then \
+					echo "=== Compiled SQL for $$MODEL ===" && \
+					cat "$$COMPILED_FILE"; \
+				else \
+					echo "Error: Could not find compiled SQL for $$MODEL"; \
+					exit 1; \
+				fi; \
+			else \
+				$(UV) dbt compile > /dev/null 2>&1 && \
+				echo "Compiled SQL files are in target/compiled/beefy_databarn/models/"; \
+				find target/compiled/beefy_databarn/models -name "*.sql" -type f | head -10; \
+			fi \
+			;; \
+		docs) \
+			echo "Generating dbt documentation..."; \
+			$(UV) dbt docs generate && $(UV) dbt docs serve \
+			;; \
+		help|"") \
+			echo "dbt:"; \
+			echo "  make dbt run             Run dbt models"; \
+			echo "  make dbt run <model>     Run a specific dbt model"; \
+			echo "  make dbt test            Run dbt tests"; \
+			echo "  make dbt compile         Compile dbt models"; \
+			echo "  make dbt sql [<model>]   Show compiled SQL (optionally for specific model)"; \
+			echo "  make dbt docs            Generate and serve documentation"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make dbt [run [model]|test [model]|compile|sql [model_name]|docs|help]"; \
+			exit 1 \
+			;; \
+	esac
 
 # dlt commands - using subcommands
 dlt:
-	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "run" ]; then \
-		$(MAKE) -s _dlt-run RESOURCE=""; \
-	elif [ "$(word 2,$(MAKECMDGOALS))" = "run" ]; then \
-		$(MAKE) -s _dlt-run RESOURCE="$(word 3,$(MAKECMDGOALS))"; \
-	else \
-		echo "Usage: make dlt run <resource>"; \
-		echo "  resource can be a pipeline name (e.g., beefy_db_configs)"; \
-		echo "  or pipeline.resource (e.g., beefy_db_configs.feebatch_harvests)"; \
-		exit 1; \
-	fi
-
-_dlt-run:
-	@if [ -n "$(RESOURCE)" ]; then \
-		echo "Running dlt resource: $(RESOURCE)..."; \
-		cd dlt && unset VIRTUAL_ENV && uv run --env-file ../.env ./run.py $(RESOURCE); \
-	else \
-		echo "Running all dlt pipelines..."; \
-		cd dlt && unset VIRTUAL_ENV && uv run --env-file ../.env ./run.py; \
-	fi
+	@cd dlt && unset VIRTUAL_ENV && \
+	SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	RESOURCE="$(word 3,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		run) \
+			if [ -n "$$RESOURCE" ]; then \
+				echo "Running dlt resource: $$RESOURCE..."; \
+				$(UV) ./run.py $$RESOURCE; \
+			else \
+				echo "Running all dlt pipelines..."; \
+				$(UV) ./run.py; \
+			fi \
+			;; \
+		help|"") \
+			echo "dlt:"; \
+			echo "  make dlt run                    Run all dlt pipelines"; \
+			echo "  make dlt run <resource>         Run a specific pipeline or resource"; \
+			echo "                                  Examples: beefy_db or beefy_db.feebatch_harvests"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make dlt [run [resource]|help]"; \
+			echo "  resource can be a pipeline name (e.g., beefy_db)"; \
+			echo "  or pipeline.resource (e.g., beefy_db.feebatch_harvests)"; \
+			exit 1 \
+			;; \
+	esac
 
 # Catch unknown commands - show help and exit with error
 # Only show error if this is the first goal (not a model name or subcommand argument)
@@ -214,65 +184,77 @@ _dlt-run:
 	fi
 
 # Grafana commands - using subcommands
+gf: grafana # alias for grafana
 grafana:
-	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
-		$(MAKE) -s _grafana-restart; \
-	else \
-		echo "Usage: make grafana [restart]"; \
-		exit 1; \
-	fi
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		restart) \
+			echo "Re-restarting Grafana (restarting service to reload configs)..."; \
+			$(DC) restart grafana; \
+			echo "✓ Grafana re-restarted" \
+			;; \
+		help|"") \
+			echo "Grafana:"; \
+			echo "  make [grafana|gf] restart     Re-restart Grafana (reload configs)"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make [grafana|gf] [restart|help]"; \
+			exit 1 \
+			;; \
+	esac
 
-# Internal targets
-_grafana-restart:
-	@echo "Re-restarting Grafana (restarting service to reload configs)..."
-	@docker compose -f infra/dev/docker-compose.yml restart grafana
-	@echo "✓ Grafana re-restarted"
-
+# ClickHouse commands - using subcommands
+ch: clickhouse # alias for clickhouse
 clickhouse:
-	@if [ "$(filter-out $@,$(MAKECMDGOALS))" = "restart" ]; then \
-		$(MAKE) -s _clickhouse-restart; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "client" ]; then \
-		$(MAKE) -s _clickhouse-client USER=""; \
-	elif [ "$(word 2,$(MAKECMDGOALS))" = "client" ]; then \
-		$(MAKE) -s _clickhouse-client USER="$(word 3,$(MAKECMDGOALS))"; \
-	else \
-		echo "Usage: make clickhouse [restart|client [user]]"; \
-		exit 1; \
-	fi
-
-_clickhouse-restart:
-	@echo "Restarting ClickHouse..."
-	@docker compose -f infra/dev/docker-compose.yml restart clickhouse
-	@echo "✓ ClickHouse restarted"
-
-_clickhouse-client:
-	@if [ -n "$(USER)" ]; then \
-		echo "Opening ClickHouse client shell as user: $(USER)..."; \
-		docker compose -f infra/dev/docker-compose.yml exec clickhouse clickhouse-client --user $(USER); \
-	else \
-		echo "Opening ClickHouse client shell (default user)..."; \
-		docker compose -f infra/dev/docker-compose.yml exec clickhouse clickhouse-client; \
-	fi
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	USER="$(word 3,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		restart) \
+			echo "Restarting ClickHouse..."; \
+			$(DC) restart clickhouse; \
+			echo "✓ ClickHouse restarted" \
+			;; \
+		client) \
+			if [ -n "$$USER" ]; then \
+				echo "Opening ClickHouse client shell as user: $$USER..."; \
+				$(DC) exec clickhouse clickhouse-client --user $$USER; \
+			else \
+				echo "Opening ClickHouse client shell (default user)..."; \
+				$(DC) exec clickhouse clickhouse-client; \
+			fi \
+			;; \
+		help|"") \
+			echo "ClickHouse:"; \
+			echo "  make [clickhouse|ch] restart          Re-restart ClickHouse (reload configs)"; \
+			echo "  make [clickhouse|ch] client [<user>]  Open ClickHouse client shell (default user)"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make [clickhouse|ch] [restart|client [user]|help]"; \
+			exit 1 \
+			;; \
+	esac
 
 # API commands - using subcommands
 api:
-	@if [ "$@" != "$(firstword $(MAKECMDGOALS))" ]; then \
-		:; \
-	elif [ "$(filter-out $@,$(MAKECMDGOALS))" = "dev" ]; then \
-		$(MAKE) -s _api-dev; \
-	else \
-		echo "Usage: make api dev"; \
-		exit 1; \
-	fi
-
-# Internal targets
-_api-dev:
-	@echo "Starting API service in dev mode (with auto-reload)..."
-	@cd api && unset VIRTUAL_ENV && PYTHONPATH=.. uv run --env-file ../.env uvicorn main:app --host 0.0.0.0 --port 8080 --reload
-
-# Catch subcommands
-restart client:
-	@:
+	@cd api && unset VIRTUAL_ENV && \
+	SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		dev) \
+			echo "Starting API service in dev mode (with auto-reload)..."; \
+			$(UV) uvicorn main:app --host 0.0.0.0 --port 8080 --reload \
+			;; \
+		help|"") \
+			echo "API:"; \
+			echo "  make api dev              Start API service in dev mode (with auto-reload)"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make api [dev|help]"; \
+			exit 1 \
+			;; \
+	esac
 
 # Dependencies
 deps-check: ## Check for outdated dependencies
@@ -310,10 +292,10 @@ setup: ## Initial setup (copy .env, install deps)
 
 dev: ## Full development workflow (setup, start, run dbt)
 	@$(MAKE) -s setup
-	@$(MAKE) -s _infra-start
+	@$(MAKE) -s infra start
 	@echo "Waiting for services to be healthy..."
 	@sleep 10
-	@$(MAKE) -s _dbt-run
+	@$(MAKE) -s dbt run
 	@echo ""
 	@echo "✓ Development environment ready!"
 	@$(MAKE) -s _print-urls

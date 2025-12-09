@@ -28,5 +28,7 @@ dev = [
 package = false
 
 [dependency-groups]
-dev = []
+dev = [
+    "dlt[workspace]>=1.18.2",
+]
 

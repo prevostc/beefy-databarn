@@ -1,0 +1,21 @@
+version: 2
+
+models:
+  - name: stg_beefy_db__price_oracles
+    description: "Staging model for price oracle reference data from dlt beefy_db dataset"
+    columns:
+      - name: id
+        description: "Unique identifier for the price oracle"
+        tests:
+          - not_null
+          - unique
+      - name: oracle_id
+        description: "Oracle identifier string"
+        tests:
+          - not_null
+          - unique
+      - name: tokens
+        description: "Array of token addresses for this oracle"
+        tests:
+          - not_null
+

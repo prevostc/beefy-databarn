@@ -1,0 +1,51 @@
+version: 2
+
+models:
+  - name: stg_beefy_db__bifi_buyback
+    description: "Staging model for BIFI buyback events from dlt beefy_db dataset"
+    columns:
+      - name: id
+        description: "Unique identifier for the buyback event"
+        tests:
+          - not_null
+          - unique
+      - name: block_number
+        description: "Block number when the buyback transaction occurred"
+        tests:
+          - not_null
+      - name: txn_timestamp
+        description: "Timestamp when the buyback transaction occurred"
+        tests:
+          - not_null
+      - name: event_idx
+        description: "Event index within the transaction"
+        tests:
+          - not_null
+      - name: txn_hash
+        description: "Transaction hash"
+        tests:
+          - not_null
+      - name: bifi_amount
+        description: "Amount of BIFI tokens in the buyback"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: bifi_price
+        description: "Price of BIFI at the time of buyback"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true
+      - name: buyback_total
+        description: "Total buyback value (bifi_amount * bifi_price) - this is the revenue"
+        tests:
+          - not_null
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                inclusive: true

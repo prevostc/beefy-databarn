@@ -41,7 +41,7 @@ WITH tvl_data AS (
     NULL as underlying_liquidity,
     [] as underlying_balances,
     NULL as underlying_price
-  FROM {{ ref('stg_beefy_api_snapshots__tvl') }} t
+  FROM {{ ref('stg_beefy_api__tvl') }} t
   INNER JOIN {{ ref('product') }} p
     ON t.network_id = p.chain_id
     AND t.vault_id = p.beefy_key
@@ -75,7 +75,7 @@ apy_data AS (
     NULL as underlying_liquidity,
     [] as underlying_balances,
     NULL as underlying_price
-  FROM {{ ref('stg_beefy_api_snapshots__apy') }} a
+  FROM {{ ref('stg_beefy_api__apy') }} a
   INNER JOIN {{ ref('product') }} p
     ON a.vault_id = p.beefy_key
 ),
@@ -108,7 +108,7 @@ apy_breakdown_data AS (
     NULL as underlying_liquidity,
     [] as underlying_balances,
     NULL as underlying_price
-  FROM {{ ref('stg_beefy_api_snapshots__apy_breakdown') }} ab
+  FROM {{ ref('stg_beefy_api__apy_breakdown') }} ab
   INNER JOIN {{ ref('product') }} p
     ON ab.vault_id = p.beefy_key
 ),
@@ -141,7 +141,7 @@ lps_breakdown_data AS (
     lb.underlying_liquidity,
     lb.underlying_balances,
     lb.underlying_price
-  FROM {{ ref('stg_beefy_api_snapshots__lps_breakdown') }} lb
+  FROM {{ ref('stg_beefy_api__lps_breakdown') }} lb
   INNER JOIN {{ ref('product') }} p
     ON lb.vault_id = p.beefy_key
 ),

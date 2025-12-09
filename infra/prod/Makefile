@@ -4,14 +4,12 @@
 
 .PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt clickhouse
 
-# Load .env file from project root if it exists
-ifneq (,$(wildcard ../../.env))
-    include ../../.env
-    export
-endif
+# Paths and common commands
+ROOT_DIR := $(abspath ../..)
+DC := docker compose -f $(ROOT_DIR)/infra/prod/docker-compose.yml --env-file $(ROOT_DIR)/.env
+UV := uv run --env-file $(ROOT_DIR)/.env
 
-# Directories that need to exist for bind mounts
-# Use ?= to allow .env file to override, otherwise default to /mnt/data
+# Directories that need to exist for bind mounts (override via .env if present)
 STORAGE_DIR ?= /mnt/data
 DATA_DIRS := $(STORAGE_DIR)/clickhouse \
              $(STORAGE_DIR)/prometheus \
@@ -30,19 +28,12 @@ DATA_DIRS := $(STORAGE_DIR)/clickhouse \
 help:
 	@echo "Available commands:"
 	@echo ""
-	@echo "  make help              Show this help message (default)"
-	@echo "  make build [dbt|superset]  Build images (all or specific service)"
-	@echo "  make ps                Show running services"
-	@echo "  make logs              Show logs from all services"
-	@echo "  make up                Rolling update (deploy with no-downtime)"
-	@echo "  make deploy            Build and deploy"
-	@echo "  make restart <service> Restart a specific service (service name required)"
-	@echo "  make dbt run           Run dbt in the dbt container"
-	@echo "  make dbt test          Test dbt in the dbt container"
-	@echo "  make dlt run            Run dlt in the dlt container"
-	@echo "  make clickhouse client Open ClickHouse client"
-	@echo "  make ensure-dirs       Create required data directories"
-	@echo ""
+	@$(MAKE) -s build help
+	@$(MAKE) -s dbt help
+	@$(MAKE) -s dlt help
+	@$(MAKE) -s clickhouse help
+	@$(MAKE) -s infra help
+	@$(MAKE) -s misc help
 
 # Build images: make build [dbt|superset] or make build (all)
 # Usage: make build or make build dbt or make build superset
@@ -50,61 +41,21 @@ build:
 	@if [ -n "$(filter dbt superset,$(MAKECMDGOALS))" ]; then \
 		SERVICE=$(filter dbt superset,$(MAKECMDGOALS)); \
 		echo "Building $$SERVICE image..."; \
-		docker compose -f docker-compose.yml build $$SERVICE; \
+		$(DC) build $$SERVICE; \
 		echo "$$SERVICE image built successfully"; \
 	else \
 		echo "Building all images..."; \
-		docker compose -f docker-compose.yml build; \
+		$(DC) build; \
 		echo "All images built successfully"; \
 	fi
 
-# Run dbt: make dbt run or make dbt test
-# Usage: make dbt run or make dbt test
-dbt:
-	@if [ -n "$(filter run,$(MAKECMDGOALS))" ]; then \
-		echo "Running dbt..."; \
-		docker exec -it beefy-databarn-dbt-1 uv run dbt run; \
-	elif [ -n "$(filter test,$(MAKECMDGOALS))" ]; then \
-		echo "Testing dbt..."; \
-		docker exec -it beefy-databarn-dbt-1 uv run dbt test; \
-	else \
-		echo "Usage: make dbt run or make dbt test"; \
-		exit 1; \
-	fi
-
-# Run dlt: make dlt run
-# Usage: make dlt run
-dlt:
-	@if [ -n "$(filter run,$(MAKECMDGOALS))" ]; then \
-		echo "Running dlt..."; \
-		docker exec -it beefy-databarn-dlt-1 uv run /app/infra/dlt/run.py; \
-	else \
-		echo "Usage: make dlt run"; \
-		exit 1; \
-	fi
-
-# ClickHouse client: make clickhouse client
-# Usage: make clickhouse client
-clickhouse:
-	@if [ -n "$(filter client,$(MAKECMDGOALS))" ]; then \
-		echo "Opening ClickHouse client..."; \
-		docker exec -it beefy-databarn-clickhouse-1 clickhouse-client; \
-	else \
-		echo "Usage: make clickhouse client"; \
-		exit 1; \
-	fi
-
-# Prevent make from treating dbt/superset/run/test/client as targets
-%:
-	@:
-
 # Show running services
 ps:
-	docker compose -f docker-compose.yml ps
+	$(DC) ps
 
 # Show logs from all services
 logs:
-	docker compose -f docker-compose.yml logs -f
+	$(DC) logs -f
 
 # Restart services: make restart <service_name>
 # Usage: make restart <service_name>
@@ -116,8 +67,108 @@ restart:
 		exit 1; \
 	fi; \
 	echo "Restarting $$SERVICE..."; \
-	docker compose -f docker-compose.yml up -d $$SERVICE --force-recreate --build; \
+	$(DC) up -d $$SERVICE --force-recreate --build; \
 	echo "$$SERVICE restarted successfully"
+
+# up (and build)
+up: ensure-dirs
+	$(DC) up -d
+
+# down
+down:
+	$(DC) down
+
+# Run dbt: make dbt run or make dbt test
+# Usage: make dbt run or make dbt test
+dbt:
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		run) \
+			echo "Running dbt..."; \
+			MODEL="$(word 3,$(MAKECMDGOALS))" && \
+			if [ -n "$$MODEL" ]; then \
+				echo "Running dbt model: $$MODEL..."; \
+				$(DC) exec dbt uv run dbt run --select $$MODEL; \
+			else \
+				echo "Running all dbt models..."; \
+				$(DC) exec dbt uv run dbt run; \
+			fi; \
+			echo "dbt run completed successfully"; \
+		;; \
+		test) \
+			echo "Testing dbt..."; \
+			MODEL="$(word 3,$(MAKECMDGOALS))" && \
+			if [ -n "$$MODEL" ]; then \
+				echo "Testing dbt model: $$MODEL..."; \
+				$(DC) exec dbt uv run dbt test --select $$MODEL; \
+			else \
+				echo "Testing all dbt models..."; \
+				$(DC) exec dbt uv run dbt test; \
+			fi; \
+			echo "dbt test completed successfully"; \
+		;; \
+		help|"") \
+			echo "dbt:"; \
+			echo "  make dbt run [<model>]   Run dbt models"; \
+			echo "  make dbt test [<model>]   Run dbt tests"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make dbt [run [<model>]|test [<model>]|help]"; \
+			exit 1; \
+		;; \
+	esac
+
+# Run dlt: make dlt run
+# Usage: make dlt run
+dlt:
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		run) \
+			echo "Running dlt..."; \
+			PIPELINE="$(word 3,$(MAKECMDGOALS))" && \
+			if [ -n "$$PIPELINE" ]; then \
+				echo "Running dlt pipeline: $$PIPELINE..."; \
+				$(DC) exec dlt uv run /app/dlt/$$PIPELINE.py; \
+			else \
+				echo "Usage: make dlt run <pipeline>"; \
+				exit 1; \
+			fi; \
+		;; \
+		help|"") \
+			echo "dlt:"; \
+			echo "  make dlt run [<pipeline>]   Run dlt pipeline"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make dlt [run [<pipeline>]|help]"; \
+			exit 1; \
+		;; \
+	esac
+
+# ClickHouse client: make clickhouse client
+# Usage: make clickhouse client
+clickhouse:
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		client) \
+			echo "Opening ClickHouse client..."; \
+			$(DC) exec clickhouse clickhouse-client; \
+		;; \
+		help|"") \
+			echo "clickhouse:"; \
+			echo "  make clickhouse client   Open ClickHouse client"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make clickhouse [client|help]"; \
+			exit 1; \
+		;; \
+	esac
+
+# Prevent make from treating dbt/superset/run/test/client as targets
+%:
+	@:
 
 # Ensure required directories exist for bind mounts
 ensure-dirs:
@@ -132,14 +183,6 @@ ensure-dirs:
 		fi; \
 	done
 	@echo "✓ All required directories created"
-
-# up (and build)
-up: ensure-dirs
-	docker compose -f docker-compose.yml up -d
-
-# down
-down:
-	docker compose -f docker-compose.yml down
 
 
 # Build and deploy

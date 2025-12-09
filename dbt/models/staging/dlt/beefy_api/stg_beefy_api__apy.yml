@@ -1,0 +1,31 @@
+version: 2
+
+models:
+  - name: stg_beefy_api__apy
+    description: "Staging model for APY data from dlt beefy_api dataset"
+    columns:
+      - name: apy
+        description: "Annual percentage yield"
+        tests:
+          - not_null
+      - name: etag
+        description: "ETag for this data snapshot (part of primary key)"
+        tests:
+          - not_null
+      - name: vault_id
+        description: "Vault identifier (part of primary key)"
+        tests:
+          - not_null
+      - name: date_time
+        description: "Timestamp when this data was captured"
+        tests:
+          - not_null
+      - name: apy__v_text
+        description: "APY as text (variant column from dlt)"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - etag
+              - vault_id
+

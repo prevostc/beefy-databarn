@@ -1,21 +1,15 @@
 #!/usr/bin/env python3
 """
 Scheduler for DLT pipelines using APScheduler.
-Runs the DLT pipeline every 5 minutes.
+Runs three separate DLT pipelines on different schedules.
 """
 from __future__ import annotations
 import logging
 import asyncio
-import sys
-from dlt.common.runtime import signals
+import subprocess
+from pathlib import Path
 from apscheduler.schedulers.asyncio import AsyncIOScheduler
 from apscheduler.triggers.cron import CronTrigger
-
-# Add dlt directory to path for imports (scheduler is in infra/dlt, dlt code is in /app/dlt)
-sys.path.insert(0, "/app/dlt")
-
-# Import the pipeline runner function from run.py
-from run import run_pipelines
 
 # Configure logging
 logging.basicConfig(
@@ -25,32 +19,95 @@ logging.basicConfig(
 )
 logger = logging.getLogger(__name__)
 
-TASK_TIMEOUT = 60 * 30 # 30 minutes timeout max
+TASK_TIMEOUT = 60 * 30  # 30 minutes timeout max
 
+# Path to the dlt directory (assuming scheduler runs from /app/infra/dlt, dlt code is in /app/dlt)
+DLT_DIR = Path("/app/dlt")
 
-async def dlt_task():
-    """Run the DLT pipeline by calling the reusable function from run.py."""
+async def run_pipeline_script(script_name: str):
+    """Run a pipeline script using uv run."""
+    process = None
     try:
-        logger.info("Starting DLT pipeline run...")
+        logger.info(f"Starting {script_name} pipeline run...")
+        # Change to the dlt directory and run the script
+        process = await asyncio.create_subprocess_exec(
+            "uv", "run", f"./{script_name}",
+            cwd=str(DLT_DIR),
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+        )
+        
         async with asyncio.timeout(TASK_TIMEOUT):
-            await run_pipelines()
-        logger.info("DLT pipeline run completed successfully")
-    except Exception as e:
-        logger.error(f"Error running DLT pipeline: {e}", exc_info=True)
+            stdout, stderr = await process.communicate()
+        
+        if process.returncode == 0:
+            logger.info(f"{script_name} pipeline run completed successfully")
+            if stdout:
+                logger.debug(f"{script_name} stdout: {stdout.decode()}")
+        else:
+            logger.error(f"{script_name} pipeline failed with return code {process.returncode}")
+            if stderr:
+                logger.error(f"{script_name} stderr: {stderr.decode()}")
+            if stdout:
+                logger.error(f"{script_name} stdout: {stdout.decode()}")
+    finally:
+        # Kill process if it's still running (timeout or other error)
+        if process and process.returncode is None:
+            logger.warning(f"Killing {script_name} process...")
+            try:
+                process.kill()
+                await asyncio.wait_for(process.wait(), timeout=30)
+            except asyncio.TimeoutError:
+                logger.error(f"Process {script_name} did not terminate after kill signal")
+
+
+async def beefy_api_task():
+    """Run the beefy_api pipeline."""
+    await run_pipeline_script("beefy_api_pipeline.py")
+
+
+async def beefy_db_task():
+    """Run the beefy_db pipeline."""
+    await run_pipeline_script("beefy_db_pipeline.py")
+
+
+async def github_files_task():
+    """Run the github_files pipeline."""
+    await run_pipeline_script("github_files_pipeline.py")
 
 
 async def main():
     """Main async function to run the scheduler."""
-    logger.info("Starting DLT scheduler (runs every 5 minutes)...")
+    logger.info("Starting DLT scheduler with 3 pipeline tasks...")
     
     scheduler = AsyncIOScheduler()
 
-    # Schedule the pipeline to run every 5 minutes
+    # Schedule beefy_api pipeline to run every 5 minutes at :00, :05, :10, etc.
     scheduler.add_job(
-        dlt_task,
-        trigger=CronTrigger(minute="*/5"),
-        id="dlt_pipeline",
-        name="DLT Pipeline",
+        beefy_api_task,
+        trigger=CronTrigger(minute="0/5"),
+        id="beefy_api_pipeline",
+        name="Beefy API Pipeline",
+        max_instances=1,  # Prevent overlapping runs
+        coalesce=True,   # Combine multiple pending runs into one
+    )
+
+    # Schedule beefy_db pipeline to run every 5 minutes at :01, :06, :11, etc.
+    scheduler.add_job(
+        beefy_db_task,
+        trigger=CronTrigger(minute="1/5"),
+        id="beefy_db_pipeline",
+        name="Beefy DB Pipeline",
+        max_instances=1,  # Prevent overlapping runs
+        coalesce=True,   # Combine multiple pending runs into one
+    )
+
+    # Schedule github_files pipeline to run every 5 minutes at :02, :07, :12, etc.
+    scheduler.add_job(
+        github_files_task,
+        trigger=CronTrigger(minute="2/5"),
+        id="github_files_pipeline",
+        name="GitHub Files Pipeline",
         max_instances=1,  # Prevent overlapping runs
         coalesce=True,   # Combine multiple pending runs into one
     )
