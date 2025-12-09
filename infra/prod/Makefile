@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api
+.PHONY: help build ps logs deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api
 
 # Paths and common commands
 ROOT_DIR := $(abspath ../..)
@@ -35,61 +35,60 @@ help:
 	@$(MAKE) -s infra help
 	@$(MAKE) -s misc help
 
-# Build images: make build [dbt|superset] or make build (all)
-# Usage: make build or make build dbt or make build superset
-build:
-	@if [ -n "$(filter dbt superset,$(MAKECMDGOALS))" ]; then \
-		SERVICE=$(filter dbt superset,$(MAKECMDGOALS)); \
-		echo "Building $$SERVICE image..."; \
-		$(DC) build $$SERVICE; \
-		echo "$$SERVICE image built successfully"; \
-	else \
-		echo "Building all images..."; \
-		$(DC) build; \
-		echo "All images built successfully"; \
-	fi
 
-# Show running services
-ps:
-	$(DC) ps
-
-# Show logs from all services
-logs:
-	@SERVICE=$(filter-out logs,$(MAKECMDGOALS)); \
-	if [ -n "$$SERVICE" ]; then \
-		echo "Showing logs for $$SERVICE..."; \
-		$(DC) logs -f $$SERVICE; \
-	else \
-		echo "Showing logs for all services..."; \
-		$(DC) logs -f; \
-	fi;
-
-# Restart services: make restart <service_name>
-# Usage: make restart <service_name>
-restart:
-	@SERVICE=$(filter-out restart,$(MAKECMDGOALS)); \
-	if [ -z "$$SERVICE" ]; then \
-		echo "Error: Service name is required"; \
-		echo "Usage: make restart <service_name>"; \
-		exit 1; \
-	fi; \
-	echo "Restarting $$SERVICE..."; \
-	$(DC) up -d $$SERVICE --force-recreate --build; \
-	echo "$$SERVICE restarted successfully"
-
-# up (and build)
-up: ensure-dirs
-	$(DC) up -d
-
-# down
-down:
-	$(DC) down
+infra: ensure-dirs
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		start) \
+			echo "Starting infrastructure services (rebuilding images if needed)..."; \
+			$(DC) up -d --build; \
+			echo "✓ Infrastructure services started"; \
+			$(MAKE) -s _print-urls \
+			;; \
+		stop) \
+			echo "Stopping infrastructure services..."; \
+			$(DC) down; \
+			echo "✓ Infrastructure services stopped"; \
+			;; \
+		restart) \
+			echo "Restarting infrastructure services..."; \
+			$(DC) restart; \
+			echo "✓ Infrastructure services restarted"; \
+			;; \
+		logs) \
+			$(DC) logs -f; \
+			;; \
+		ps) \
+			$(DC) ps; \
+			;; \
+		help|"") \
+			echo "infra:"; \
+			echo "  make infra start         Start infrastructure services (rebuilds if needed)"; \
+			echo "  make infra stop          Stop infrastructure services"; \
+			echo "  make infra restart       Restart infrastructure services"; \
+			echo "  make infra logs          View infrastructure logs"; \
+			echo "  make infra ps            Show service status"; \
+			echo "" \
+			;; \
+		*) \
+			echo "Usage: make infra [start|stop|restart|logs|ps|help]"; \
+			exit 1; \
+		;; \
+	esac
 
 # Run dbt: make dbt run or make dbt test
 # Usage: make dbt run or make dbt test
-dbt:
+dbt: ensure-dirs
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
+		logs) \
+			echo "$$SUBCMD dbt..."; \
+			$(DC) exec dbt logs -f; \
+		;; \
+		restart) \
+			echo "Restarting dbt..."; \
+			$(DC) restart dbt --force-recreate --build; \
+		;; \
 		run) \
 			echo "Running dbt..."; \
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \
@@ -131,6 +130,18 @@ dbt:
 dlt:
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
+		logs) \
+			echo "Showing dlt logs..."; \
+			$(DC) exec dlt logs -f; \
+		;; \
+		restart) \
+			echo "Restarting dlt..."; \
+			$(DC) restart dlt --force-recreate --build; \
+		;; \
+		ps) \
+			echo "Showing dlt service status..."; \
+			$(DC) ps dlt; \
+		;; \
 		run) \
 			echo "Running dlt..."; \
 			SOURCE="$(word 3,$(MAKECMDGOALS))" && \
@@ -163,6 +174,18 @@ ch: clickhouse # alias for clickhouse
 clickhouse:
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
+		logs) \
+			echo "Showing ClickHouse logs..."; \
+			$(DC) exec clickhouse logs -f; \
+		;; \
+		restart) \
+			echo "Restarting ClickHouse..."; \
+			$(DC) restart clickhouse --force-recreate --build; \
+		;; \
+		ps) \
+			echo "Showing ClickHouse service status..."; \
+			$(DC) ps clickhouse; \
+		;; \
 		client) \
 			echo "Opening ClickHouse client..."; \
 			$(DC) exec clickhouse clickhouse-client; \
@@ -199,9 +222,4 @@ ensure-dirs:
 		fi; \
 	done
 	@echo "✓ All required directories created"
-
-
-# Build and deploy
-deploy: build
-	@$(MAKE) -s up
 

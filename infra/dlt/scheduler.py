@@ -55,6 +55,17 @@ async def run_pipeline_script(script_name: str):
             except asyncio.TimeoutError:
                 logger.error(f"Process {script_name} did not terminate after kill signal")
 
+async def beefy_api_pipeline():
+    """Run the beefy_api pipeline."""
+    await run_pipeline_script("beefy_api_pipeline.py")
+
+async def beefy_db_pipeline():
+    """Run the beefy_db pipeline."""
+    await run_pipeline_script("beefy_db_pipeline.py")
+
+async def github_files_pipeline():
+    """Run the github_files pipeline."""
+    await run_pipeline_script("github_files_pipeline.py")
 
 async def main():
     """Main async function to run the scheduler."""
@@ -64,7 +75,7 @@ async def main():
 
     # Schedule beefy_api pipeline to run every 5 minutes at :00, :05, :10, etc.
     scheduler.add_job(
-        lambda: run_pipeline_script("beefy_api_pipeline.py"),
+        beefy_api_pipeline,
         trigger=CronTrigger(minute="0/5"),
         id="beefy_api_pipeline",
         name="Beefy API Pipeline",
@@ -74,7 +85,7 @@ async def main():
 
     # Schedule beefy_db pipeline to run every 5 minutes at :01, :06, :11, etc.
     scheduler.add_job(
-        lambda: run_pipeline_script("beefy_db_pipeline.py"),
+        beefy_db_pipeline,
         trigger=CronTrigger(minute="1/5"),
         id="beefy_db_pipeline",
         name="Beefy DB Pipeline",
@@ -84,7 +95,7 @@ async def main():
 
     # Schedule github_files pipeline to run every 5 minutes at :02, :07, :12, etc.
     scheduler.add_job(
-        lambda: run_pipeline_script("github_files_pipeline.py"),
+        github_files_pipeline,
         trigger=CronTrigger(minute="2/5"),
         id="github_files_pipeline",
         name="GitHub Files Pipeline",
