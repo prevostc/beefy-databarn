@@ -191,7 +191,7 @@ clickhouse:
 			echo "Showing ClickHouse service status..."; \
 			$(DC) ps clickhouse; \
 		;; \
-		client) \
+		client|cli) \
 			echo "Opening ClickHouse client..."; \
 			$(DC) exec clickhouse clickhouse-client; \
 		;; \

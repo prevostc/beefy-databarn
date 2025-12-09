@@ -96,7 +96,7 @@ async def get_beefy_db_apys_resource() -> Any:
             {"name": "t", "nullable": False },
 
             # make sure metrics have enough precision, Decimal256(20) -> Decimal(76, 20)
-            {"name": "val", "data_type": "float64"},
+            {"name": "val", "data_type": "double"},
         ]
     )
 
