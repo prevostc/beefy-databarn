@@ -83,22 +83,22 @@ async def main():
         coalesce=True,   # Combine multiple pending runs into one
     )
 
-    # Schedule beefy_db pipeline to run every 5 minutes at :01, :06, :11, etc.
+    # Schedule github_files pipeline to run every 5 minutes at :01, :06, :11, etc.
     scheduler.add_job(
-        beefy_db_pipeline,
+        github_files_pipeline,
         trigger=CronTrigger(minute="1/5"),
-        id="beefy_db_pipeline",
-        name="Beefy DB Pipeline",
+        id="github_files_pipeline",
+        name="GitHub Files Pipeline",
         max_instances=1,  # Prevent overlapping runs
         coalesce=True,   # Combine multiple pending runs into one
     )
 
-    # Schedule github_files pipeline to run every 5 minutes at :02, :07, :12, etc.
+    # Schedule beefy_db pipeline to run every 5 minutes at :02, :07, :12, etc.
     scheduler.add_job(
-        github_files_pipeline,
+        beefy_db_pipeline,
         trigger=CronTrigger(minute="2/5"),
-        id="github_files_pipeline",
-        name="GitHub Files Pipeline",
+        id="beefy_db_pipeline",
+        name="Beefy DB Pipeline",
         max_instances=1,  # Prevent overlapping runs
         coalesce=True,   # Combine multiple pending runs into one
     )
