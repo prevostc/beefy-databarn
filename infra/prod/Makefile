@@ -39,9 +39,14 @@ help:
 infra: ensure-dirs
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
+		build) \
+			echo "Rebuilding infrastructure images..."; \
+			$(DC) build; \
+			echo "✓ Infrastructure images rebuilt"; \
+			;; \
 		start|up) \
 			echo "Starting infrastructure services (rebuilding images if needed)..."; \
-			$(DC) up -d --build; \
+			$(DC) up -d; \
 			echo "✓ Infrastructure services started"; \
 			$(MAKE) -s _print-urls \
 			;; \
