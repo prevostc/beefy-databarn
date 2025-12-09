@@ -147,41 +147,36 @@ dbt:
 dlt:
 	@cd dlt && unset VIRTUAL_ENV && \
 	SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
-	RESOURCE="$(word 3,$(MAKECMDGOALS))" && \
+	SOURCE="$(word 3,$(MAKECMDGOALS))" && \
+	RESOURCE="$(word 4,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
 		run) \
-			if [ -n "$$RESOURCE" ]; then \
-				echo "Running dlt resource: $$RESOURCE..."; \
-				$(UV) ./run.py $$RESOURCE; \
+			if [ -n "$$RESOURCE" ] && [ -n "$$SOURCE" ]; then \
+				echo "Running dlt source: $$SOURCE, resource: $$RESOURCE..."; \
+				$(UV) ./$${SOURCE}_pipeline.py $$RESOURCE; \
+			elif [ -n "$$SOURCE" ]; then \
+				echo "Running dlt source: $$SOURCE..."; \
+				$(UV) ./$${SOURCE}_pipeline.py; \
 			else \
-				echo "Running all dlt pipelines..."; \
-				$(UV) ./run.py; \
+				echo "Usage: make dlt run <source> [resource]"; \
+				exit 1; \
 			fi \
 			;; \
 		help|"") \
 			echo "dlt:"; \
 			echo "  make dlt run                    Run all dlt pipelines"; \
-			echo "  make dlt run <resource>         Run a specific pipeline or resource"; \
-			echo "                                  Examples: beefy_db or beefy_db.feebatch_harvests"; \
+			echo "  make dlt run <source> [resource]         Run a specific pipeline or resource"; \
+			echo "                                  Examples: beefy_db vaults, beefy_api tokens"; \
 			echo "" \
 			;; \
 		*) \
-			echo "Usage: make dlt [run [resource]|help]"; \
-			echo "  resource can be a pipeline name (e.g., beefy_db)"; \
-			echo "  or pipeline.resource (e.g., beefy_db.feebatch_harvests)"; \
+			echo "Usage: make dlt [run [source] [resource]|help]"; \
+			echo "  source can be a source name (e.g., beefy_db, beefy_api, github_files)"; \
+			echo "  resource can be a resource name (e.g., feebatch_harvests, vaults, tokens, ...)"; \
 			exit 1 \
 			;; \
 	esac
 
-# Catch unknown commands - show help and exit with error
-# Only show error if this is the first goal (not a model name or subcommand argument)
-%:
-	@if [ "$@" = "$(firstword $(MAKECMDGOALS))" ]; then \
-		echo "Error: Unknown command '$@'" >&2; \
-		echo "" >&2; \
-		$(MAKE) -s help >&2; \
-		exit 1; \
-	fi
 
 # Grafana commands - using subcommands
 gf: grafana # alias for grafana

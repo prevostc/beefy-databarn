@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt clickhouse
+.PHONY: help build ps logs up deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api
 
 # Paths and common commands
 ROOT_DIR := $(abspath ../..)
@@ -55,7 +55,14 @@ ps:
 
 # Show logs from all services
 logs:
-	$(DC) logs -f
+	@SERVICE=$(filter-out logs,$(MAKECMDGOALS)); \
+	if [ -n "$$SERVICE" ]; then \
+		echo "Showing logs for $$SERVICE..."; \
+		$(DC) logs -f $$SERVICE; \
+	else \
+		echo "Showing logs for all services..."; \
+		$(DC) logs -f; \
+	fi;
 
 # Restart services: make restart <service_name>
 # Usage: make restart <service_name>
@@ -126,12 +133,16 @@ dlt:
 	case "$$SUBCMD" in \
 		run) \
 			echo "Running dlt..."; \
-			PIPELINE="$(word 3,$(MAKECMDGOALS))" && \
-			if [ -n "$$PIPELINE" ]; then \
-				echo "Running dlt pipeline: $$PIPELINE..."; \
-				$(DC) exec dlt uv run /app/dlt/$$PIPELINE.py; \
+			SOURCE="$(word 3,$(MAKECMDGOALS))" && \
+			RESOURCE="$(word 4,$(MAKECMDGOALS))" && \
+			if [ -n "$$RESOURCE" ] && [ -n "$$SOURCE" ]; then \
+				echo "Running dlt source: $$SOURCE, resource: $$RESOURCE..."; \
+				$(DC) exec dlt uv run /app/dlt/$${SOURCE}_pipeline.py $$RESOURCE; \
+			elif [ -n "$$SOURCE" ]; then \
+				echo "Running dlt source: $$SOURCE..."; \
+				$(DC) exec dlt uv run /app/dlt/$${SOURCE}_pipeline.py; \
 			else \
-				echo "Usage: make dlt run <pipeline>"; \
+				echo "Usage: make dlt run <source> [resource]"; \
 				exit 1; \
 			fi; \
 		;; \
@@ -148,6 +159,7 @@ dlt:
 
 # ClickHouse client: make clickhouse client
 # Usage: make clickhouse client
+ch: clickhouse # alias for clickhouse
 clickhouse:
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
@@ -166,7 +178,11 @@ clickhouse:
 		;; \
 	esac
 
-# Prevent make from treating dbt/superset/run/test/client as targets
+# Prevent make from treating command arguments as targets
+run test client github_files tvls beefy_db beefy_api:
+	@:
+
+# Catch-all for any other resource/source names
 %:
 	@:
 
