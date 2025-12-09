@@ -1,4 +1,4 @@
-.PHONY: help setup start dev run test client github_files tvls beefy_db beefy_api logs restart ps build stop help
+.PHONY: help setup start dev run test client github_files tvls beefy_db beefy_api logs restart ps build stop help loop
 .PHONY: infra dbt dlt grafana clickhouse api deps-check
 
 # Prevent execution in production (user "databarn")
@@ -159,6 +159,15 @@ dlt:
 				$(UV) ./$${SOURCE}_pipeline.py; \
 			else \
 				echo "Usage: make dlt run <source> [resource]"; \
+				exit 1; \
+			fi \
+			;; \
+		loop) \
+			if [ -n "$$RESOURCE" ] && [ -n "$$SOURCE" ]; then \
+				echo "Looping dlt pipeline: $$SOURCE, resource: $$RESOURCE..."; \
+				$(UV) ./$${SOURCE}_pipeline.py $$RESOURCE --loop; \
+			else \
+				echo "Usage: make dlt loop <source> <resource>"; \
 				exit 1; \
 			fi \
 			;; \

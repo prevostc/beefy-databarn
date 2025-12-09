@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api
+.PHONY: help build ps logs deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api loop
 
 # Paths and common commands
 ROOT_DIR := $(abspath ../..)
@@ -161,6 +161,16 @@ dlt:
 				echo "Usage: make dlt run <source> [resource]"; \
 				exit 1; \
 			fi; \
+		;; \
+		loop) \
+			echo "Looping dlt..."; \
+			SOURCE="$(word 3,$(MAKECMDGOALS))" && \
+			RESOURCE="$(word 4,$(MAKECMDGOALS))" && \
+			if [ -n "$$RESOURCE" ] && [ -n "$$SOURCE" ]; then \
+				echo "Looping dlt source: $$SOURCE, resource: $$RESOURCE..."; \
+				$(DC) exec dlt uv run /app/dlt/$${SOURCE}_pipeline.py $$RESOURCE --loop; \
+			fi; \
+			echo "dlt loop completed successfully"; \
 		;; \
 		help|"") \
 			echo "dlt:"; \
