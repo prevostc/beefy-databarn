@@ -88,7 +88,7 @@ dbt: ensure-dirs
 	case "$$SUBCMD" in \
 		logs) \
 			echo "$$SUBCMD dbt..."; \
-			$(DC) exec dbt logs -f; \
+			$(DC) logs -f dbt; \
 		;; \
 		restart) \
 			echo "Restarting dbt..."; \
@@ -137,7 +137,7 @@ dlt:
 	case "$$SUBCMD" in \
 		logs) \
 			echo "Showing dlt logs..."; \
-			$(DC) exec dlt logs -f; \
+			$(DC) logs -f dlt; \
 		;; \
 		restart) \
 			echo "Restarting dlt..."; \
@@ -181,7 +181,7 @@ clickhouse:
 	case "$$SUBCMD" in \
 		logs) \
 			echo "Showing ClickHouse logs..."; \
-			$(DC) exec clickhouse logs -f; \
+			$(DC) logs -f clickhouse; \
 		;; \
 		restart) \
 			echo "Restarting ClickHouse..."; \
