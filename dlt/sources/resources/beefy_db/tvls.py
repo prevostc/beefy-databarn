@@ -95,7 +95,7 @@ async def get_beefy_db_tvls_resource() -> Any:
             {"name": "vault_id", "nullable": False },
             {"name": "t", "nullable": False },
             # keep val as float64 because some values are too large for Decimal(76, 20)
-            {"name": "val", "data_type": "float64"},
+            {"name": "val", "data_type": "double"},
         ]
     )
 
