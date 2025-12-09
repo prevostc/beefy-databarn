@@ -39,7 +39,7 @@ help:
 infra: ensure-dirs
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
-		start) \
+		start|up) \
 			echo "Starting infrastructure services (rebuilding images if needed)..."; \
 			$(DC) up -d --build; \
 			echo "✓ Infrastructure services started"; \
