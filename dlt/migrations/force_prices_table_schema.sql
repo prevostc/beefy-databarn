@@ -4,7 +4,6 @@
 
 -- 0. Clean leftovers from previous attempts
 DROP TABLE IF EXISTS dlt.beefy_db_incremental___prices_tmp SYNC;
-DROP TABLE IF EXISTS dlt.beefy_db_incremental___prices_old SYNC;
 
 -- 1. Temporary ReplacingMergeTree for deduplication
 CREATE TABLE dlt.beefy_db_incremental___prices_tmp
@@ -27,10 +26,9 @@ FROM dlt.beefy_db_incremental___prices;
 OPTIMIZE TABLE dlt.beefy_db_incremental___prices_tmp FINAL;
 
 -- 6. Swap tables
+RENAME TABLE IF EXISTS dlt.beefy_db_incremental___prices TO dlt.beefy_db_incremental___prices_old;
 RENAME TABLE
-    dlt.beefy_db_incremental___prices TO dlt.beefy_db_incremental___prices_old,
     dlt.beefy_db_incremental___prices_tmp TO dlt.beefy_db_incremental___prices;
 
 -- 7. Optional cleanup
-DROP TABLE dlt.beefy_db_incremental___prices_old SYNC;
-
+DROP TABLE IF EXISTS dlt.beefy_db_incremental___prices_old SYNC;

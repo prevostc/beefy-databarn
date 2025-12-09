@@ -9,7 +9,7 @@ from lib.async_runner import PipelineRunner, PipelineTask
 from sources.github_files import github_files
 from sources.beefy_api_configs import beefy_api_configs
 from sources.beefy_api_snapshots import beefy_api_snapshots
-from sources.beefy_db import beefy_db_configs, beefy_db_incremental 
+from sources.beefy_db.beefy_db import beefy_db_configs, beefy_db_incremental
 from dlt.common.runtime import signals
 
 def configure_env() -> None:

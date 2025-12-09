@@ -6,7 +6,7 @@ from typing import Any, Callable, Awaitable
 from dataclasses import dataclass
 import dlt
 from dlt.common.runtime import signals
-from lib.config import PIPELINE_ITERATION_TIMEOUT
+from lib.config import is_production
 
 logger = logging.getLogger(__name__)
 
@@ -68,13 +68,12 @@ class PipelineRunner:
             try:
                 source = await task.get_source()
                 # Filter to specific resource if requested for this pipeline
-                if resource_filter and task.pipeline.pipeline.pipeline_name in resource_filter:
+                if resource_filter and task.pipeline.pipeline_name in resource_filter:
                     resource_name = resource_filter[task.pipeline.pipeline_name]
                     source = source.with_resources(resource_name)
 
                 logger.info("Running pipeline %s", task.pipeline.pipeline_name)
                 if task.run_mode == "once":
-                    print(source)
                     result = task.pipeline.run(source)
                 elif task.run_mode == "loop":
                     iteration_count = 0
@@ -91,8 +90,9 @@ class PipelineRunner:
                 logger.info("%s completed", task.pipeline.pipeline_name)
             except Exception as e:
                 logger.error("Error occurred while running pipeline %s: %s", task.pipeline.pipeline_name, e)
+                if not is_production():
+                    raise
                 exceptions.append(e)
-
         if exceptions:
             raise PipelineRunnerError(exceptions)
 

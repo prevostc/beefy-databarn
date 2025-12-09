@@ -21,5 +21,4 @@ SELECT
   toDecimal256(ifNull({{ to_decimal('want_price') }}, 0), 20) as want_price,
   toBool(ifNull(is_cowllector, false)) as is_cowllector,
   cast({{ evm_address('strategist_address') }} as String) as strategist_address
-FROM {{ source('dlt', 'beefy_db_incremental___harvests') }}
-
+FROM {{ source('dlt', 'beefy_db_incremental___harvests') }} FINAL
