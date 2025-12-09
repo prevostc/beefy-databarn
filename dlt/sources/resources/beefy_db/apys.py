@@ -22,7 +22,7 @@ TABLE_SQL = f"""
     (
         `vault_id` Int64 CODEC(ZSTD(3)),
         `t`         DateTime64(6, 'UTC') CODEC(ZSTD(3)),
-        `val`       Nullable(Decimal(76, 20)) CODEC(ZSTD(3))
+        `val`       Nullable(Float64) CODEC(ZSTD(3))
     )
     ENGINE = ReplacingMergeTree
     PRIMARY KEY (vault_id, t)
@@ -96,7 +96,7 @@ async def get_beefy_db_apys_resource() -> Any:
             {"name": "t", "nullable": False },
 
             # make sure metrics have enough precision, Decimal256(20) -> Decimal(76, 20)
-            {"name": "val", "data_type": "decimal", "scale": 20, "precision": 76},
+            {"name": "val", "data_type": "float64"},
         ]
     )
 

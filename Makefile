@@ -1,4 +1,4 @@
-.PHONY: help setup start dev
+.PHONY: help setup start dev run test client github_files tvls beefy_db beefy_api logs restart ps build stop help
 .PHONY: infra dbt dlt grafana clickhouse api deps-check
 
 # Prevent execution in production (user "databarn")
