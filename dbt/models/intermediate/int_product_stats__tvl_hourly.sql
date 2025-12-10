@@ -32,3 +32,4 @@ SELECT
   argMax(tvl_usd, date_time) as tvl_usd
 FROM tvl_with_product
 GROUP BY chain_id, product_address, toStartOfHour(date_time)
+HAVING tvl_usd < {{ to_decimal('1000000000') }} -- no one product has a tvl over $1B
