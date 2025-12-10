@@ -1,0 +1,14 @@
+version: 2
+
+models:
+  - name: int_product_stats__unified_hourly
+    description: "Unified hourly stats from all sources (TVL, APY, breakdowns, LPS, yield). Uses UNION ALL + CoalescingMergeTree for better performance."
+    columns:
+      - name: tvl_usd
+        description: "Total value locked in USD"
+        tests:
+          - expect_column_max_value:
+              arguments:
+                max_value: 1000000000
+              config:
+                severity: error

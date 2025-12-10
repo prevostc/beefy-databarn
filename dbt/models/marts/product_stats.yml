@@ -92,6 +92,12 @@ models:
         description: "Total value locked in USD"
         data_type: Nullable(Float64)
         codec: ZSTD(3)
+        tests:
+          - expect_column_max_value:
+              arguments:
+                max_value: 1000000000
+              config:
+                severity: error
       - name: apy
         description: "Annual percentage yield"
         data_type: Nullable(Float64)

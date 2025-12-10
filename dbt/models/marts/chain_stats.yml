@@ -53,6 +53,12 @@ models:
         description: "Total value locked in USD across all product types (vault + gov + CLM)"
         data_type: Nullable(Decimal(76, 20))
         codec: ZSTD(3)
+        tests:
+          - expect_column_max_value:
+              arguments:
+                max_value: 1000000000000
+              config:
+                severity: error
       - name: vault_tvl_usd
         description: "TVL attributed to vault assets in USD"
         data_type: Nullable(Decimal(76, 20))
