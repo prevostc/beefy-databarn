@@ -10,25 +10,25 @@ models:
         codec: Delta, LZ4
         tests:
           - not_null
-      - name: t
+      - name: date_time
         description: "Timestamp for the chain TVL observation"
         data_type: DateTime64(6, 'UTC')
         codec: DoubleDelta, LZ4
         tests:
           - not_null
-      - name: total
+      - name: tvl_usd
         description: "Total TVL across vault, gov, and CLM"
         data_type: Decimal256(20)
         codec: ZSTD(3)
-      - name: vault
+      - name: vault_tvl_usd
         description: "TVL attributed to vault assets"
         data_type: Decimal256(20)
         codec: ZSTD(3)
-      - name: gov
+      - name: gov_tvl_usd
         description: "TVL attributed to governance assets"
         data_type: Decimal256(20)
         codec: ZSTD(3)
-      - name: clm
+      - name: clm_tvl_usd
         description: "TVL attributed to CLM assets"
         data_type: Decimal256(20)
         codec: ZSTD(3)

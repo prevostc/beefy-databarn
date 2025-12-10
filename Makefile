@@ -104,6 +104,10 @@ dbt:
 			echo "Compiling dbt models..."; \
 			$(UV) dbt compile \
 			;; \
+		refresh) \
+			echo "Refreshing dbt models..."; \
+			$(UV) dbt run --select $$MODEL --full-refresh; \
+			;; \
 		sql) \
 			echo "Compiling and showing SQL (no queries executed)..."; \
 			if [ -n "$$MODEL" ]; then \

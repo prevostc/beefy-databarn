@@ -88,7 +88,7 @@ models:
         codec: DoubleDelta, LZ4
         tests:
           - not_null
-      - name: tvl
+      - name: tvl_usd
         description: "Total value locked in USD"
         data_type: Nullable(Float64)
         codec: ZSTD(3)

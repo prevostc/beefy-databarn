@@ -17,7 +17,7 @@ WITH tvl_with_product AS (
     p.chain_id,
     p.product_address,
     a.date_time,
-    a.tvl
+    a.tvl_usd
   FROM {{ ref('stg_beefy_db__tvls') }} a
   INNER JOIN {{ ref('stg_beefy_db__vault_ids') }} vi
     ON a.vault_id = vi.vault_id
@@ -29,6 +29,6 @@ SELECT
   chain_id,
   product_address,
   toStartOfHour(date_time) as date_hour,
-  argMax(tvl, date_time) as tvl
+  argMax(tvl_usd, date_time) as tvl_usd
 FROM tvl_with_product
 GROUP BY chain_id, product_address, toStartOfHour(date_time)

@@ -5,7 +5,7 @@
     engine='CoalescingMergeTree',
     order_by=['date_hour', 'chain_id', 'product_address'],
     on_schema_change='append_new_columns',
-    post_hook=["OPTIMIZE TABLE {{ this }} FINAL"],
+    post_hook=["OPTIMIZE TABLE {{ this }} DEDUPLICATE by date_hour, chain_id, product_address"],
   )
 }}
 
@@ -24,15 +24,15 @@
 {% endif %}
 
 SELECT
-  hs.date_hour,
   hs.chain_id,
-  hs.product_address,
   p.product_type,
   p.beefy_key,
+  hs.product_address,
   p.display_name,
   p.is_active,
   p.platform_id,
-  hs.tvl,
+  hs.date_hour,
+  hs.tvl_usd,
   hs.apy,
   hs.compoundings_per_year,
   hs.beefy_performance_fee,
