@@ -83,7 +83,7 @@ infra: ensure-dirs
 
 # Run dbt: make dbt run or make dbt test
 # Usage: make dbt run or make dbt test
-dbt: ensure-dirs
+dbt:
 	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
 	case "$$SUBCMD" in \
 		logs) \
@@ -224,6 +224,33 @@ clickhouse:
 			;; \
 		*) \
 			echo "Usage: make clickhouse [client|help]"; \
+			exit 1; \
+		;; \
+	esac
+
+postgres:
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		client|cli) \
+			echo "Opening Postgres client..."; \
+			$(DC) exec postgres psql"; \
+		;; \
+		logs) \
+			echo "Showing Postgres logs..."; \
+			$(DC) logs -f postgres; \
+		;; \
+		restart) \
+			echo "Restarting Postgres..."; \
+			$(DC) up -d --force-recreate --build postgres; \
+		;; \
+		ps) \
+			echo "Showing Postgres service status..."; \
+			$(DC) ps postgres; \
+		;; \
+		help|"") \
+		;; \
+		*) \
+			echo "Usage: make postgres [logs|restart|ps|help]"; \
 			exit 1; \
 		;; \
 	esac

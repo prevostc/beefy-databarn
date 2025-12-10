@@ -25,6 +25,39 @@ sys.path.insert(0, '/app')
 max_retries = 30
 retry_count = 0
 
+ENSURE_PERMISSIONS = {
+    "Alpha": [
+        ("can_read", "Query"),
+        ("menu_access", "Query Search"),
+        ("menu_access", "SQL Editor"),
+        ("menu_access", "SQL Lab"),
+        ("can_execute_sql_query", "SQLLab"),
+        ("can_export_csv", "SQLLab"),
+        ("can_get_results", "SQLLab"),
+        ("can_read", "SQLLab"),
+        ("menu_access", "Saved Queries"),
+        ("can_export", "SavedQuery"),
+        ("can_read", "SavedQuery"),
+        ("can_write", "SavedQuery"),
+        ("can_read", "SqlLabPermalinkRestApi"),
+        ("can_write", "SqlLabPermalinkRestApi"),
+        ("can_sqllab", "Superset"),
+        ("can_sqllab_history", "Superset"),
+        ("can_activate", "TabStateView"),
+        ("can_delete", "TabStateView"),
+        ("can_delete_query", "TabStateView"),
+        ("can_get", "TabStateView"),
+        ("can_migrate_query", "TabStateView"),
+        ("can_post", "TabStateView"),
+        ("can_put", "TabStateView"),
+        ("all_query_access", "all_query_access"),
+    ],
+    "Public": [
+        ("can_time_range", "Api"),
+    ],
+}
+
+
 while retry_count < max_retries:
     try:
         # Import after path is set
@@ -39,85 +72,63 @@ while retry_count < max_retries:
             # Refresh session to ensure we have latest data after superset init
             db.session.expire_all()
             
-            # Find the Alpha role
-            alpha_role = db.session.query(Role).filter_by(name='Alpha').first()
-            
-            if not alpha_role:
-                print("Warning: Alpha role not found. Creating it...")
-                alpha_role = Role(name='Alpha')
-                db.session.add(alpha_role)
-                db.session.commit()
-                print("✓ Created Alpha role")
-            else:
-                # Refresh the role to get latest permissions
-                db.session.refresh(alpha_role)
-            
-            # SQL Lab permissions that need to be granted
-            # Format: (permission_name, view_menu_name)
-            sql_lab_permissions = [
-                ("can_read", "Query"),
-                ("menu_access", "Query Search"),
-                ("menu_access", "SQL Editor"),
-                ("menu_access", "SQL Lab"),
-                ("can_execute_sql_query", "SQLLab"),
-                ("can_export_csv", "SQLLab"),
-                ("can_get_results", "SQLLab"),
-                ("can_read", "SQLLab"),
-                ("menu_access", "Saved Queries"),
-                ("can_export", "SavedQuery"),
-                ("can_read", "SavedQuery"),
-                ("can_write", "SavedQuery"),
-                ("can_read", "SqlLabPermalinkRestApi"),
-                ("can_write", "SqlLabPermalinkRestApi"),
-                ("can_sqllab", "Superset"),
-                ("can_sqllab_history", "Superset"),
-                ("can_activate", "TabStateView"),
-                ("can_delete", "TabStateView"),
-                ("can_delete_query", "TabStateView"),
-                ("can_get", "TabStateView"),
-                ("can_migrate_query", "TabStateView"),
-                ("can_post", "TabStateView"),
-                ("can_put", "TabStateView"),
-                ("all_query_access", "all_query_access"),
-            ]
-            
-            # Find all SQL Lab permissions
-            permissions_added = []
-            for perm_name, view_menu_name in sql_lab_permissions:
-                # Find permission and view menu
-                permission = db.session.query(Permission).filter_by(name=perm_name).first()
-                view_menu = db.session.query(ViewMenu).filter_by(name=view_menu_name).first()
+            # Process each role in ENSURE_PERMISSIONS
+            total_permissions_added = 0
+            for role_name, permissions_list in ENSURE_PERMISSIONS.items():
+                # Find or create the role
+                role = db.session.query(Role).filter_by(name=role_name).first()
                 
-                if permission and view_menu:
-                    # Find the PermissionView that links them
-                    perm_view = db.session.query(PermissionView).filter_by(
-                        permission_id=permission.id,
-                        view_menu_id=view_menu.id
-                    ).first()
-                    
-                    if perm_view:
-                        # Check if Alpha role already has this permission
-                        if perm_view not in alpha_role.permissions:
-                            alpha_role.permissions.append(perm_view)
-                            permissions_added.append(perm_name)
-                            print(f"✓ Added permission '{perm_name}' on '{view_menu_name}' to Alpha role")
-                        else:
-                            print(f"  Permission '{perm_name}' on '{view_menu_name}' already exists for Alpha role")
-                    else:
-                        print(f"Warning: PermissionView for '{perm_name}' on '{view_menu_name}' not found")
+                if not role:
+                    print(f"Warning: {role_name} role not found. Creating it...")
+                    role = Role(name=role_name)
+                    db.session.add(role)
+                    db.session.commit()
+                    print(f"✓ Created {role_name} role")
                 else:
-                    missing = []
-                    if not permission:
-                        missing.append(f"Permission '{perm_name}'")
-                    if not view_menu:
-                        missing.append(f"ViewMenu '{view_menu_name}'")
-                    print(f"Warning: {' and '.join(missing)} not found in Superset")
+                    # Refresh the role to get latest permissions
+                    db.session.refresh(role)
+                
+                # Process permissions for this role
+                permissions_added = []
+                for perm_name, view_menu_name in permissions_list:
+                    # Find permission and view menu
+                    permission = db.session.query(Permission).filter_by(name=perm_name).first()
+                    view_menu = db.session.query(ViewMenu).filter_by(name=view_menu_name).first()
+                    
+                    if permission and view_menu:
+                        # Find the PermissionView that links them
+                        perm_view = db.session.query(PermissionView).filter_by(
+                            permission_id=permission.id,
+                            view_menu_id=view_menu.id
+                        ).first()
+                        
+                        if perm_view:
+                            # Check if role already has this permission
+                            if perm_view not in role.permissions:
+                                role.permissions.append(perm_view)
+                                permissions_added.append((perm_name, view_menu_name))
+                                print(f"✓ Added permission '{perm_name}' on '{view_menu_name}' to {role_name} role")
+                            else:
+                                print(f"  Permission '{perm_name}' on '{view_menu_name}' already exists for {role_name} role")
+                        else:
+                            print(f"Warning: PermissionView for '{perm_name}' on '{view_menu_name}' not found")
+                    else:
+                        missing = []
+                        if not permission:
+                            missing.append(f"Permission '{perm_name}'")
+                        if not view_menu:
+                            missing.append(f"ViewMenu '{view_menu_name}'")
+                        print(f"Warning: {' and '.join(missing)} not found in Superset")
+                
+                if permissions_added:
+                    db.session.commit()
+                    total_permissions_added += len(permissions_added)
+                    print(f"✓ Successfully provisioned {len(permissions_added)} permissions for {role_name} role")
+                else:
+                    print(f"✓ {role_name} role already has all required permissions")
             
-            if permissions_added:
-                db.session.commit()
-                print(f"✓ Successfully provisioned {len(permissions_added)} SQL Lab permissions for Alpha role")
-            else:
-                print("✓ Alpha role already has all required SQL Lab permissions")
+            if total_permissions_added > 0:
+                print(f"✓ Total: Successfully provisioned {total_permissions_added} permissions across all roles")
             
         break
     except ImportError as e:
