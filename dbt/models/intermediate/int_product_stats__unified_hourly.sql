@@ -3,6 +3,7 @@
     materialized='materialized_view',
     tags=['intermediate', 'product_stats'],
     order_by=['date_hour', 'chain_id', 'product_address'],
+    on_schema_change='append_new_columns',
   )
 }}
 
@@ -53,7 +54,10 @@ SELECT
   NULL as total_supply,
   NULL as underlying_liquidity,
   [] as underlying_balances,
-  NULL as underlying_price
+  NULL as underlying_price,
+  NULL as underlying_amount_compounded,
+  NULL as underlying_token_price_usd,
+  NULL as underlying_amount_compounded_usd
 FROM {{ ref('int_product_stats__tvl_hourly') }}
 {% if is_incremental() %}
   WHERE date_hour >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
@@ -88,7 +92,10 @@ SELECT
   NULL as total_supply,
   NULL as underlying_liquidity,
   [] as underlying_balances,
-  NULL as underlying_price
+  NULL as underlying_price,
+  NULL as underlying_amount_compounded,
+  NULL as underlying_token_price_usd,
+  NULL as underlying_amount_compounded_usd
 FROM {{ ref('int_product_stats__apy_hourly') }}
 {% if is_incremental() %}
   WHERE date_hour >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
@@ -123,7 +130,10 @@ SELECT
   NULL as total_supply,
   NULL as underlying_liquidity,
   [] as underlying_balances,
-  NULL as underlying_price
+  NULL as underlying_price,
+  NULL as underlying_amount_compounded,
+  NULL as underlying_token_price_usd,
+  NULL as underlying_amount_compounded_usd
 FROM {{ ref('int_product_stats__apy_breakdown_hourly') }}
 {% if is_incremental() %}
   WHERE date_hour >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
@@ -158,8 +168,49 @@ SELECT
   total_supply,
   underlying_liquidity,
   underlying_balances,
-  underlying_price
+  underlying_price,
+  NULL as underlying_amount_compounded,
+  NULL as underlying_token_price_usd,
+  NULL as underlying_amount_compounded_usd
 FROM {{ ref('int_product_stats__lps_breakdown_hourly') }}
+{% if is_incremental() %}
+  WHERE date_hour >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
+{% endif %}
+
+UNION ALL
+
+-- Yield data
+SELECT
+  chain_id,
+  product_address,
+  date_hour,
+  NULL as tvl,
+  NULL as apy,
+  NULL as compoundings_per_year,
+  NULL as beefy_performance_fee,
+  NULL as lp_fee,
+  NULL as total_apy,
+  NULL as vault_apr,
+  NULL as trading_apr,
+  NULL as clm_apr,
+  NULL as reward_pool_apr,
+  NULL as reward_pool_trading_apr,
+  NULL as vault_apy,
+  NULL as liquid_staking_apr,
+  NULL as composable_pool_apr,
+  NULL as merkl_apr,
+  NULL as linea_ignition_apr,
+  NULL as lp_price,
+  [] as breakdown_tokens,
+  [] as breakdown_balances,
+  NULL as total_supply,
+  NULL as underlying_liquidity,
+  [] as underlying_balances,
+  NULL as underlying_price,
+  underlying_amount_compounded,
+  underlying_token_price_usd,
+  underlying_amount_compounded_usd
+FROM {{ ref('int_product_stats__yield_hourly') }}
 {% if is_incremental() %}
   WHERE date_hour >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
 {% endif %}

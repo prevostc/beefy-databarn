@@ -55,6 +55,9 @@ SELECT
   hs.underlying_liquidity,
   hs.underlying_balances,
   hs.underlying_price,
+  hs.underlying_amount_compounded,
+  hs.underlying_token_price_usd,
+  hs.underlying_amount_compounded_usd,
 FROM {{ ref('int_product_stats__unified_hourly') }} hs
 INNER JOIN {{ ref('product') }} p
   ON hs.chain_id = p.chain_id

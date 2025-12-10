@@ -12,23 +12,23 @@
 -- This reduces memory usage by materializing tvl aggregations separately
 -- Combines tvl staging data with product information and aggregates to hourly
 
-WITH tvl_with_product AS (
+WITH yield_with_product AS (
   SELECT
-    p.chain_id,
-    p.product_address,
     a.date_time,
-    a.tvl
-  FROM {{ ref('stg_beefy_db__tvls') }} a
-  INNER JOIN {{ ref('stg_beefy_db__vault_ids') }} vi
-    ON a.vault_id = vi.vault_id
-  INNER JOIN {{ ref('product') }} p
-    ON vi.beefy_key = p.beefy_key
+    a.chain_id,
+    a.product_address,
+    a.underlying_amount_compounded,
+    a.underlying_token_price_usd,
+    a.underlying_amount_compounded_usd
+  FROM {{ ref('int_yield') }} a
 )
 
 SELECT
   chain_id,
   product_address,
   toStartOfHour(date_time) as date_hour,
-  argMax(tvl, date_time) as tvl
-FROM tvl_with_product
+  argMax(underlying_amount_compounded, date_time) as underlying_amount_compounded,
+  argMax(underlying_token_price_usd, date_time) as underlying_token_price_usd,
+  argMax(underlying_amount_compounded_usd, date_time) as underlying_amount_compounded_usd
+FROM yield_with_product
 GROUP BY chain_id, product_address, toStartOfHour(date_time)

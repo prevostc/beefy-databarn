@@ -3,6 +3,7 @@
     materialized='materialized_view',
     tags=['intermediate', 'product_stats'],
     order_by=['date_hour', 'chain_id', 'product_address'],
+    on_schema_change='append_new_columns',
   )
 }}
 

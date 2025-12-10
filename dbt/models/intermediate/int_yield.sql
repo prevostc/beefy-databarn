@@ -1,7 +1,9 @@
 {{
   config(
-    materialized='view',
-    tags=['intermediate', 'yield']
+    materialized='materialized_view',
+    tags=['intermediate', 'yield'],
+    order_by=['date_time', 'chain_id', 'product_address'],
+    on_schema_change='sync_all_columns',
   )
 }}
 
@@ -13,8 +15,8 @@
 WITH cleaned_yield AS (
   SELECT
     t.txn_timestamp as date_time,
-    t.network_id as chain_id,
-    t.vault_id,
+    t.network_id,
+    t.vault_beefy_key,
     t.block_number,
     t.txn_idx,
     t.event_idx,
@@ -62,8 +64,8 @@ WITH cleaned_yield AS (
 -- Each row represents a yield-generating harvest event
 SELECT
   cy.date_time,
-  cy.chain_id,
-  cy.vault_id,
+  p.chain_id,
+  p.product_address,
   cy.block_number,
   cy.txn_idx,
   cy.event_idx,
@@ -72,4 +74,6 @@ SELECT
   cy.underlying_token_price_usd,
   cy.underlying_amount_compounded_usd
 FROM cleaned_yield cy
-
+INNER JOIN {{ ref('product') }} p
+  ON cy.network_id = p.chain_id
+  AND cy.vault_beefy_key = p.beefy_key

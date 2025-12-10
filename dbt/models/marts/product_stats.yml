@@ -180,3 +180,15 @@ models:
         description: "Underlying token price in USD"
         data_type: Nullable(Decimal(76, 20))
         codec: ZSTD(3)
+      - name: underlying_amount_compounded
+        description: "Underlying amount compounded"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)
+      - name: underlying_token_price_usd
+        description: "Underlying token price in USD"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)
+      - name: underlying_amount_compounded_usd
+        description: "Underlying amount compounded in USD"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)

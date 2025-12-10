@@ -40,7 +40,7 @@ models:
         codec: LZ4
         tests:
           - not_null
-      - name: vault_id
+      - name: vault_beefy_key
         description: "Vault identifier"
         data_type: String
         codec: LZ4

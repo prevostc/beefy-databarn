@@ -13,7 +13,7 @@ SELECT
   cy.date_time,
   cy.chain_id as chain_id,
   dc.chain_name,
-  dp.product_address,
+  cy.product_address,
   cy.block_number,
   cy.txn_idx as tx_idx,
   cy.event_idx,
@@ -24,7 +24,4 @@ SELECT
 FROM {{ ref('int_yield') }} cy
 INNER JOIN {{ ref('chain') }} dc
   ON cy.chain_id = dc.chain_id
-INNER JOIN {{ ref('product') }} dp
-  ON cy.chain_id = dp.chain_id
-  AND cy.vault_id = dp.beefy_key
 
