@@ -17,7 +17,7 @@ models:
       - relationships_array_multi_key:
           name: relationships_reward_pool_addresses_token
           arguments:
-            to: ref('reward_pool')
+            to: ref('product_reward_pool')
             from_chain_column: chain_id
             from_array_column: reward_pool_addresses
             to_chain_column: chain_id
@@ -25,7 +25,7 @@ models:
       - relationships_array_multi_key:
           name: relationships_classic_boost_addresses_token
           arguments:
-            to: ref('classic_boost')
+            to: ref('product_classic_boost')
             from_chain_column: chain_id
             from_array_column: classic_boost_addresses
             to_chain_column: chain_id

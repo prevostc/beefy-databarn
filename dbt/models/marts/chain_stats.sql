@@ -1,64 +1,62 @@
 {{
   config(
-    materialized='incremental',
+    materialized='table',
     tags=['marts', 'tvl', 'stats', 'chains'],
-    engine='CoalescingMergeTree',
     order_by=['date_hour', 'chain_id'],
-    on_schema_change='append_new_columns',
-    post_hook=["OPTIMIZE TABLE {{ this }} DEDUPLICATE by date_hour, chain_id"],
   )
 }}
 
-{% if is_incremental() %}
-  {% set max_date_sql %}
-    select max(cast(date_hour as Nullable(DateTime('UTC')))) as max_date_hour
-    from {{ this }}
-  {% endset %}
-  {% set max_date_tbl = run_query(max_date_sql) %}
-  {% set max_date = max_date_tbl.columns[0][0] %}
-  {% if max_date is none %}
-    {% set max_date = '2021-07-31 19:30:00' %}
-  {% endif %}
-{% else %}
-  {% set max_date = '2021-07-31 19:30:00' %}
-{% endif %}
-
-WITH cleaned_tvl_by_chain AS (
-  SELECT
-    network_id,
-    date_time,
-    tvl_usd,
-    vault_tvl_usd,
-    gov_tvl_usd,
-    clm_tvl_usd
-  FROM {{ ref('stg_beefy_db__tvl_by_chain') }}
-
-  -- remove obviously erroneous data
-  WHERE NOT (
-    network_id = 1 AND
-    date_time BETWEEN '2024-04-03' AND '2024-04-04'
-    AND tvl_usd > {{ to_decimal('8000000000') }}
-  )
-)
 SELECT
-  c.chain_id,
-  c.chain_name,
-  c.beefy_key,
-  c.beefy_enabled,
-  toStartOfHour(t.date_time) as date_hour,
-  argMax(t.tvl_usd, t.date_time) as tvl_usd,
-  argMax(t.vault_tvl_usd, t.date_time) as vault_tvl_usd,
-  argMax(t.gov_tvl_usd, t.date_time) as gov_tvl_usd,
-  argMax(t.clm_tvl_usd, t.date_time) as clm_tvl_usd
-FROM cleaned_tvl_by_chain t
+  c.chain_id as chain_id,
+  c.chain_name as chain_name,
+  c.beefy_key as beefy_key,
+  c.beefy_enabled as beefy_enabled,
+  ps.date_hour as date_hour,
+  {{ to_decimal('sum(ps.tvl_usd)') }} as tvl_usd,
+  {{ to_decimal('sum(if(ps.product_type = \'classic\', ps.tvl_usd, 0))') }} as vault_tvl_usd,
+  {{ to_decimal('sum(if(ps.product_type = \'clm\', ps.tvl_usd, 0))') }} as clm_tvl_usd,
+  -- Fee averages (separate columns for easy querying)
+  avg(ps.beefy_performance_fee) as avg_beefy_performance_fee,
+  avg(ps.lp_fee) as avg_lp_fee,
+  avg(ps.compoundings_per_year) as avg_compoundings_per_year,
+  -- APR/APY averages (separate columns for easy querying)
+  avg(ps.apy) as avg_apy,
+  avg(ps.total_apy) as avg_total_apy,
+  avg(ps.vault_apr) as avg_vault_apr,
+  avg(ps.trading_apr) as avg_trading_apr,
+  avg(ps.clm_apr) as avg_clm_apr,
+  avg(ps.reward_pool_apr) as avg_reward_pool_apr,
+  avg(ps.reward_pool_trading_apr) as avg_reward_pool_trading_apr,
+  avg(ps.vault_apy) as avg_vault_apy,
+  avg(ps.liquid_staking_apr) as avg_liquid_staking_apr,
+  avg(ps.composable_pool_apr) as avg_composable_pool_apr,
+  avg(ps.merkl_apr) as avg_merkl_apr,
+  avg(ps.linea_ignition_apr) as avg_linea_ignition_apr,
+  -- Fee quantiles: [min, p25, p50, p75, max] (excluding NULLs)
+  {{ quantiles('ps.beefy_performance_fee') }} as beefy_performance_fee_quantiles,
+  {{ quantiles('ps.lp_fee') }} as lp_fee_quantiles,
+  {{ quantiles('ps.compoundings_per_year') }} as compoundings_per_year_quantiles,
+  -- APR/APY quantiles: [min, p25, p50, p75, max] (excluding NULLs)
+  -- Access: apy_quantiles[0] for min, apy_quantiles[1] for p25, apy_quantiles[2] for p50, etc.
+  {{ quantiles('ps.apy') }} as apy_quantiles,
+  {{ quantiles('ps.total_apy') }} as total_apy_quantiles,
+  {{ quantiles('ps.vault_apr') }} as vault_apr_quantiles,
+  {{ quantiles('ps.trading_apr') }} as trading_apr_quantiles,
+  {{ quantiles('ps.clm_apr') }} as clm_apr_quantiles,
+  {{ quantiles('ps.reward_pool_apr') }} as reward_pool_apr_quantiles,
+  {{ quantiles('ps.reward_pool_trading_apr') }} as reward_pool_trading_apr_quantiles,
+  {{ quantiles('ps.vault_apy') }} as vault_apy_quantiles,
+  {{ quantiles('ps.liquid_staking_apr') }} as liquid_staking_apr_quantiles,
+  {{ quantiles('ps.composable_pool_apr') }} as composable_pool_apr_quantiles,
+  {{ quantiles('ps.merkl_apr') }} as merkl_apr_quantiles,
+  {{ quantiles('ps.linea_ignition_apr') }} as linea_ignition_apr_quantiles,
+  sum(ps.underlying_amount_compounded_usd) as underlying_amount_compounded_usd
+FROM {{ ref('product_stats') }} ps
 INNER JOIN {{ ref('chain') }} c
-  ON t.network_id = c.chain_id
-{% if is_incremental() %}
-  WHERE toStartOfHour(t.date_time) >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
-{% endif %}
+  ON ps.chain_id = c.chain_id
 GROUP BY
   c.chain_id,
   c.chain_name,
   c.beefy_key,
   c.beefy_enabled,
-  toStartOfHour(t.date_time)
+  ps.date_hour

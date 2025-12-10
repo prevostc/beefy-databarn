@@ -64,3 +64,7 @@
         else {{ value }} 
     end
 {%- endmacro %}
+
+{% macro quantiles(column_expr) %}
+    quantiles(0.0, 0.25, 0.5, 0.75, 1.0)({{ column_expr }})
+{%- endmacro %}
