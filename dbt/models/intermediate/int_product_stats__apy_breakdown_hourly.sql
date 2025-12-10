@@ -1,7 +1,8 @@
 {{
   config(
-    materialized='view',
+    materialized='materialized_view',
     tags=['intermediate', 'product_stats'],
+    order_by=['date_hour', 'chain_id', 'product_address'],
   )
 }}
 

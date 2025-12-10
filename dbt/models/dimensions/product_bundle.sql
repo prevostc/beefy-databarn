@@ -1,8 +1,7 @@
 {{
     config(
-        materialized='table',
+        materialized='materialized_view',
         tags=['dimension', 'products'],
-        engine='MergeTree()',
         order_by=['chain_id', 'bundle_root_product_address'],
     )
 }}

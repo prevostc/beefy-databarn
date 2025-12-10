@@ -1,7 +1,8 @@
 {{
   config(
-    materialized='table',
-    tags=['dimension', 'platforms']
+    materialized='materialized_view',
+    tags=['dimension', 'platforms'],
+    order_by=['platform_id'],
   )
 }}
 

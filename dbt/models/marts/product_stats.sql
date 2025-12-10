@@ -1,47 +1,46 @@
 {{
   config(
-    materialized='incremental',
+    materialized='table',
     tags=['marts', 'tvl', 'stats'],
-    engine='ReplacingMergeTree()',
+    engine='CoalescingMergeTree',
     order_by=['date_hour', 'chain_id', 'product_address'],
-    unique_key=['date_hour', 'chain_id', 'product_address'],
-    on_schema_change='append_new_columns',
-    post_hook="OPTIMIZE TABLE {{ this }} FINAL",
+    post_hook=["OPTIMIZE TABLE {{ this }} FINAL"],
   )
 }}
 
-{% if is_incremental() %}
-  {% set max_date_sql %}
-    select max(date_hour) as max_date_hour
-    from {{ this }}
-  {% endset %}
-  {% set max_date_tbl = run_query(max_date_sql) %}
-  {% set max_date = max_date_tbl.columns[0][0] %}
-{% endif %}
-
--- Mart model: Timeseries of product stats (TVL, APY, breakdowns, price)
--- This model provides a complete timeseries of all product metrics by joining:
--- - TVL snapshots
--- - APY data
--- - APY breakdown (merged)
--- - LPS breakdown (merged)
--- - Price data (from LPS breakdown underlying_price)
---
--- Optimized for memory: Uses materialized intermediate tables and UNION ALL
--- instead of FULL OUTER JOINs to avoid memory-intensive join operations
-
 SELECT
+  hs.date_hour,
+  hs.chain_id,
+  hs.product_address,
   p.product_type,
   p.beefy_key,
   p.display_name,
   p.is_active,
   p.platform_id,
-  hs.*
+  hs.tvl,
+  hs.apy,
+  hs.compoundings_per_year,
+  hs.beefy_performance_fee,
+  hs.lp_fee,
+  hs.total_apy,
+  hs.vault_apr,
+  hs.trading_apr,
+  hs.clm_apr,
+  hs.reward_pool_apr,
+  hs.reward_pool_trading_apr,
+  hs.vault_apy,
+  hs.liquid_staking_apr,
+  hs.composable_pool_apr,
+  hs.merkl_apr,
+  hs.linea_ignition_apr,
+  hs.lp_price,
+  hs.breakdown_tokens,
+  hs.breakdown_balances,
+  hs.total_supply,
+  hs.underlying_liquidity,
+  hs.underlying_balances,
+  hs.underlying_price,
 FROM {{ ref('int_product_stats__unified_hourly') }} hs
 INNER JOIN {{ ref('product') }} p
   ON hs.chain_id = p.chain_id
   AND hs.product_address = p.product_address
-{% if is_incremental() %}
-  WHERE hs.date_hour >= toDateTime('{{ max_date }}') - INTERVAL 15 DAY
-    AND hs.date_hour <= toDateTime('{{ max_date }}') + INTERVAL 3 MONTH
-{% endif %}

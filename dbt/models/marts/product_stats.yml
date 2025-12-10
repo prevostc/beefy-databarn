@@ -176,7 +176,7 @@ models:
         description: "Underlying balances"
         data_type: Array(Decimal(76, 20))
         codec: LZ4
-      - name: price
+      - name: underlying_price
         description: "Underlying token price in USD"
         data_type: Nullable(Decimal(76, 20))
         codec: ZSTD(3)
