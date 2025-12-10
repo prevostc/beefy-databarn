@@ -94,6 +94,18 @@ dbt: ensure-dirs
 			echo "Restarting dbt..."; \
 			$(DC) up -d --force-recreate --build dbt; \
 		;; \
+		refresh) \
+			MODEL="$(word 3,$(MAKECMDGOALS))" && \
+			echo "Refreshing dbt..."; \
+			if [ -n "$$MODEL" ]; then \
+				echo "Refreshing dbt model: $$MODEL..."; \
+				$(DC) exec dbt uv run dbt run --full-refresh --select $$MODEL; \
+			else \
+				echo "Usage: make dbt refresh <model>"; \
+			    exit 1; \
+			fi; \
+			echo "dbt refresh completed successfully"; \
+		;; \
 		run) \
 			echo "Running dbt..."; \
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \

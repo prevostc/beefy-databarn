@@ -105,8 +105,16 @@ dbt:
 			$(UV) dbt compile \
 			;; \
 		refresh) \
+			MODEL="$(word 3,$(MAKECMDGOALS))" && \
 			echo "Refreshing dbt models..."; \
-			$(UV) dbt run --select $$MODEL --full-refresh; \
+			if [ -n "$$MODEL" ]; then \
+				echo "Refreshing dbt model: $$MODEL..."; \
+				$(UV) dbt run --select $$MODEL --full-refresh; \
+			else \
+				echo "Usage: make dbt refresh <model>"; \
+				exit 1; \
+			fi; \
+			echo "dbt refresh completed successfully"; \
 			;; \
 		sql) \
 			echo "Compiling and showing SQL (no queries executed)..."; \
