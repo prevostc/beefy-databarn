@@ -21,6 +21,10 @@ WITH yield_with_product AS (
     a.underlying_token_price_usd,
     a.underlying_amount_compounded_usd
   FROM {{ ref('int_yield') }} a
+  WHERE 
+    a.underlying_amount_compounded between 0 and 1000000000000
+    and a.underlying_token_price_usd between 0 and 1000000
+    and a.underlying_amount_compounded_usd between 0 and 1000000000000
 )
 
 SELECT

@@ -23,6 +23,8 @@ WITH apy_with_product AS (
     ON a.vault_id = vi.vault_id
   INNER JOIN {{ ref('product') }} p
     ON vi.beefy_key = p.beefy_key
+  WHERE 
+    a.apy between 0 and 1000000 -- no one product has an apy over 1M %
 )
 
 SELECT
@@ -32,4 +34,3 @@ SELECT
   argMax(apy, date_time) as apy
 FROM apy_with_product
 GROUP BY chain_id, product_address, toStartOfHour(date_time)
-HAVING apy < {{ to_decimal(' 1000000') }} -- no one product has an apy over 1M %

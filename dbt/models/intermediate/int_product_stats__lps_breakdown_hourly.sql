@@ -21,4 +21,9 @@ SELECT
 FROM {{ ref('stg_beefy_api__lps_breakdown') }} lb
 INNER JOIN {{ ref('product') }} p
   ON lb.vault_id = p.beefy_key
+WHERE 
+  lb.price between 0 and 1000000
+  and lb.total_supply between 0 and 1000000000000
+  and lb.underlying_liquidity between 0 and 1000000000000
+  and lb.underlying_price between 0 and 1000000
 GROUP BY p.chain_id, p.product_address, toStartOfHour(lb.date_time)

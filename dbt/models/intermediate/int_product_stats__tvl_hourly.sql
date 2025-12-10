@@ -23,6 +23,8 @@ WITH tvl_with_product AS (
     ON a.vault_id = vi.vault_id
   INNER JOIN {{ ref('product') }} p
     ON vi.beefy_key = p.beefy_key
+  WHERE 
+    a.tvl_usd between 0 and 1000000000
 )
 
 SELECT
@@ -32,4 +34,3 @@ SELECT
   argMax(tvl_usd, date_time) as tvl_usd
 FROM tvl_with_product
 GROUP BY chain_id, product_address, toStartOfHour(date_time)
-HAVING tvl_usd < {{ to_decimal('1000000000') }} -- no one product has a tvl over $1B

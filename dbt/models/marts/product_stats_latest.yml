@@ -77,6 +77,12 @@ models:
       - name: apy
         description: "Annual percentage yield (latest value)"
         data_type: Nullable(Float64)
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                inclusive: true
       - name: compoundings_per_year
         description: "Number of compoundings per year (latest value)"
         data_type: Nullable(Int64)
@@ -89,6 +95,12 @@ models:
       - name: total_apy
         description: "Total APY (latest value)"
         data_type: Nullable(Float64)
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                inclusive: true
       - name: vault_apr
         description: "Vault APR (latest value)"
         data_type: Nullable(Float64)

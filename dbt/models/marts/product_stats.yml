@@ -93,15 +93,21 @@ models:
         data_type: Nullable(Float64)
         codec: ZSTD(3)
         tests:
-          - expect_column_max_value:
+          - dbt_utils.accepted_range:
               arguments:
+                min_value: 0
                 max_value: 1000000000
-              config:
-                severity: error
+                inclusive: true
       - name: apy
         description: "Annual percentage yield"
         data_type: Nullable(Float64)
         codec: ZSTD(3)
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                inclusive: true
       - name: compoundings_per_year
         description: "Number of compoundings per year"
         data_type: Nullable(Int64)
@@ -118,6 +124,12 @@ models:
         description: "Total APY"
         data_type: Nullable(Float64)
         codec: ZSTD(3)
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                inclusive: true
       - name: vault_apr
         description: "Vault APR"
         data_type: Nullable(Float64)

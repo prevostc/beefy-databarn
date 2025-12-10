@@ -1,25 +1,9 @@
 version: 2
 
 models:
-  - name: int_product_stats__unified_hourly
-    description: "Unified hourly stats from all sources (TVL, APY, breakdowns, LPS, yield). Uses UNION ALL + CoalescingMergeTree for better performance."
+  - name: int_product_stats__apy_breakdown_hourly
+    description: "Hourly APY breakdown aggregations"
     columns:
-      - name: tvl_usd
-        description: "Total value locked in USD"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000000
-                inclusive: true
-      - name: apy
-        description: "APY percentage"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000
-                inclusive: true
       - name: compoundings_per_year
         description: "Number of compoundings per year"
         tests:
@@ -131,60 +115,4 @@ models:
               arguments:
                 min_value: 0
                 max_value: 1000000
-                inclusive: true
-      - name: lp_price
-        description: "LP token price"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000
-                inclusive: true
-      - name: total_supply
-        description: "Total supply"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000000000
-                inclusive: true
-      - name: underlying_liquidity
-        description: "Underlying liquidity"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000000000
-                inclusive: true
-      - name: underlying_price
-        description: "Underlying price"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000
-                inclusive: true
-      - name: underlying_amount_compounded
-        description: "Underlying amount compounded"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000000000
-                inclusive: true
-      - name: underlying_token_price_usd
-        description: "Underlying token price in USD"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000
-                inclusive: true
-      - name: underlying_amount_compounded_usd
-        description: "Underlying amount compounded in USD"
-        tests:
-          - dbt_utils.accepted_range:
-              arguments:
-                min_value: 0
-                max_value: 1000000000000
                 inclusive: true

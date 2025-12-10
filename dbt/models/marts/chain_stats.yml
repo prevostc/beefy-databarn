@@ -54,11 +54,11 @@ models:
         data_type: Nullable(Decimal(76, 20))
         codec: ZSTD(3)
         tests:
-          - expect_column_max_value:
+          - dbt_utils.accepted_range:
               arguments:
+                min_value: 0
                 max_value: 1000000000000
-              config:
-                severity: error
+                inclusive: true
       - name: vault_tvl_usd
         description: "TVL attributed to vault assets in USD"
         data_type: Nullable(Decimal(76, 20))
@@ -83,10 +83,22 @@ models:
         description: "Average APY across all products"
         data_type: Nullable(Float64)
         codec: ZSTD(3)
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                inclusive: true
       - name: avg_total_apy
         description: "Average total APY across all products"
         data_type: Nullable(Float64)
         codec: ZSTD(3)
+        tests:
+          - dbt_utils.accepted_range:
+              arguments:
+                min_value: 0
+                max_value: 1000000
+                inclusive: true
       - name: avg_vault_apr
         description: "Average vault APR across all products"
         data_type: Nullable(Float64)

@@ -29,4 +29,15 @@ SELECT
 FROM {{ ref('stg_beefy_api__apy_breakdown') }} ab
 INNER JOIN {{ ref('product') }} p
   ON ab.vault_id = p.beefy_key
+WHERE 
+  ab.compoundings_per_year between 0 and 1000000000
+  and ab.beefy_performance_fee between 0 and 1000000000
+  and ab.lp_fee between 0 and 1000000000
+  and ab.total_apy between 0 and 1000000
+  and ab.vault_apr between 0 and 1000000
+  and ab.trading_apr between 0 and 1000000
+  and ab.clm_apr between 0 and 1000000
+  and ab.reward_pool_apr between 0 and 1000000
+  and ab.reward_pool_trading_apr between 0 and 1000000
+  and ab.vault_apy between 0 and 1000000
 GROUP BY p.chain_id, p.product_address, toStartOfHour(ab.date_time)
