@@ -32,3 +32,4 @@ SELECT
   argMax(apy, date_time) as apy
 FROM apy_with_product
 GROUP BY chain_id, product_address, toStartOfHour(date_time)
+HAVING apy < {{ to_decimal(' 1000000') }} -- no one product has an apy over 1M %
