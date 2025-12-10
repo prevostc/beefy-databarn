@@ -1,0 +1,73 @@
+version: 2
+
+models:
+  - name: chain_stats
+    description: "Timeseries of chain-level TVL statistics including total TVL and breakdowns by product type (vault, gov, CLM). Provides a complete historical view of TVL metrics aggregated at the chain level."
+    config:
+      contract:
+        enforced: true
+      meta:
+        primary_key: ["chain_id", "date_hour"]
+    tests:
+      - relationships_multi_key:
+          name: relationships_chain_stats_chain
+          arguments:
+            to: ref('chain')
+            from_columns: ["chain_id"]
+            to_columns: ["chain_id"]
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - chain_id
+              - date_hour
+    columns:
+      - name: chain_id
+        description: "Chain ID (foreign key to chain.chain_id)"
+        data_type: Int64
+        codec: ZSTD(3)
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
+      - name: chain_name
+        description: "Human-readable chain name"
+        data_type: String
+        codec: LZ4
+        tests:
+          - not_null
+      - name: beefy_key
+        description: "Beefy-specific chain identifier (foreign key to chain.beefy_key)"
+        data_type: String
+        codec: LZ4
+        tests:
+          - not_null
+      - name: beefy_enabled
+        description: "Whether the chain is currently enabled on Beefy"
+        data_type: Bool
+        codec: LZ4
+        tests:
+          - not_null
+      - name: date_hour
+        description: "Date hour when this snapshot was captured"
+        data_type: DateTime('UTC')
+        codec: DoubleDelta, LZ4
+        tests:
+          - not_null
+      - name: tvl_usd
+        description: "Total value locked in USD across all product types (vault + gov + CLM)"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)
+      - name: vault_tvl_usd
+        description: "TVL attributed to vault assets in USD"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)
+      - name: gov_tvl_usd
+        description: "TVL attributed to governance assets in USD"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)
+      - name: clm_tvl_usd
+        description: "TVL attributed to CLM (Concentrated Liquidity Manager) assets in USD"
+        data_type: Nullable(Decimal(76, 20))
+        codec: ZSTD(3)

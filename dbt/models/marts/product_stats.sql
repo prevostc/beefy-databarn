@@ -1,11 +1,8 @@
 {{
   config(
-    materialized='incremental',
+    materialized='table',
     tags=['marts', 'tvl', 'stats'],
-    engine='CoalescingMergeTree',
     order_by=['date_hour', 'chain_id', 'product_address'],
-    on_schema_change='append_new_columns',
-    post_hook=["OPTIMIZE TABLE {{ this }} DEDUPLICATE by date_hour, chain_id, product_address"],
   )
 }}
 
@@ -58,7 +55,7 @@ SELECT
   hs.underlying_amount_compounded,
   hs.underlying_token_price_usd,
   hs.underlying_amount_compounded_usd,
-FROM {{ ref('int_product_stats__unified_hourly') }} hs
+FROM {{ ref('int_product_stats__unified_hourly') }} hs FINAL
 INNER JOIN {{ ref('product') }} p
   ON hs.chain_id = p.chain_id
   AND hs.product_address = p.product_address
