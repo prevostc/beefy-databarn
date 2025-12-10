@@ -6,6 +6,20 @@
   )
 }}
 
+{% if is_incremental() %}
+  {% set max_date_sql %}
+    select max(cast(date_hour as Nullable(DateTime('UTC')))) as max_date_hour
+    from {{ this }}
+  {% endset %}
+  {% set max_date_tbl = run_query(max_date_sql) %}
+  {% set max_date = max_date_tbl.columns[0][0] %}
+  {% if max_date is none %}
+    {% set max_date = '2021-07-31 19:30:00' %}
+  {% endif %}
+{% else %}
+  {% set max_date = '2021-07-31 19:30:00' %}
+{% endif %}
+
 -- Materialized intermediate: Unified hourly stats from all sources
 -- Uses UNION ALL + CoalescingMergeTree instead of GROUP BY for better performance
 -- CoalescingMergeTree automatically merges rows with the same sorting key,

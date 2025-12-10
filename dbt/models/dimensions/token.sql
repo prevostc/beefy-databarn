@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='materialized_view',
+    materialized='table',
     tags=['dimension', 'tokens'],
     order_by=['chain_id', 'representation_address'],
   )

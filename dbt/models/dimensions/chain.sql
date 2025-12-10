@@ -1,8 +1,7 @@
 {{
   config(
-    materialized='materialized_view',
-    tags=['dimension', 'chains'],
-    order_by=['chain_id'],
+    materialized='table',
+    tags=['dimension', 'chains']
   )
 }}
 

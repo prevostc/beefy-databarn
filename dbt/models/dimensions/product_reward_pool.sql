@@ -1,7 +1,8 @@
 {{
   config(
-    materialized='materialized_view',
+    materialized='table',
     tags=['dimension', 'products'],
+    engine='MergeTree()',
     order_by=['chain_id', 'reward_pool_address'],
   )
 }}
