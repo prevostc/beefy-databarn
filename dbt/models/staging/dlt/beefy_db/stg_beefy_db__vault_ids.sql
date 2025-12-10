@@ -5,7 +5,7 @@
 }}
 
 SELECT
-  cast(id as String) as id,
-  cast(vault_id as String) as vault_id
-FROM {{ source('dlt', 'beefy_db___vault_ids') }}
+  cast(vi.id as String) as vault_id,
+  vi.vault_id as beefy_key
+FROM {{ source('dlt', 'beefy_db___vault_ids') }} vi
 

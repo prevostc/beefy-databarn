@@ -51,9 +51,10 @@ models:
         tests:
           - not_null
           - accepted_values:
-              values:
-                - clm_bundle
-                - classic_bundle
+              arguments:
+                values:
+                  - clm_bundle
+                  - classic_bundle
       - name: is_active
         description: "Whether the bundle is currently active"
         data_type: Bool

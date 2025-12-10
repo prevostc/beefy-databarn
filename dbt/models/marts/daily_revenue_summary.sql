@@ -15,51 +15,51 @@
 
 WITH bifi_buyback_daily AS (
   SELECT
-    toDate(txn_timestamp) as date_day,
+    toDate(bb.txn_timestamp) as date_day,
     0 as yield_usd,
     0 as revenue_usd,
-    sum(toDecimal256(bifi_amount * bifi_price, 20)) as bifi_buyback_usd
-  FROM {{ ref('stg_beefy_db__bifi_buyback') }}
+    sum(toDecimal256(bb.bifi_amount * bb.bifi_price, 20)) as bifi_buyback_usd
+  FROM {{ ref('stg_beefy_db__bifi_buyback') }} bb
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
-    buyback_total IS NOT NULL
-    AND txn_timestamp IS NOT NULL
-    AND bifi_amount > 0
-    AND bifi_price > 0
+    bb.buyback_total IS NOT NULL
+    AND bb.txn_timestamp IS NOT NULL
+    AND bb.bifi_amount > 0
+    AND bb.bifi_price > 0
     -- Filter out invalid timestamps that would convert to 1970-01-01
-    AND toDate(txn_timestamp) > '1970-01-01'
-  GROUP BY toDate(txn_timestamp)
+    AND toDate(bb.txn_timestamp) > '1970-01-01'
+  GROUP BY toDate(bb.txn_timestamp)
 ),
 
 feebatch_revenue_daily AS (
   SELECT
-    toDate(txn_timestamp) as date_day,
+    toDate(fh.txn_timestamp) as date_day,
     0 as yield_usd,
-    sum(toDecimal256(treasury_amt, 20)) as revenue_usd,
+    sum(toDecimal256(fh.treasury_amt, 20)) as revenue_usd,
     0 as bifi_buyback_usd
-  FROM {{ ref('stg_beefy_db__feebatch_harvests') }}
+  FROM {{ ref('stg_beefy_db__feebatch_harvests') }} fh
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
-    treasury_amt IS NOT NULL
-    AND txn_timestamp IS NOT NULL
-    AND treasury_amt > 0
+    fh.treasury_amt IS NOT NULL
+    AND fh.txn_timestamp IS NOT NULL
+    AND fh.treasury_amt > 0
     -- Filter out invalid timestamps that would convert to 1970-01-01
-    AND toDate(txn_timestamp) > '1970-01-01'
-  GROUP BY toDate(txn_timestamp)
+    AND toDate(fh.txn_timestamp) > '1970-01-01'
+  GROUP BY toDate(fh.txn_timestamp)
 ),
 
 yield_daily AS (
   SELECT
-    toDate(date_time) as date_day,
-    sum(underlying_amount_compounded_usd) as yield_usd,
+    toDate(ye.date_time) as date_day,
+    sum(ye.underlying_amount_compounded_usd) as yield_usd,
     0 as revenue_usd,
     0 as bifi_buyback_usd
-  FROM {{ ref('int_yield') }}
+  FROM {{ ref('int_yield') }} ye
   WHERE
     -- Filter out invalid timestamps that would convert to 1970-01-01
-    date_time IS NOT NULL
-    AND toDate(date_time) > '1970-01-01'
-  GROUP BY toDate(date_time)
+    ye.date_time IS NOT NULL
+    AND toDate(ye.date_time) > '1970-01-01'
+  GROUP BY toDate(ye.date_time)
 ),
 
 all_rows as (

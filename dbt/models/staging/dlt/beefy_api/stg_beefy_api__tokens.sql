@@ -5,16 +5,16 @@
 }}
 
 SELECT
-  type,
-  cast(id as String) as id,
-  ifNull(symbol, 'Unknown') as symbol,
-  ifNull(name, 'Unknown') as name,
-  {{ normalize_network_beefy_key('chain_id') }} as chain_beefy_key,
-  oracle,
-  oracle_id,
-  cast({{ evm_address('address') }} as String) as address,
-  cast(decimals as Int64) as decimals,
-  bridge,
-  toBool(staked) as staked
-FROM {{ source('dlt', 'beefy_api___tokens') }}
-where chain_id is not null
+  t.type,
+  cast(t.id as String) as id,
+  ifNull(t.symbol, 'Unknown') as symbol,
+  ifNull(t.name, 'Unknown') as name,
+  {{ normalize_network_beefy_key('t.chain_id') }} as chain_beefy_key,
+  t.oracle,
+  t.oracle_id,
+  cast({{ evm_address('t.address') }} as String) as address,
+  cast(t.decimals as Int64) as decimals,
+  t.bridge,
+  toBool(t.staked) as staked
+FROM {{ source('dlt', 'beefy_api___tokens') }} t
+where t.chain_id is not null

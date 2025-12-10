@@ -37,6 +37,7 @@
     arrayMap(x -> {{ to_decimal('x') }}, {{ to_str_list(json_string) }})
 {%- endmacro %}
 
+
 {% macro to_representation_evm_address_list(json_string) %}
     arrayMap(x -> {{ to_representation_evm_address('x') }}, {{ to_str_list(json_string) }})
 {%- endmacro %}
@@ -49,6 +50,10 @@
 {% macro to_decimal(value) %}
     {#- Converts a value to Decimal with specified precision and scale -#}
     toDecimal256({{ value }}, 20)
+{%- endmacro %}
+
+{% macro to_float(value) %}
+    toFloat64({{ value }})
 {%- endmacro %}
 
 {% macro if_null(value, default_value) %}

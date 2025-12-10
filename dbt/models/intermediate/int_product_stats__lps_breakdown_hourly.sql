@@ -1,0 +1,22 @@
+{{
+  config(
+    materialized='view',
+    tags=['intermediate', 'product_stats'],
+  )
+}}
+
+SELECT
+  p.chain_id,
+  p.product_address,
+  toStartOfHour(lb.date_time) as date_hour,
+  argMax(lb.price, lb.date_time) as lp_price,
+  argMax(lb.tokens, lb.date_time) as breakdown_tokens,
+  argMax(lb.balances, lb.date_time) as breakdown_balances,
+  argMax(lb.total_supply, lb.date_time) as total_supply,
+  argMax(lb.underlying_liquidity, lb.date_time) as underlying_liquidity,
+  argMax(lb.underlying_balances, lb.date_time) as underlying_balances,
+  argMax(lb.underlying_price, lb.date_time) as underlying_price
+FROM {{ ref('stg_beefy_api__lps_breakdown') }} lb
+INNER JOIN {{ ref('product') }} p
+  ON lb.vault_id = p.beefy_key
+GROUP BY p.chain_id, p.product_address, toStartOfHour(lb.date_time)

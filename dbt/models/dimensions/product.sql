@@ -12,47 +12,47 @@
 -- Small reference table, materialized as table for performance
 
 SELECT
-    chain_id,
+    pc.chain_id,
     'classic' as product_type,
-    vault_address as product_address,
-    beefy_key,
-    display_name,
-    is_active,
-    platform_id
-FROM {{ ref('product_classic') }}
+    pc.vault_address as product_address,
+    pc.beefy_key,
+    pc.display_name,
+    pc.is_active,
+    pc.platform_id
+FROM {{ ref('product_classic') }} pc
 
 UNION ALL
 
 SELECT
-    chain_id,
+    clm.chain_id,
     'clm' as product_type,
-    vault_address as product_address,
-    beefy_key,
-    display_name,
-    is_active,
-    platform_id
-FROM {{ ref('product_clm') }}
+    clm.vault_address as product_address,
+    clm.beefy_key,
+    clm.display_name,
+    clm.is_active,
+    clm.platform_id
+FROM {{ ref('product_clm') }} clm
 
 UNION ALL
 
 SELECT
-    chain_id,
+    rp.chain_id,
     'reward_pool' as product_type,
-    reward_pool_address as product_address,
-    beefy_key,
-    display_name,
-    is_active,
-    platform_id
-FROM {{ ref('product_reward_pool') }}
+    rp.reward_pool_address as product_address,
+    rp.beefy_key,
+    rp.display_name,
+    rp.is_active,
+    rp.platform_id
+FROM {{ ref('product_reward_pool') }} rp
 
 UNION ALL
 
 SELECT
-    chain_id,
+    cb.chain_id,
     'boost' as product_type,
-    boost_address as product_address,
-    beefy_key,
-    display_name,
-    is_active,
+    cb.boost_address as product_address,
+    cb.beefy_key,
+    cb.display_name,
+    cb.is_active,
     null as platform_id
-FROM {{ ref('product_classic_boost') }}
+FROM {{ ref('product_classic_boost') }} cb

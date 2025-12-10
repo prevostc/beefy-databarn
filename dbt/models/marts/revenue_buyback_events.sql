@@ -12,18 +12,18 @@
 
 WITH cleaned_revenue AS (
   SELECT
-    id,
-    block_number,
+    bb.id,
+    bb.block_number,
     -- Standardize timestamp (handle timezone issues if any)
-    toDateTime(txn_timestamp) as date_time,
-    event_idx,
-    lower(txn_hash) as tx_hash,
-    bifi_price as token_price_usd,
-    bifi_amount as buyback_amount,
+    toDateTime(bb.txn_timestamp) as date_time,
+    bb.event_idx,
+    lower(bb.txn_hash) as tx_hash,
+    bb.bifi_price as token_price_usd,
+    bb.bifi_amount as buyback_amount,
     -- Ensure proper Decimal multiplication with explicit casting
     -- Multiply as Decimal128 to avoid precision/overflow issues
-    bifi_amount * bifi_price as buyback_usd
-  FROM {{ ref('stg_beefy_db__bifi_buyback') }}
+    bb.bifi_amount * bb.bifi_price as buyback_usd
+  FROM {{ ref('stg_beefy_db__bifi_buyback') }} bb
   WHERE
     -- Filter out invalid records (ensure revenue data quality)
     buyback_total IS NOT NULL

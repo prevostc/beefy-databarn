@@ -10,14 +10,14 @@ models:
         codec: LZ4
         tests:
           - not_null
-      - name: t
+      - name: date_time
         description: "Timestamp for the APY observation"
         data_type: DateTime64(6, 'UTC')
         codec: DoubleDelta, LZ4
         tests:
           - not_null
-      - name: val
+      - name: apy
         description: "APY value"
-        data_type: Decimal256(20)
+        data_type: Nullable(Float64)
         codec: ZSTD(3)
 

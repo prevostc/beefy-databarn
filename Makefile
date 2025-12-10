@@ -1,5 +1,4 @@
-.PHONY: help setup start dev run test client github_files tvls beefy_db beefy_api logs restart ps build stop help loop
-.PHONY: infra dbt dlt grafana clickhouse api deps-check
+.PHONY: help infra dbt dlt grafana clickhouse api deps-check setup dev
 
 # Prevent execution in production (user "databarn")
 CURRENT_USER := $(shell whoami 2>/dev/null)
@@ -123,6 +122,27 @@ dbt:
 				find target/compiled/beefy_databarn/models -name "*.sql" -type f | head -10; \
 			fi \
 			;; \
+		sql-explain) \
+			if [ -z "$$MODEL" ]; then \
+				echo "Usage: make dbt sql-explain <model>"; \
+				exit 1; \
+			fi; \
+			echo "Explaining SQL for model: $$MODEL..."; \
+			COMPILED_FILE=$$(find target/compiled/beefy_databarn/models -name "$$MODEL.sql" -type f | head -1) && \
+			if [ -z "$$COMPILED_FILE" ]; then \
+				echo "Error: Could not find compiled SQL for $$MODEL"; \
+				exit 1; \
+			fi; \
+			echo "EXPLAIN query below in ClickHouse:"; \
+			QUERY=$$(sed 's/"/\\"/g' "$$COMPILED_FILE") && \
+			echo "========== RAW QUERY =========="; \
+			cat "$$COMPILED_FILE"; \
+			echo "========== EXPLAIN PIPELINE ==========\n"; \
+			$(DC) exec clickhouse clickhouse-client --query="EXPLAIN PIPELINE  $${QUERY}"; \
+			echo "========== EXPLAIN PLAN ==========\n"; \
+			$(DC) exec clickhouse clickhouse-client --query="EXPLAIN PLAN indexes = 1, description = 1 $${QUERY}"; \
+			echo "\n========== END =========="; \
+			;; \
 		docs) \
 			echo "Generating dbt documentation..."; \
 			$(UV) dbt docs generate && $(UV) dbt docs serve \
@@ -219,7 +239,7 @@ clickhouse:
 			$(DC) restart clickhouse; \
 			echo "✓ ClickHouse restarted" \
 			;; \
-		client) \
+		client|cli) \
 			if [ -n "$$USER" ]; then \
 				echo "Opening ClickHouse client shell as user: $$USER..."; \
 				$(DC) exec clickhouse clickhouse-client --user $$USER; \
@@ -315,4 +335,9 @@ _print-urls:
 	echo "  - Grafana: http://localhost:3000 ($${GRAFANA_ADMIN_USER:-admin}/$${GRAFANA_ADMIN_PASSWORD:-admin})" && \
 	echo "  - Prometheus: http://localhost:9090 (no auth)" && \
 	echo "  - MinIO: http://localhost:9001 ($${MINIO_ACCESS_KEY:-admin}/$${MINIO_SECRET_KEY:-admin})"
+
+# Catch-all target to prevent "No rule to make target" errors
+# This allows arguments to be passed to targets without make complaining
+%:
+	@:
 

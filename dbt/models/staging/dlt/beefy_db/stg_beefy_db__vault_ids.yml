@@ -4,13 +4,13 @@ models:
   - name: stg_beefy_db__vault_ids
     description: "Staging model for vault/product IDs from dlt beefy_db dataset"
     columns:
-      - name: id
+      - name: vault_id
         description: "Unique identifier for the vault record"
         tests:
           - not_null
           - unique
-      - name: vault_id
-        description: "Vault identifier (beefy_id)"
+      - name: beefy_key
+        description: "Vault identifier (beefy_key)"
         tests:
           - not_null
           - unique

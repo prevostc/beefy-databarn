@@ -5,9 +5,9 @@
 }}
 
 SELECT
-  cast(chain_id as String) as chain_id,
-  {{ evm_address('address') }} as address,
-  toBool(is_contract) as is_contract,
-  label
-FROM {{ source('dlt', 'beefy_db___address_metadata') }}
+  cast(t.chain_id as String) as chain_id,
+  {{ evm_address('t.address') }} as address,
+  toBool(t.is_contract) as is_contract,
+  t.label
+FROM {{ source('dlt', 'beefy_db___address_metadata') }} t
 
