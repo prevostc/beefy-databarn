@@ -243,7 +243,7 @@ clickhouse-client \
 
     -- External quota: limit external workloads
     CREATE QUOTA OR REPLACE external_quota
-        FOR INTERVAL 60 SECOND MAX
+        FOR INTERVAL 1 SECOND MAX
             queries        = 5000,
             query_selects  = 5000,
             errors         = 1000,
