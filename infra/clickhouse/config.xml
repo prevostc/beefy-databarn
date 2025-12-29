@@ -15,7 +15,7 @@
 
     <max_connections from_env="CLICKHOUSE_MAX_CONNECTIONS" replace="1">200</max_connections>
     <keep_alive_timeout>3</keep_alive_timeout>
-    <max_concurrent_queries from_env="CLICKHOUSE_MAX_CONCURRENT_QUERIES" replace="1">50</max_concurrent_queries>
+    <max_concurrent_queries from_env="CLICKHOUSE_MAX_CONCURRENT_QUERIES" replace="1">200</max_concurrent_queries>
     <uncompressed_cache_size from_env="CLICKHOUSE_UNCOMPRESSED_CACHE_SIZE" replace="1">8589934592</uncompressed_cache_size>
     <mark_cache_size from_env="CLICKHOUSE_MARK_CACHE_SIZE" replace="1">5368709120</mark_cache_size>
 
