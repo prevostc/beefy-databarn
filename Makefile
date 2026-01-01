@@ -189,6 +189,9 @@ dlt:
 			elif [ -n "$$SOURCE" ]; then \
 				echo "Running dlt source: $$SOURCE..."; \
 				$(UV) ./$${SOURCE}_pipeline.py; \
+			elif [ -z "$$SOURCE" ]; then \
+				echo "Running all dlt pipelines..."; \
+				$(UV) ./all_pipeline.py; \
 			else \
 				echo "Usage: make dlt run <source> [resource]"; \
 				exit 1; \

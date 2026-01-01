@@ -18,7 +18,9 @@ SELECT
     pc.beefy_key,
     pc.display_name,
     pc.is_active,
-    pc.platform_id
+    pc.platform_id,
+    pc.creation_block,
+    pc.creation_datetime
 FROM {{ ref('product_classic') }} pc
 
 UNION ALL
@@ -30,7 +32,9 @@ SELECT
     clm.beefy_key,
     clm.display_name,
     clm.is_active,
-    clm.platform_id
+    clm.platform_id,
+    clm.creation_block,
+    clm.creation_datetime
 FROM {{ ref('product_clm') }} clm
 
 UNION ALL
@@ -42,7 +46,9 @@ SELECT
     rp.beefy_key,
     rp.display_name,
     rp.is_active,
-    rp.platform_id
+    rp.platform_id,
+    rp.creation_block,
+    rp.creation_datetime
 FROM {{ ref('product_reward_pool') }} rp
 
 UNION ALL
@@ -54,5 +60,7 @@ SELECT
     cb.beefy_key,
     cb.display_name,
     cb.is_active,
-    null as platform_id
+    null as platform_id, -- todo
+    cb.creation_block,
+    cb.creation_datetime
 FROM {{ ref('product_classic_boost') }} cb

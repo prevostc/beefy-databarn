@@ -31,8 +31,8 @@ models:
         data_type: String
       - name: initialized_block
         description: "Block number when initialized"
-        data_type: String
+        data_type: Nullable(Int64)
       - name: initialized_timestamp
         description: "Timestamp when initialized"
-        data_type: DateTime64(3, 'UTC')
+        data_type: Nullable(DateTime64(3, 'UTC'))
 

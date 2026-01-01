@@ -12,7 +12,7 @@ SELECT
   t.underlyingToken0_id as underlying_token0_id,
   t.underlyingToken1_id as underlying_token1_id,
   t.initializableStatus as initializable_status,
-  t.initializedBlock as initialized_block,
-  t.initializedTimestamp as initialized_timestamp
+  cast(t.initializedBlock as Nullable(Int64)) as initialized_block,
+  cast(t.initializedTimestamp as Nullable(DateTime64(3, 'UTC'))) as initialized_timestamp
 FROM {{ source('envio', 'ClmManager') }} t
 

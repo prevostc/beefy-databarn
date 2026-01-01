@@ -15,7 +15,12 @@ select
   boost.id as display_name,
   toBool(ifNull(boost.status = 'active', false)) as is_active,
   {{ to_representation_evm_address('boost.underlying_token_address') }} as underlying_token_representation_address,
-  {{ to_representation_evm_address('boost.reward_token_address') }} as reward_token_representation_address
+  {{ to_representation_evm_address('boost.reward_token_address') }} as reward_token_representation_address,
+  envio.initialized_block as creation_block,
+  envio.initialized_timestamp as creation_datetime
 from {{ ref('stg_beefy_api__boosts') }} boost
 join {{ ref('chain') }} chain_dim on boost.chain = chain_dim.beefy_key
+left join {{ ref('stg_envio__classic_boost') }} envio
+  on chain_dim.chain_id = envio.network_id
+  and boost.boost_contract_address = envio.address
 where boost.version is null or boost.version < 2

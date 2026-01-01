@@ -18,7 +18,9 @@ with clm_bundles as (
         clm.display_name as display_name,
         clm.platform_id as platform_id,
         groupArray(10)(DISTINCT reward_pool.reward_pool_address) as reward_pool_addresses,
-        groupArray(10)(DISTINCT boost.boost_address) as classic_boost_addresses
+        groupArray(10)(DISTINCT boost.boost_address) as classic_boost_addresses,
+        clm.creation_block as creation_block,
+        clm.creation_datetime as creation_datetime
     from {{ ref('product_clm') }} clm
     left join {{ ref('product_classic') }} classic
         on classic.chain_id = clm.chain_id
@@ -32,7 +34,7 @@ with clm_bundles as (
     left join {{ ref('product_classic_boost') }} boost
         on boost.chain_id = clm.chain_id
         and boost.underlying_token_representation_address = clm.vault_address
-    group by 1,2,3,4,5,6,7
+    group by 1,2,3,4,5,6,7,10,11
 ),
 classic_bundles as (
     select 
@@ -44,7 +46,9 @@ classic_bundles as (
         classic.display_name as display_name,
         classic.platform_id as platform_id,
         groupArray(10)(DISTINCT reward_pool.reward_pool_address) as reward_pool_addresses,
-        groupArray(10)(DISTINCT boost.boost_address) as classic_boost_addresses
+        groupArray(10)(DISTINCT boost.boost_address) as classic_boost_addresses,
+        classic.creation_block as creation_block,
+        classic.creation_datetime as creation_datetime
     from {{ ref('product_classic') }} classic
     left join {{ ref('product_reward_pool') }} reward_pool 
         on reward_pool.chain_id = classic.chain_id
@@ -57,7 +61,7 @@ classic_bundles as (
             select chain_id, bundle_root_product_address
             from clm_bundles
         )
-    group by 1,2,3,4,5,6,7
+    group by 1,2,3,4,5,6,7,10,11
 )
 select * from clm_bundles
 union all

@@ -67,4 +67,18 @@ models:
         data_type: String
         tests:
           - not_null
+      - name: creation_block
+        description: "Block number when the product was initialized (from envio)"
+        data_type: Nullable(Int64)
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "is null or creation_block != 0"
+      - name: creation_datetime
+        description: "Timestamp when the product was initialized (from envio)"
+        data_type: Nullable(DateTime64(3, 'UTC'))
+        tests:
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "is null or creation_datetime >= '2020-01-01'"
 
