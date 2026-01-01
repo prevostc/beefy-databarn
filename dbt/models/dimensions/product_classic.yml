@@ -88,3 +88,36 @@ models:
           - dbt_utils.expression_is_true:
               arguments:
                 expression: "is null or creation_datetime >= '2020-01-01'"
+      - name: strategies_json
+        description: "JSON array of all strategies associated with this product. Each strategy object contains address, initialized_block (Int64), and initialized_timestamp (DateTime64). Empty array '[]' if no strategies exist."
+        data_type: String
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "= '[]' OR JSONType(strategies_json, '$') = 'Array'"
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: "= '[]' OR JSONLength(strategies_json, '$') >= 0"
+          - dbt_utils.expression_is_true:
+              arguments:
+                expression: |
+                  = '[]' OR (
+                    JSONLength(strategies_json, '$') = 0 OR
+                    arrayAll(
+                      i -> (
+                        JSONHas(strategies_json, concat('$[', toString(i), '].address')) = 1 AND
+                        JSONExtract(strategies_json, concat('$[', toString(i), '].address'), 'String') != '' AND
+                        JSONHas(strategies_json, concat('$[', toString(i), '].initialized_timestamp')) = 1 AND
+                        parseDateTime64BestEffort(JSONExtract(strategies_json, concat('$[', toString(i), '].initialized_timestamp'), 'String')) >= '2020-01-01' AND
+                        (
+                          JSONHas(strategies_json, concat('$[', toString(i), '].initialized_block')) = 0 OR
+                          (
+                            JSONType(strategies_json, concat('$[', toString(i), '].initialized_block')) IN ('Int64', 'UInt64', 'Number') AND
+                            JSONExtract(strategies_json, concat('$[', toString(i), '].initialized_block'), 'Nullable(Int64)') IS NOT NULL
+                          )
+                        )
+                      ),
+                      range(JSONLength(strategies_json, '$'))
+                    )
+                  )
