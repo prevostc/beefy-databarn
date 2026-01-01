@@ -37,13 +37,17 @@ models:
         tests:
           - not_null
       - name: active_chain_ids
-        description: "Array of chain IDs where this address has been seen. Empty array if address has not been seen on any chain."
+        description: "Array of chain IDs where this address has been seen (from reference data) or has recorded activity (from token balance changes). Empty array if address has not been seen on any chain."
         data_type: Array(Int64)
         tests:
           - not_null
           - dbt_utils.expression_is_true:
               arguments:
                 expression: "is not null and length(active_chain_ids) > 0"
+          - relationships_array:
+              arguments:
+                to: ref('chain')
+                to_column: chain_id
       - name: first_activity_timestamp
         description: "Timestamp of the first token balance change for this address. Null if the address has no recorded activity."
         data_type: Nullable(DateTime64(3, 'UTC'))
@@ -73,13 +77,4 @@ models:
         data_type: UInt64
         tests:
           - not_null
-      - name: activity_chain_ids
-        description: "Array of chain IDs where this address has recorded token balance changes. Empty array if the address has no recorded activity."
-        data_type: Array(Int64)
-        tests:
-          - not_null
-          - relationships_array:
-              arguments:
-                to: ref('chain')
-                to_column: chain_id
 

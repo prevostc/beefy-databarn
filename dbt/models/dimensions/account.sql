@@ -174,20 +174,6 @@ special_addresses AS (
     FROM {{ ref('chain') }} c
 ),
 
-all_addresses AS (
-  SELECT chain_id, address, label, is_contract FROM product_addresses
-  UNION ALL
-  SELECT chain_id, address, label, is_contract FROM strategy_addresses
-  UNION ALL
-  SELECT chain_id, address, label, is_contract FROM token_addresses
-  UNION ALL
-  SELECT chain_id, address, label, is_contract FROM underlying_token_addresses
-  UNION ALL
-  SELECT chain_id, address, label, is_contract FROM address_metadata
-  UNION ALL
-  SELECT chain_id, address, label, is_contract FROM special_addresses
-),
-
 address_activity AS (
   SELECT
     a.address,
@@ -203,11 +189,40 @@ address_activity AS (
   GROUP BY a.address
 ),
 
+activity_addresses AS (
+  -- Extract addresses from activity data and expand chain_ids
+  SELECT
+    act.address,
+    chain_id,
+    CAST(NULL as Nullable(String)) as label,
+    false as is_contract
+  FROM address_activity act
+  ARRAY JOIN act.activity_chain_ids as chain_id
+  WHERE act.address IS NOT NULL
+    AND act.address != ''
+),
+
+all_addresses AS (
+  SELECT chain_id, address, label, is_contract FROM product_addresses
+  UNION ALL
+  SELECT chain_id, address, label, is_contract FROM strategy_addresses
+  UNION ALL
+  SELECT chain_id, address, label, is_contract FROM token_addresses
+  UNION ALL
+  SELECT chain_id, address, label, is_contract FROM underlying_token_addresses
+  UNION ALL
+  SELECT chain_id, address, label, is_contract FROM address_metadata
+  UNION ALL
+  SELECT chain_id, address, label, is_contract FROM special_addresses
+  UNION ALL
+  SELECT chain_id, address, label, is_contract FROM activity_addresses
+),
+
 addresses_aggregated AS (
   SELECT
     address,
-    arrayDistinct(groupArray(label)) as labels,
-    coalesce(any(is_contract), false) as is_contract,
+    arrayDistinct(arrayFilter(x -> x IS NOT NULL, groupArray(label))) as labels,
+    coalesce(max(is_contract), false) as is_contract,
     arrayDistinct(arrayFlatten(groupArray(cast(chain_id as Int64)))) as active_chain_ids
   FROM all_addresses
   WHERE address IS NOT NULL
@@ -223,8 +238,7 @@ SELECT
   toNullable(act.last_activity_timestamp) as last_activity_timestamp,
   cast(coalesce(act.total_balance_changes, 0) as UInt64) as total_balance_changes,
   cast(coalesce(act.unique_transactions, 0) as UInt64) as unique_transactions,
-  cast(coalesce(act.unique_tokens, 0) as UInt64) as unique_tokens,
-  coalesce(act.activity_chain_ids, []) as activity_chain_ids
+  cast(coalesce(act.unique_tokens, 0) as UInt64) as unique_tokens
 FROM addresses_aggregated aa
 LEFT JOIN address_activity act
   ON aa.address = act.address
