@@ -1,0 +1,57 @@
+version: 2
+
+models:
+  - name: stg_envio__pool_rewarded_event
+    description: "Staging model for PoolRewardedEvent data from envio database"
+    columns:
+      - name: id
+        description: "PoolRewardedEvent identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: network_id
+        description: "Network identifier"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: trx_hash
+        description: "Transaction hash"
+        data_type: String
+        tests:
+          - not_null
+      - name: log_index
+        description: "Log index within the transaction"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: block_number
+        description: "Block number"
+        data_type: String
+        tests:
+          - not_null
+      - name: block_timestamp
+        description: "Block timestamp"
+        data_type: DateTime64(3, 'UTC')
+        tests:
+          - not_null
+      - name: pool_share_token_id
+        description: "Pool share token identifier (references Token.id)"
+        data_type: String
+      - name: reward_token_id
+        description: "Reward token identifier (references Token.id)"
+        data_type: String
+      - name: reward_amount
+        description: "Reward amount"
+        data_type: String
+      - name: reward_vesting_seconds
+        description: "Reward vesting period in seconds"
+        data_type: String
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - network_id
+              - trx_hash
+              - log_index
+

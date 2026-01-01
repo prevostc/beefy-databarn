@@ -1,0 +1,59 @@
+version: 2
+
+models:
+  - name: stg_envio__token_balance_change
+    description: "Staging model for TokenBalanceChange data from envio database"
+    columns:
+      - name: id
+        description: "TokenBalanceChange identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: network_id
+        description: "Network identifier"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: token_balance_id
+        description: "TokenBalance identifier (references TokenBalance.id)"
+        data_type: String
+      - name: account_id
+        description: "Account identifier (references Account.id)"
+        data_type: String
+        tests:
+          - not_null
+      - name: token_id
+        description: "Token identifier (references Token.id)"
+        data_type: String
+        tests:
+          - not_null
+      - name: trx_hash
+        description: "Transaction hash"
+        data_type: String
+        tests:
+          - not_null
+      - name: block_number
+        description: "Block number"
+        data_type: String
+        tests:
+          - not_null
+      - name: block_timestamp
+        description: "Block timestamp"
+        data_type: DateTime64(3, 'UTC')
+        tests:
+          - not_null
+      - name: balance_before
+        description: "Token balance before the change"
+        data_type: String
+      - name: balance_after
+        description: "Token balance after the change"
+        data_type: String
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - network_id
+              - trx_hash
+              - token_balance_id
+

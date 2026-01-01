@@ -1,0 +1,18 @@
+version: 2
+
+models:
+  - name: stg_envio__account
+    description: "Staging model for Account data from envio database"
+    columns:
+      - name: id
+        description: "Account identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: address
+        description: "Account address"
+        data_type: String
+        tests:
+          - not_null
+

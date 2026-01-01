@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_envio__token_balance
+    description: "Staging model for TokenBalance data from envio database"
+    columns:
+      - name: id
+        description: "TokenBalance identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: network_id
+        description: "Network identifier"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: account_id
+        description: "Account identifier (references Account.id)"
+        data_type: String
+        tests:
+          - not_null
+      - name: token_id
+        description: "Token identifier (references Token.id)"
+        data_type: String
+        tests:
+          - not_null
+      - name: amount
+        description: "Token balance amount"
+        data_type: String
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - network_id
+              - account_id
+              - token_id
+

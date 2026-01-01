@@ -1,0 +1,22 @@
+version: 2
+
+sources:
+  - name: envio
+    description: "Source data from envio database"
+    database: envio
+    schema: envio
+    tables:
+      - name: Account
+      - name: ClassicBoost
+      - name: ClassicVault
+      - name: ClassicVaultStrategy
+      - name: ClmManager
+      - name: ClmStrategy
+      - name: Erc4626Adapter
+      - name: LstVault
+      - name: PoolRewardedEvent
+      - name: RewardPool
+      - name: Token
+      - name: TokenBalance
+      - name: TokenBalanceChange
+      - name: dynamic_contract_registry

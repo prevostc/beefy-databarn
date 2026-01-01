@@ -1,0 +1,46 @@
+version: 2
+
+models:
+  - name: stg_envio__dynamic_contract_registry
+    description: "Staging model for dynamic_contract_registry data from envio database"
+    columns:
+      - name: id
+        description: "Dynamic contract registry identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: network_id
+        description: "Network identifier"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: registering_event_block_number
+        description: "Block number of the registering event"
+        data_type: Int64
+      - name: registering_event_log_index
+        description: "Log index of the registering event"
+        data_type: Int64
+      - name: registering_event_block_timestamp
+        description: "Block timestamp of the registering event"
+        data_type: Int64
+      - name: registering_event_contract_name
+        description: "Contract name from the registering event"
+        data_type: String
+      - name: registering_event_name
+        description: "Event name from the registering event"
+        data_type: String
+      - name: registering_event_src_address
+        description: "Source address from the registering event"
+        data_type: String
+      - name: contract_address
+        description: "Registered contract address"
+        data_type: String
+        tests:
+          - not_null
+      - name: contract_name
+        description: "Registered contract name"
+        data_type: String
+        tests:
+          - not_null
+

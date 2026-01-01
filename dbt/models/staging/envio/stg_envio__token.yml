@@ -1,0 +1,53 @@
+version: 2
+
+models:
+  - name: stg_envio__token
+    description: "Staging model for Token data from envio database"
+    columns:
+      - name: id
+        description: "Token identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: network_id
+        description: "Network identifier"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: is_virtual
+        description: "Whether the token is virtual"
+        data_type: Bool
+        tests:
+          - not_null
+      - name: address
+        description: "Token contract address"
+        data_type: String
+        tests:
+          - not_null
+      - name: symbol
+        description: "Token symbol"
+        data_type: Nullable(String)
+      - name: name
+        description: "Token name"
+        data_type: Nullable(String)
+      - name: decimals
+        description: "Token decimals"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: total_supply
+        description: "Total token supply"
+        data_type: String
+      - name: holder_count
+        description: "Number of token holders"
+        data_type: Int64
+        tests:
+          - not_null
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          arguments:
+            combination_of_columns:
+              - network_id
+              - address
+

@@ -1,0 +1,38 @@
+version: 2
+
+models:
+  - name: stg_envio__classic_vault
+    description: "Staging model for ClassicVault data from envio database"
+    columns:
+      - name: id
+        description: "ClassicVault identifier (primary key)"
+        data_type: String
+        tests:
+          - not_null
+          - unique
+      - name: network_id
+        description: "Network identifier"
+        data_type: Int64
+        tests:
+          - not_null
+      - name: address
+        description: "ClassicVault contract address"
+        data_type: String
+        tests:
+          - not_null
+      - name: share_token_id
+        description: "Share token identifier (references Token.id)"
+        data_type: String
+      - name: underlying_token_id
+        description: "Underlying token identifier (references Token.id)"
+        data_type: String
+      - name: initializable_status
+        description: "Initialization status (INITIALIZING or INITIALIZED)"
+        data_type: String
+      - name: initialized_block
+        description: "Block number when initialized"
+        data_type: String
+      - name: initialized_timestamp
+        description: "Timestamp when initialized"
+        data_type: DateTime64(3, 'UTC')
+

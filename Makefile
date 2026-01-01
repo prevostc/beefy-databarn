@@ -211,7 +211,7 @@ dlt:
 			echo "" \
 			;; \
 		*) \
-			echo "Usage: make dlt [run [source] [resource]|help]"; \
+			echo "Usage: make dlt [run <source>|all [resource]|help]"; \
 			echo "  source can be a source name (e.g., beefy_db, beefy_api, github_files)"; \
 			echo "  resource can be a resource name (e.g., feebatch_harvests, vaults, tokens, ...)"; \
 			exit 1 \
