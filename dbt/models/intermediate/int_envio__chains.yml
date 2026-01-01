@@ -1,0 +1,23 @@
+version: 2
+
+models:
+  - name: int_envio__chains
+    description: "Intermediate model representing all chains covered by envio. Extracts distinct network_ids from token balances that are associated with accounts."
+    columns:
+      - name: network_id
+        description: "Network identifier (chain ID) for chains tracked by envio"
+        data_type: Int64
+        tests:
+          - not_null
+          - unique
+      - name: chain_id
+        description: "Chain ID from chain dimension (same as network_id, included for consistency with product dimensions)"
+        data_type: Int64
+        tests:
+          - not_null
+          - unique
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
+

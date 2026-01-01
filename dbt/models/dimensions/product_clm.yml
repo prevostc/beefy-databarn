@@ -105,29 +105,25 @@ models:
           - not_null
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "= '[]' OR JSONType(strategies_json, '$') = 'Array'"
+                expression: "= '[]' OR JSONType(strategies_json) = 'Array'"
           - dbt_utils.expression_is_true:
               arguments:
-                expression: "= '[]' OR JSONLength(strategies_json, '$') >= 0"
+                expression: "= '[]' OR JSONLength(strategies_json) >= 0"
           - dbt_utils.expression_is_true:
               arguments:
                 expression: |
                   = '[]' OR (
-                    JSONLength(strategies_json, '$') = 0 OR
+                    JSONLength(strategies_json) = 0 OR
                     arrayAll(
-                      i -> (
-                        JSONHas(strategies_json, concat('$[', toString(i), '].address')) = 1 AND
-                        JSONExtract(strategies_json, concat('$[', toString(i), '].address'), 'String') != '' AND
-                        JSONHas(strategies_json, concat('$[', toString(i), '].initialized_timestamp')) = 1 AND
-                        parseDateTime64BestEffort(JSONExtract(strategies_json, concat('$[', toString(i), '].initialized_timestamp'), 'String')) >= '2020-01-01' AND
-                        (
-                          JSONHas(strategies_json, concat('$[', toString(i), '].initialized_block')) = 0 OR
-                          (
-                            JSONType(strategies_json, concat('$[', toString(i), '].initialized_block')) IN ('Int64', 'UInt64', 'Number') AND
-                            JSONExtract(strategies_json, concat('$[', toString(i), '].initialized_block'), 'Nullable(Int64)') IS NOT NULL
-                          )
-                        )
+                      strategy -> (
+                        JSONHas(strategy, 'address') = 1 AND
+                        JSONExtract(strategy, 'address', 'String') != '' AND
+                        JSONHas(strategy, 'initialized_timestamp') = 1 AND
+                        parseDateTime64BestEffort(JSONExtract(strategy, 'initialized_timestamp', 'String')) >= '2020-01-01' AND
+                        JSONHas(strategy, 'initialized_block') = 1 AND
+                        JSONType(strategy, 'initialized_block') IN ('Int64', 'UInt64', 'Number') AND
+                        JSONExtract(strategy, 'initialized_block', 'Nullable(Int64)') IS NOT NULL
                       ),
-                      range(JSONLength(strategies_json, '$'))
+                      JSONExtract(strategies_json, '$', 'Array(String)')
                     )
                   )

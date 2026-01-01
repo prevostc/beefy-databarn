@@ -55,7 +55,7 @@ SELECT
   arrayMap(x -> {{ to_representation_evm_address('x') }}, vaults.deposit_token_addresses) as underlying_token_representation_addresses,
   envio.initialized_block as creation_block,
   envio.initialized_timestamp as creation_datetime,
-  ifNull(strategies_agg.strategies_json, '[]') as strategies_json
+  coalesce(nullIf(strategies_agg.strategies_json, ''), '[]') as strategies_json
 FROM {{ ref('stg_beefy_api__clm_vaults') }} vaults
 LEFT JOIN {{ ref('chain') }} chain_dim
   ON vaults.network = chain_dim.beefy_key
