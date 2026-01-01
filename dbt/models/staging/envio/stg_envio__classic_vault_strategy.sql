@@ -6,7 +6,7 @@
 
 SELECT
   t.id as id,
-  t.chainId as network_id,
+  cast(t.chainId as Int64) as network_id,
   {{ evm_address('t.address') }} as address,
   t.classicVault_id as classic_vault_id,
   t.initializableStatus as initializable_status,

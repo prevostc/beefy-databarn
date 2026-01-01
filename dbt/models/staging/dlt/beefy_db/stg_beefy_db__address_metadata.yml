@@ -4,8 +4,9 @@ models:
   - name: stg_beefy_db__address_metadata
     description: "Staging model for address metadata from dlt beefy_db dataset"
     columns:
-      - name: chain_id
-        description: "Chain ID (references chain.chain_id)"
+      - name: network_id
+        description: "Network ID (part of primary key)"
+        data_type: Int64
         tests:
           - not_null
       - name: address
@@ -20,5 +21,5 @@ models:
       - dbt_utils.unique_combination_of_columns:
           arguments:
             combination_of_columns:
-              - chain_id
+              - network_id
               - address

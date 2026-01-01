@@ -13,7 +13,7 @@
 
 SELECT
     pc.chain_id,
-    'classic' as product_type,
+    'classic_vault' as product_type,
     pc.vault_address as product_address,
     pc.beefy_key,
     pc.display_name,
@@ -27,7 +27,7 @@ UNION ALL
 
 SELECT
     clm.chain_id,
-    'clm' as product_type,
+    'clm_manager' as product_type,
     clm.vault_address as product_address,
     clm.beefy_key,
     clm.display_name,
@@ -55,7 +55,7 @@ UNION ALL
 
 SELECT
     cb.chain_id,
-    'boost' as product_type,
+    'classic_boost' as product_type,
     cb.boost_address as product_address,
     cb.beefy_key,
     cb.display_name,

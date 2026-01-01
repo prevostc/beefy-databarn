@@ -15,10 +15,13 @@ models:
         tests:
           - not_null
       - name: product_type
-        description: "Type of product (classic or clm)"
+        description: "Type of product (classic_vault, clm_manager, classic_boost, or reward_pool)"
         data_type: String
         tests:
           - not_null
+          - accepted_values:
+              arguments:
+                values: ['classic_vault', 'clm_manager', 'classic_boost', 'reward_pool']
       - name: product_address
         description: "Product contract address"
         data_type: String
