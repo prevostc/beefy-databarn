@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='view',
+    materialized='table',
     tags=['data_quality', 'debug']
   )
 }}
