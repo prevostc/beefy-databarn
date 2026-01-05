@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='table',
+    materialized='view',
     tags=['data_quality', 'debug']
   )
 }}
@@ -112,6 +112,6 @@ where (chain_id, product_address) not in (
     select 56 as chain_id, '0x53ea5c5cb2f3b5ae6c88fdaf453c2f816d777ceb' as product_address
     union all
     -- kava boost that was never used
-    select 1 as chain_id, '0x3c9c884efab85c44d675039de227b3dd275c360e' as product_address
+    select 2222 as chain_id, '0x3c9c884efab85c44d675039de227b3dd275c360e' as product_address
   )
 )
