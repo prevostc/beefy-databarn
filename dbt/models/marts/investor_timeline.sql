@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='view',
+    materialized='materialized_view',
     tags=['marts', 'investor', 'timeline'],
     order_by=['account_id', 'datetime', 'product_address'],
     on_schema_change='sync_all_columns',
@@ -23,7 +23,7 @@
 {% set cutoff_date = cutoff_date_tbl.columns[0][0] %}
 {% endif %}
 
-SELECT
+SELECT DISTINCT ON (account_id, datetime, product_address, transaction_hash, log_index)
   datetime,
   account_id,
   product_key,
@@ -49,7 +49,7 @@ SELECT
   usd_balance_before,
   usd_balance_after,
   usd_balance_diff
-FROM {{ ref('int_investor_timeline_historical') }} FINAL
+FROM {{ ref('int_investor_timeline_historical') }}
 WHERE datetime < toDateTime('{{ cutoff_date }}')
 
 UNION ALL
