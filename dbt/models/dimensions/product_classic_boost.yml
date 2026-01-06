@@ -47,6 +47,11 @@ models:
         data_type: String
         tests:
           - not_null
+      - name: beefy_price_oracle_key
+        description: "Oracle ID used for price lookups (inherited from the underlying classic vault, defaults to beefy_key if null)"
+        data_type: String
+        tests:
+          - not_null
       - name: display_name
         description: "Boost display name"
         data_type: String

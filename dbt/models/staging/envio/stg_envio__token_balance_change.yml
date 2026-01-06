@@ -10,6 +10,15 @@ models:
         tests:
           - not_null
           - unique
+      - name: chain_id
+        description: "Chain identifier"
+        data_type: Int64
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('chain')
+                field: chain_id
       - name: network_id
         description: "Network identifier"
         data_type: Int64
@@ -33,9 +42,14 @@ models:
         data_type: String
         tests:
           - not_null
+      - name: log_index
+        description: "Log index"
+        data_type: Int32
+        tests:
+          - not_null
       - name: block_number
         description: "Block number"
-        data_type: String
+        data_type: Int64
         tests:
           - not_null
       - name: block_timestamp

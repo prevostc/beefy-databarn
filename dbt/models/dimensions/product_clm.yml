@@ -49,6 +49,11 @@ models:
         data_type: String
         tests:
           - not_null
+      - name: beefy_price_oracle_key
+        description: "Oracle ID used for price lookups (from stg_beefy_api__clm_vaults.oracle_id, defaults to beefy_key if null)"
+        data_type: String
+        tests:
+          - not_null
       - name: display_name
         description: "Product/vault display name"
         data_type: String

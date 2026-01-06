@@ -22,7 +22,7 @@ models:
           - not_null
       - name: log_index
         description: "Log index within the transaction"
-        data_type: Int64
+        data_type: Int32
         tests:
           - not_null
       - name: block_number
