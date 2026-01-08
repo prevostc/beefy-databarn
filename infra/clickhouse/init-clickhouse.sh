@@ -79,6 +79,9 @@ clickhouse-client \
     CREATE DATABASE IF NOT EXISTS dbt;
     CREATE DATABASE IF NOT EXISTS dlt;
     CREATE DATABASE IF NOT EXISTS envio;
+    CREATE DATABASE IF NOT EXISTS envio_poc1;
+    CREATE DATABASE IF NOT EXISTS envio_poc2;
+    CREATE DATABASE IF NOT EXISTS envio_poc3;
   "
 
 
@@ -139,6 +142,9 @@ clickhouse-client \
     GRANT ${READ_PERM}                ON INFORMATION_SCHEMA.*       TO dbt;
     GRANT ${READ_PERM}                ON dlt.*                      TO dbt;
     GRANT ${READ_PERM}                ON envio.*                    TO dbt;
+    GRANT ${READ_PERM}                ON envio_poc1.*                TO dbt;
+    GRANT ${READ_PERM}                ON envio_poc2.*                TO dbt;
+    GRANT ${READ_PERM}                ON envio_poc3.*                TO dbt;
     GRANT ${READ_PERM}, ${WRITE_PERM} ON dbt.*                      TO dbt;
     GRANT ${READ_PERM}, ${WRITE_PERM} ON analytics.*                TO dbt;
 
@@ -148,6 +154,9 @@ clickhouse-client \
     GRANT ${READ_PERM} ON dbt.*       TO grafana;
     GRANT ${READ_PERM} ON analytics.* TO grafana;
     GRANT ${READ_PERM} ON envio.* TO grafana;
+    GRANT ${READ_PERM} ON envio_poc1.* TO grafana;
+    GRANT ${READ_PERM} ON envio_poc2.* TO grafana;
+    GRANT ${READ_PERM} ON envio_poc3.* TO grafana;
 
     -- superset: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM superset;
@@ -155,6 +164,9 @@ clickhouse-client \
     GRANT ${READ_PERM} ON dbt.*       TO superset;
     GRANT ${READ_PERM} ON analytics.* TO superset;
     GRANT ${READ_PERM} ON envio.* TO superset;
+    GRANT ${READ_PERM} ON envio_poc1.* TO superset;
+    GRANT ${READ_PERM} ON envio_poc2.* TO superset;
+    GRANT ${READ_PERM} ON envio_poc3.* TO superset;
 
     -- api: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM api;
@@ -162,10 +174,16 @@ clickhouse-client \
     GRANT ${READ_PERM} ON dlt.* TO api;
     GRANT ${READ_PERM} ON dbt.* TO api;
     GRANT ${READ_PERM} ON envio.* TO api;
+    GRANT ${READ_PERM} ON envio_poc1.* TO api;
+    GRANT ${READ_PERM} ON envio_poc2.* TO api;
+    GRANT ${READ_PERM} ON envio_poc3.* TO api;
 
     -- envio-sync: R on analytics.*
     REVOKE ALL PRIVILEGES ON *.* FROM envio;
     GRANT ${READ_PERM}, ${WRITE_PERM}, ${RESET_DB_PERM} ON envio.* TO envio;
+    GRANT ${READ_PERM}, ${WRITE_PERM}, ${RESET_DB_PERM} ON envio_poc1.* TO envio;
+    GRANT ${READ_PERM}, ${WRITE_PERM}, ${RESET_DB_PERM} ON envio_poc2.* TO envio;
+    GRANT ${READ_PERM}, ${WRITE_PERM}, ${RESET_DB_PERM} ON envio_poc3.* TO envio;
 
     -------------------------------------------
     -- Settings profiles (env-synced)
