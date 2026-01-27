@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: envio
     description: "Source data from envio database"
-    database: envio
+    database: envio_poc2
     schema: envio
     tables:
       - name: Account
