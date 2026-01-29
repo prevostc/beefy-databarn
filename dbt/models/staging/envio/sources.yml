@@ -3,7 +3,7 @@ version: 2
 sources:
   - name: envio
     description: "Source data from envio database"
-    database: envio_poc3
+    database: "{{ env_var('DBT_ENVIO_BALANCES_DB', 'envio') }}"
     schema: envio
     tables:
       - name: Account

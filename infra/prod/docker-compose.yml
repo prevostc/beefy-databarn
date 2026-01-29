@@ -416,6 +416,7 @@ services:
       DBT_CLICKHOUSE_USER: ${DBT_CLICKHOUSE_USER:-dbt}
       DBT_CLICKHOUSE_PASSWORD: ${DBT_CLICKHOUSE_PASSWORD}
       DBT_CLICKHOUSE_DB: ${DBT_CLICKHOUSE_DB:-analytics}
+      DBT_ENVIO_BALANCES_DB: ${DBT_ENVIO_BALANCES_DB:-envio}
     networks:
       - backend_network
     restart: on-failure
