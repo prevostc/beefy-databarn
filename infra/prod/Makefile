@@ -2,7 +2,7 @@
 # This Makefile provides commands for building images and managing the Docker Compose stack
 # Uses docker rollout plugin for no-downtime deployments
 
-.PHONY: help build ps logs deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api loop
+.PHONY: help build ps logs deploy ensure-dirs restart dbt dlt clickhouse run test client github_files tvls beefy_db beefy_api loop docker
 
 # Paths and common commands
 ROOT_DIR := $(abspath ../..)
@@ -34,7 +34,7 @@ help:
 	@$(MAKE) -s dlt help
 	@$(MAKE) -s clickhouse help
 	@$(MAKE) -s infra help
-	@$(MAKE) -s misc help
+	@$(MAKE) -s docker help
 
 
 infra: ensure-dirs
@@ -252,6 +252,42 @@ postgres:
 		;; \
 		*) \
 			echo "Usage: make postgres [logs|restart|ps|help]"; \
+			exit 1; \
+		;; \
+	esac
+
+# Docker: prune (clean up old Docker images/containers; runs only if all services are up)
+docker:
+	@SUBCMD="$(word 2,$(MAKECMDGOALS))" && \
+	case "$$SUBCMD" in \
+		prune) \
+			EXPECTED=$$($(DC) config --services | wc -l); \
+			echo "Checking all $$EXPECTED services are running..."; \
+			RUNNING=$$($(DC) ps -q 2>/dev/null | wc -l); \
+			if [ "$$RUNNING" -ne "$$EXPECTED" ]; then \
+				echo "Error: expected $$EXPECTED running services, found $$RUNNING. Refusing to prune."; \
+				$(DC) ps -a; \
+				exit 1; \
+			fi; \
+			NOT_UP=$$($(DC) ps -a --format '{{.Status}}' | grep -v '^Up' || true); \
+			if [ -n "$$NOT_UP" ]; then \
+				echo "Error: some containers are not up. Refusing to prune."; \
+				$(DC) ps -a; \
+				exit 1; \
+			fi; \
+			echo "✓ All services running. Pruning unused Docker resources..."; \
+			docker system prune -af; \
+			docker container prune -af; \
+			docker image prune -af; \
+			echo "✓ Prune completed"; \
+		;; \
+		help|"") \
+			echo "docker:"; \
+			echo "  make docker prune   Remove unused Docker containers and dangling images (only if all services are running)"; \
+			echo "" \
+		;; \
+		*) \
+			echo "Usage: make docker [prune|help]"; \
 			exit 1; \
 		;; \
 	esac
