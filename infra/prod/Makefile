@@ -277,7 +277,7 @@ docker:
 			fi; \
 			echo "✓ All services running. Pruning unused Docker resources..."; \
 			docker system prune -af; \
-			docker container prune -af; \
+			docker container prune -f; \
 			docker image prune -af; \
 			echo "✓ Prune completed"; \
 		;; \
