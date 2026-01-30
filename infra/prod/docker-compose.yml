@@ -411,6 +411,8 @@ services:
       - ../../dbt:/app/dbt
     environment:
       DBT_TARGET: prod
+      DBT_RUN_LOCKFILE: ${DBT_RUN_LOCKFILE:-/app/dbt/.dbt_run.lock}
+      DBT_RUN_LOCK_TIMEOUT: ${DBT_RUN_LOCK_TIMEOUT:-30}
       DBT_CLICKHOUSE_HOST: ${DBT_CLICKHOUSE_HOST:-clickhouse}
       DBT_CLICKHOUSE_PORT: 8123
       DBT_CLICKHOUSE_USER: ${DBT_CLICKHOUSE_USER:-dbt}

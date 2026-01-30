@@ -6,8 +6,7 @@
 #   e.g. run_dbt_with_lock.sh run --select my_model
 #   e.g. run_dbt_with_lock.sh test
 #
-# Uses fd-based flock (subshell) so it works with both GNU flock and BusyBox flock;
-# the "flock ... -- cmd" form can fail with "failed to execute --" on some systems.
+# Uses flock -x [ -w timeout ] file -- command (GNU/util-linux flock).
 
 LOCKFILE="${DBT_RUN_LOCKFILE:-/app/dbt/.dbt_run.lock}"
 # Max wait in seconds (default 15min); 0 = wait forever
@@ -20,14 +19,9 @@ cd /app/dbt
 export DBT_PROFILES_DIR=/app/dbt
 export DBT_PROJECT_DIR=/app/dbt
 
+# Use fd 9 for lock (small fd avoids parser issues in some /bin/sh)
 if [ "$LOCK_TIMEOUT" -gt 0 ]; then
-  (
-    flock -x -w "$LOCK_TIMEOUT" 200
-    exec uv run dbt "$@"
-  ) 200>"$LOCKFILE"
+  flock -x -w "$LOCK_TIMEOUT" "$LOCKFILE" -- uv run dbt "$@"
 else
-  (
-    flock -x 200
-    exec uv run dbt "$@"
-  ) 200>"$LOCKFILE"
+  flock -x "$LOCKFILE" -- uv run dbt "$@"
 fi
