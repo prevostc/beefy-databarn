@@ -7,3 +7,4 @@ dlthub_telemetry = true
 
 [load]
 truncate_staging_dataset=true
+delete_completed_jobs=true
