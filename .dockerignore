@@ -11,11 +11,18 @@ venv/
 env/
 ENV/
 
-# dbt
+# dbt data / build artifacts (all containers that COPY dbt/)
 dbt/target/
 dbt/dbt_packages/
 dbt/logs/
 dbt/.dbt/
+dbt/.user.yml
+
+# dlt data / pipeline state (all containers that COPY dlt/)
+dlt/.dlt/
+dlt/_local/
+dlt/**/_local/
+dlt/**/completed_jobs/
 
 # Environment
 .env
@@ -33,4 +40,5 @@ Thumbs.db
 # Documentation
 *.md
 !README.md
+
 

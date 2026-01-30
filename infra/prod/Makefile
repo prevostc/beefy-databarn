@@ -19,7 +19,8 @@ DATA_DIRS := $(STORAGE_DIR)/clickhouse \
              $(STORAGE_DIR)/superset \
              $(STORAGE_DIR)/redis \
              $(STORAGE_DIR)/traefik_certs \
-             $(STORAGE_DIR)/dbt
+             $(STORAGE_DIR)/dbt \
+             $(STORAGE_DIR)/dlt
 
 # Default target
 .DEFAULT_GOAL := help

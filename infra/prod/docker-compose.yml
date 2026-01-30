@@ -445,6 +445,8 @@ services:
     image: beefy-databarn-dlt:latest
     volumes:
       - ../../dlt:/app/dlt
+      # DLT writes pipeline data (load/loaded/completed_jobs) to /var/dlt – mount volume so it does not fill the container overlay
+      - dlt_data:/var/dlt
     environment:
       DLT_ENV: ${DLT_ENV:-production}
       STORAGE_DIR: ${STORAGE_DIR}
@@ -588,6 +590,12 @@ volumes:
       type: none
       o: bind
       device: ${STORAGE_DIR}/dbt
+  dlt_data:
+    driver: local
+    driver_opts:
+      type: none
+      o: bind
+      device: ${STORAGE_DIR}/dlt
 
 networks:
   frontend_network:
