@@ -3,11 +3,12 @@ FROM ghcr.io/astral-sh/uv:python3.14-bookworm-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies (util-linux for flock - prevents concurrent dbt runs)
 RUN apt-get update && apt-get install -y \
     curl \
     git \
     procps \
+    util-linux \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy dependency files first (for better layer caching)
@@ -29,9 +30,10 @@ RUN uv run dbt deps
 # Create logs directory
 RUN mkdir -p /app/dbt/logs
 
-# Copy infra scripts (scheduler is deployment-specific)
+# Copy infra scripts (scheduler + lock wrapper for single dbt run at a time)
 COPY infra/dbt/scheduler.py /app/infra/dbt/scheduler.py
-RUN chmod +x /app/infra/dbt/scheduler.py
+COPY infra/dbt/run_dbt_with_lock.sh /app/run_dbt_with_lock.sh
+RUN chmod +x /app/infra/dbt/scheduler.py /app/run_dbt_with_lock.sh
 
 # Set environment variables
 ENV DBT_PROFILES_DIR=/app/dbt

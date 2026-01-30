@@ -99,10 +99,10 @@ dbt:
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \
 			if [ -n "$$MODEL" ]; then \
 				echo "Refreshing dbt model: $$MODEL..."; \
-				$(DC) exec dbt uv run dbt run --full-refresh --select $$MODEL; \
+				$(DC) exec dbt /app/run_dbt_with_lock.sh run --full-refresh --select $$MODEL; \
 			else \
 				echo "Refreshing all dbt models (full-refresh)..."; \
-				$(DC) exec dbt uv run dbt run --full-refresh; \
+				$(DC) exec dbt /app/run_dbt_with_lock.sh run --full-refresh; \
 			fi; \
 			echo "dbt refresh completed successfully"; \
 		;; \
@@ -111,10 +111,10 @@ dbt:
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \
 			if [ -n "$$MODEL" ]; then \
 				echo "Running dbt model: $$MODEL..."; \
-				$(DC) exec dbt uv run dbt run --select $$MODEL; \
+				$(DC) exec dbt /app/run_dbt_with_lock.sh run --select $$MODEL; \
 			else \
 				echo "Running all dbt models..."; \
-				$(DC) exec dbt uv run dbt run; \
+				$(DC) exec dbt /app/run_dbt_with_lock.sh run; \
 			fi; \
 			echo "dbt run completed successfully"; \
 		;; \
@@ -123,10 +123,10 @@ dbt:
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \
 			if [ -n "$$MODEL" ]; then \
 				echo "Testing dbt model: $$MODEL..."; \
-				$(DC) exec dbt uv run dbt test --select $$MODEL; \
+				$(DC) exec dbt /app/run_dbt_with_lock.sh test --select $$MODEL; \
 			else \
 				echo "Testing all dbt models..."; \
-				$(DC) exec dbt uv run dbt test; \
+				$(DC) exec dbt /app/run_dbt_with_lock.sh test; \
 			fi; \
 			echo "dbt test completed successfully"; \
 		;; \

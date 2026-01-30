@@ -43,9 +43,9 @@ def run_dbt():
                 logger.error("Error running 'dbt deps'")
                 return
         
-        # Run dbt - output streams directly to stdout/stderr for docker logs
+        # Run dbt under lock so manual "make dbt run" and scheduler don't clash
         result = subprocess.run(
-            ["uv", "run", "dbt", "run", "--show-all-deprecations"],
+            ["/app/run_dbt_with_lock.sh", "run", "--show-all-deprecations"],
             cwd=dbt_dir,
         )
         
