@@ -1,9 +1,11 @@
 {{
   config(
-    materialized='view',
+    materialized='materialized_view',
+    order_by=['txn_timestamp', 'network_id', 'block_number', 'txn_idx', 'event_idx'],
   )
 }}
 
+-- Staging as table + MV so int_yield_mv can fire on insert (trigger: dlt.beefy_db___harvests).
 SELECT
   cast(t.chain_id as Int64) as network_id,
   cast(t.block_number as Int64) as block_number,
@@ -20,5 +22,5 @@ SELECT
   toDecimal256(ifNull({{ to_decimal('t.native_price') }}, 0), 20) as native_price,
   toDecimal256(ifNull({{ to_decimal('t.want_price') }}, 0), 20) as want_price,
   toBool(ifNull(t.is_cowllector, false)) as is_cowllector,
-  cast({{ evm_address('t.strategist_address') }} as String) as strategist_address
-FROM {{ source('dlt', 'beefy_db___harvests') }} t FINAL
+  cast({{ evm_address('t.strategist_address') }} as Nullable(String)) as strategist_address
+FROM {{ source('dlt', 'beefy_db___harvests') }} t

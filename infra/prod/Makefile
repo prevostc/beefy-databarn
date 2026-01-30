@@ -96,13 +96,12 @@ dbt:
 		;; \
 		refresh) \
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \
-			echo "Refreshing dbt..."; \
 			if [ -n "$$MODEL" ]; then \
 				echo "Refreshing dbt model: $$MODEL..."; \
 				$(DC) exec dbt uv run dbt run --full-refresh --select $$MODEL; \
 			else \
-				echo "Usage: make dbt refresh <model>"; \
-			    exit 1; \
+				echo "Refreshing all dbt models (full-refresh)..."; \
+				$(DC) exec dbt uv run dbt run --full-refresh; \
 			fi; \
 			echo "dbt refresh completed successfully"; \
 		;; \
@@ -132,12 +131,13 @@ dbt:
 		;; \
 		help|"") \
 			echo "dbt:"; \
-			echo "  make dbt run [<model>]   Run dbt models"; \
-			echo "  make dbt test [<model>]   Run dbt tests"; \
+			echo "  make dbt run [<model>]     Run dbt models"; \
+			echo "  make dbt refresh [<model>] Full refresh all dbt models (or a specific model)"; \
+			echo "  make dbt test [<model>]    Run dbt tests"; \
 			echo "" \
 			;; \
 		*) \
-			echo "Usage: make dbt [run [<model>]|test [<model>]|help]"; \
+			echo "Usage: make dbt [run [<model>]|refresh [<model>]|test [<model>]|help]"; \
 			exit 1; \
 		;; \
 	esac

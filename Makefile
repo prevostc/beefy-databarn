@@ -106,13 +106,12 @@ dbt:
 			;; \
 		refresh) \
 			MODEL="$(word 3,$(MAKECMDGOALS))" && \
-			echo "Refreshing dbt models..."; \
 			if [ -n "$$MODEL" ]; then \
 				echo "Refreshing dbt model: $$MODEL..."; \
-				$(UV) dbt run --select $$MODEL --full-refresh; \
+				$(UV) dbt run --select $$MODEL --full-refresh --show-all-deprecations; \
 			else \
-				echo "Usage: make dbt refresh <model>"; \
-				exit 1; \
+				echo "Refreshing all dbt models (full-refresh)..."; \
+				$(UV) dbt run --full-refresh --show-all-deprecations; \
 			fi; \
 			echo "dbt refresh completed successfully"; \
 			;; \
@@ -163,6 +162,8 @@ dbt:
 			echo "dbt:"; \
 			echo "  make dbt run             Run dbt models"; \
 			echo "  make dbt run <model>     Run a specific dbt model"; \
+			echo "  make dbt refresh         Full refresh all dbt models"; \
+			echo "  make dbt refresh <model> Full refresh a specific dbt model"; \
 			echo "  make dbt test            Run dbt tests"; \
 			echo "  make dbt compile         Compile dbt models"; \
 			echo "  make dbt sql [<model>]   Show compiled SQL (optionally for specific model)"; \
@@ -170,7 +171,7 @@ dbt:
 			echo "" \
 			;; \
 		*) \
-			echo "Usage: make dbt [run [model]|test [model]|compile|sql [model_name]|docs|help]"; \
+			echo "Usage: make dbt [run [model]|refresh [model]|test [model]|compile|sql [model_name]|docs|help]"; \
 			exit 1 \
 			;; \
 	esac
