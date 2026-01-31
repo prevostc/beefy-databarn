@@ -31,13 +31,13 @@ models:
                 to: ref('chain')
                 field: chain_id
       - name: product_type
-        description: "Type of product (classic, clm, or reward_pool)"
+        description: "Type of product (classic_vault, clm_manager, reward_pool, or classic_boost)"
         data_type: String
         tests:
           - not_null
           - accepted_values:
               arguments:
-                values: ["classic", "clm", "reward_pool"]
+                values: ["classic_vault", "clm_manager", "reward_pool", "classic_boost"]
       - name: beefy_key
         description: "Beefy-specific vault/product identifier (foreign key to product.beefy_key)"
         data_type: String
