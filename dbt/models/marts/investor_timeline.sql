@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='materialized_view',
+    materialized='CHANGE_ME',
     tags=['marts', 'investor', 'timeline'],
     order_by=['account_id', 'datetime', 'product_address'],
     on_schema_change='sync_all_columns',
