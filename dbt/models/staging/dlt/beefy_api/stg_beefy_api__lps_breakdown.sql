@@ -5,7 +5,6 @@
   )
 }}
 
--- Staging as table + MV so int_product_stats__lps_breakdown_hourly_mv can fire on insert (trigger: dlt.beefy_api___lps_breakdown).
 SELECT
   cast(t.etag as String) as etag,
   cast(t.vault_id as String) as vault_id,

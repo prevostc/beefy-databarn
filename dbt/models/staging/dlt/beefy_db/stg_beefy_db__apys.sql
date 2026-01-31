@@ -5,7 +5,6 @@
   )
 }}
 
--- Staging as table + MV so int_product_stats__apy_hourly_mv can fire on insert (trigger: dlt.beefy_db___apys).
 SELECT
   cast(t.vault_id as String) as vault_id,
   cast(t.t as DateTime('UTC')) as date_time,

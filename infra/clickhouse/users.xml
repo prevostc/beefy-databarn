@@ -1,11 +1,30 @@
 <?xml version="1.0"?>
 <clickhouse>
+    <!-- Default = dev. Override with CLICKHOUSE_* env vars in prod. -->
     <profiles>
         <default>
-            <max_memory_usage from_env="CLICKHOUSE_MAX_MEMORY_USAGE" replace="1">10000000000</max_memory_usage>
             <max_execution_time>300</max_execution_time>
-            <use_uncompressed_cache>0</use_uncompressed_cache>
             <load_balancing>random</load_balancing>
+            <max_memory_usage from_env="CLICKHOUSE_MAX_MEMORY_USAGE" replace="1">10000000000</max_memory_usage>
+            <use_uncompressed_cache from_env="CLICKHOUSE_USE_UNCOMPRESSED_CACHE" replace="1">1</use_uncompressed_cache>
+
+            <!-- Parallelism: dev 4/2/4; prod set env (e.g. 32/16/32 for 32 cores) -->
+            <max_threads from_env="CLICKHOUSE_MAX_THREADS" replace="1">auto(4)</max_threads>
+            <max_insert_threads from_env="CLICKHOUSE_MAX_INSERT_THREADS" replace="1">auto(2)</max_insert_threads>
+            <max_final_threads from_env="CLICKHOUSE_MAX_FINAL_THREADS" replace="1">auto(4)</max_final_threads>
+
+            <!-- Push to attached materialized views concurrently instead of sequentially -->
+            <parallel_view_processing from_env="CLICKHOUSE_PARALLEL_VIEW_PROCESSING" replace="1">1</parallel_view_processing>
+            <use_async_executor_for_materialized_views from_env="CLICKHOUSE_USE_ASYNC_EXECUTOR_FOR_MATERIALIZED_VIEWS" replace="1">1</use_async_executor_for_materialized_views>
+
+            <!-- External sort/group by: dev 1GB; prod set env (e.g. 17179869184 = 16GB) -->
+            <max_bytes_before_external_sort from_env="CLICKHOUSE_MAX_BYTES_BEFORE_EXTERNAL_SORT" replace="1">1000000000</max_bytes_before_external_sort>
+            <max_bytes_before_external_group_by from_env="CLICKHOUSE_MAX_BYTES_BEFORE_EXTERNAL_GROUP_BY" replace="1">1000000000</max_bytes_before_external_group_by>
+
+            <!-- Read/aggregation optimizations -->
+            <optimize_aggregation_in_order>1</optimize_aggregation_in_order>
+            <load_marks_asynchronously>1</load_marks_asynchronously>
+            <allow_asynchronous_read_from_io_pool_for_merge_tree>1</allow_asynchronous_read_from_io_pool_for_merge_tree>
         </default>
     </profiles>
 

@@ -5,7 +5,6 @@
   )
 }}
 
--- Staging as table + MV so int_product_stats__apy_breakdown_hourly_mv can fire on insert (trigger: dlt.beefy_api___apy_breakdown).
 SELECT
   toInt64(t.compoundings_per_year) as compoundings_per_year,
   toFloat64(t.beefy_performance_fee) as beefy_performance_fee,
