@@ -1,6 +1,6 @@
 {{
   config(
-    materialized='materialized_view',
+    materialized='incremental',
     tags=['intermediate', 'product_stats'],
     order_by=['date_hour', 'chain_id', 'product_address'],
     engine='CoalescingMergeTree',
